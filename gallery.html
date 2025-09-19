@@ -1,20 +1,60 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="da">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gallery - Brachcreek Bandits</title>
+<title>Galleri - Brachcreek Bandits</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+<script src="https://unpkg.com/feather-icons"></script>
 <link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
-
 <style>
 .nav-link { color: white; }
 .nav-link:hover { color: #d4a017; }
-h1,h2,h3,h4,h5,h6 { font-family: 'Western', sans-serif; }
 .western-text { font-family: 'Western', sans-serif; }
+.cursor-pointer { cursor: pointer; }
+
+/* Gallery Grid */
+.gallery-grid img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+/* Modal */
+#modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+}
+
+#modal-img {
+  max-height: 90%;
+  max-width: 90%;
+  border-radius: 0.5rem;
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+}
+
+#modal.show #modal-img { transform: scale(1); }
+
+/* Overlay controls */
+.modal-control {
+  position: absolute;
+  color: white;
+  font-size: 2.5rem;
+  cursor: pointer;
+  user-select: none;
+  z-index: 100;
+}
+#close-btn { top: 1rem; right: 2rem; }
+#prev-btn { left: 1rem; top: 50%; transform: translateY(-50%); }
+#next-btn { right: 1rem; top: 50%; transform: translateY(-50%); }
 </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -22,73 +62,98 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Western', sans-serif; }
 <!-- Navigation -->
 <nav class="bg-black text-white shadow-lg">
 <div class="container mx-auto px-8 py-8 flex justify-between items-center">
-<a href="index.html" class="flex items-center space-x-4">
-<img src="https://scontent-cph2-1.xx.fbcdn.net/v/t39.30808-6/486356878_9742857432426186_6599031023968483380_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=2285d6&_nc_ohc=pLOCdCS-5B8Q7kNvwFTER7R&_nc_oc=AdnR99wp-pEKaV-6THZCiEU6b8Ny9BSt3ipXXV-YQvmiTjQn5NavYPNTrtQthElCT-I&_nc_zt=23&_nc_ht=scontent-cph2-1.xx&_nc_gid=JOcxiVtD0Utv27QeP2o4BQ&oh=00_AfbkRbXivYhEtim7EZ9ChOIeasZx-i5jNdi-RDn3FaUTMA&oe=68D33031" alt="Logo" class="h-20 w-20 md:h-40 md:w-40 rounded-full">
-<span class="western-text text-3xl md:text-5xl">Branchcreek Bandits</span>
-</a>
+  <a href="index.html" class="flex items-center space-x-4">
+    <img src="https://scontent-cph2-1.xx.fbcdn.net/v/t39.30808-6/486356878_9742857432426186_6599031023968483380_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=2285d6&_nc_ohc=pLOCdCS-5B8Q7kNvwFTER7R&_nc_oc=AdnR99wp-pEKaV-6THZCiEU6b8Ny9BSt3ipXXV-YQvmiTjQn5NavYPNTrtQthElCT-I&_nc_zt=23&_nc_ht=scontent-cph2-1.xx&_nc_gid=JOcxiVtD0Utv27QeP2o4BQ&oh=00_AfbkRbXivYhEtim7EZ9ChOIeasZx-i5jNdi-RDn3FaUTMA&oe=68D33031" alt="Logo" class="h-20 w-20 md:h-40 md:w-40 rounded-full">
+    <span class="western-text text-3xl md:text-5xl">Branchcreek Bandits</span>
+  </a>
 
-<div class="hidden md:flex items-center space-x-8">
-<a href="about.html" class="nav-link font-medium">About</a>
-<a href="events.html" class="nav-link font-medium">Events</a>
-<a href="gallery.html" class="nav-link font-medium font-bold text-yellow-400">Gallery</a>
-<a href="forum.html" class="nav-link font-medium">Forum</a>
-<a href="contact.html" class="nav-link font-medium">Contact</a>
-</div>
+  <div class="hidden md:flex items-center space-x-8">
+    <a href="about.html" class="nav-link font-medium">Information</a>
+    <a href="events.html" class="nav-link font-medium">Begivenheder</a>
+    <a href="gallery.html" class="nav-link font-medium">Galleri</a>
+    <a href="forum.html" class="nav-link font-medium">Forum</a>
+    <a href="contact.html" class="nav-link font-medium">Kontakt</a>
+  </div>
 
-<button id="menu-btn" class="md:hidden focus:outline-none"><i data-feather="menu"></i></button>
+  <button id="menu-btn" class="md:hidden focus:outline-none"><i data-feather="menu"></i></button>
 </div>
 
 <div id="mobile-menu" class="hidden md:hidden bg-black text-white px-8 pb-6">
-<a href="about.html" class="block py-2 nav-link">About</a>
-<a href="events.html" class="block py-2 nav-link">Events</a>
-<a href="gallery.html" class="block py-2 nav-link font-bold text-yellow-400">Gallery</a>
-<a href="forum.html" class="block py-2 nav-link">Forum</a>
-<a href="contact.html" class="block py-2 nav-link">Contact</a>
+  <a href="about.html" class="block py-2 nav-link">Information</a>
+  <a href="events.html" class="block py-2 nav-link">Begivenheder</a>
+  <a href="gallery.html" class="block py-2 nav-link">Galleri</a>
+  <a href="forum.html" class="block py-2 nav-link">Forum</a>
+  <a href="contact.html" class="block py-2 nav-link">Kontakt</a>
 </div>
 </nav>
 
-<!-- Gallery Content -->
+<!-- Gallery Section -->
 <section class="py-16 bg-white">
-<div class="container mx-auto px-6 text-center">
-<h1 class="western-text text-5xl mb-6">Gallery</h1>
-<p class="text-gray-700 mb-8 max-w-3xl mx-auto">
-A collection of photos capturing the Branchcreek Bandits in action at events, competitions, and gatherings.
-</p>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-<img src="https://via.placeholder.com/300x200" alt="Gallery 1" class="rounded-lg shadow-md">
-<img src="https://via.placeholder.com/300x200" alt="Gallery 2" class="rounded-lg shadow-md">
-<img src="https://via.placeholder.com/300x200" alt="Gallery 3" class="rounded-lg shadow-md">
+<div class="container mx-auto px-6 max-w-5xl">
+<h1 class="western-text text-5xl mb-6 text-center">Galleri</h1>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 gallery-grid" id="gallery">
+  <!-- Thumbnails inserted with JS -->
 </div>
 </div>
-</section>
 
-<!-- Footer -->
-<footer class="bg-black text-white py-12">
-<div class="container mx-auto px-6">
-<div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-<div>
-<h3 class="text-xl font-bold mb-4">Brachcreek Bandits</h3>
-<p class="text-gray-400">Preserving the spirit of the Old West through Cowboy Action Shooting since 2015.</p>
+<!-- Modal -->
+<div id="modal" class="flex">
+  <img id="modal-img" src="">
+  <span id="close-btn" class="modal-control" onclick="closeModal()">&times;</span>
+  <span id="prev-btn" class="modal-control" onclick="prevImage()">&#10094;</span>
+  <span id="next-btn" class="modal-control" onclick="nextImage()">&#10095;</span>
 </div>
-<div></div>
-<div>
-<h3 class="text-xl font-bold mb-4">Contact</h3>
-<ul class="space-y-2 text-gray-400">
-<li class="flex items-center"><i data-feather="mail" class="mr-2"></i> contact@brachcreekbandits.com</li>
-<li class="flex items-center"><i data-feather="phone" class="mr-2"></i> (555) 123-4567</li>
-<li class="flex items-center"><i data-feather="map-pin" class="mr-2"></i> Brach Creek, TX</li>
-</ul>
-</div>
-<div></div>
-</div>
-</div>
-</footer>
 
 <script>
 feather.replace();
-const menuBtn = document.getElementById('menu-btn');
-const mobileMenu = document.getElementById('mobile-menu');
-menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+
+const menuBtn=document.getElementById('menu-btn');
+const mobileMenu=document.getElementById('mobile-menu');
+menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
+
+// ✅ Only galleri images come from your local folder
+const images = [
+  "gallari/BB1.jpg",
+  "gallari/BB2.jpg",
+  "gallari/BB3.jpg"
+];
+
+let currentIndex = 0;
+
+// Populate gallery thumbnails
+const gallery = document.getElementById('gallery');
+images.forEach((src, index) => {
+  const img = document.createElement('img');
+  img.src = src;
+  img.onclick = () => openModal(index);
+  gallery.appendChild(img);
+});
+
+function openModal(index){
+  currentIndex = index;
+  const modal = document.getElementById('modal');
+  const modalImg = document.getElementById('modal-img');
+  modalImg.src = images[currentIndex];
+  modal.style.display = 'flex';
+  setTimeout(()=>modalImg.style.transform = 'scale(1)', 10);
+}
+
+function closeModal(){
+  const modal = document.getElementById('modal');
+  const modalImg = document.getElementById('modal-img');
+  modalImg.style.transform = 'scale(0.9)';
+  setTimeout(()=> modal.style.display='none', 300);
+}
+
+function nextImage(){
+  currentIndex = (currentIndex + 1) % images.length;
+  document.getElementById('modal-img').src = images[currentIndex];
+}
+
+function prevImage(){
+  currentIndex = (currentIndex - 1 + images.length) % images.length;
+  document.getElementById('modal-img').src = images[currentIndex];
+}
 </script>
 
 </body>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brachcreek Bandits - Opret Konto</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
+
+<!-- Firebase v9+ modular SDK -->
+<script type="module">
+  // Import the functions you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
+    authDomain: "branchcreek-bandits.firebaseapp.com",
+    projectId: "branchcreek-bandits",
+    storageBucket: "branchcreek-bandits.firebasestorage.app",
+    messagingSenderId: "828305260971",
+    appId: "1:828305260971:web:6c3601fc97601a9621d2ee",
+    measurementId: "G-550TRD5SQ3"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  window.signup = function() {
+    const name = document.getElementById('signup-name').value;
+    const email = document.getElementById('signup-email').value;
+    const password = document.getElementById('signup-password').value;
+
+    if(!name || !email || !password){ alert('Udfyld alle felter'); return; }
+
+    createUserWithEmailAndPassword(auth, email, password)
+      .then(userCredential => {
+        const user = userCredential.user;
+        sendEmailVerification(user)
+          .then(() => console.log("Email verification sent."));
+        document.getElementById('signup-form').classList.add('hidden');
+        document.getElementById('signup-success').classList.remove('hidden');
+      })
+      .catch(err => alert(err.message));
+  }
+
+  window.googleSignIn = function() {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider)
+      .then(result => {
+        const user = result.user;
+        alert("Tillykke! Du er logget ind med Google som " + user.displayName);
+        window.location.href = "index.html";
+      })
+      .catch(err => alert(err.message));
+  }
+</script>
+
+<style>
+h1,h2,h3,h4,h5,h6 { font-family: 'Western', sans-serif; }
+input, button { border-radius: 0 !important; }
+.btn-gold { background-color: #d4a017; transition: all 0.3s ease; }
+.btn-gold:hover { background-color: #b78a14; transform: translateY(-2px); }
+.btn-google { background-color: #4285F4; color: white; transition: all 0.3s ease; }
+.btn-google:hover { background-color: #3367D6; }
+</style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+<!-- Signup Form -->
+<section class="py-20">
+  <div class="container mx-auto px-6 max-w-lg bg-white shadow-lg p-8">
+    <h1 class="text-3xl font-bold mb-6 text-center western-text">Opret Konto</h1>
+    <div id="signup-form">
+      <input type="text" id="signup-name" placeholder="Navn" class="w-full mb-3 px-3 py-2 border">
+      <input type="email" id="signup-email" placeholder="Email" class="w-full mb-3 px-3 py-2 border">
+      <input type="password" id="signup-password" placeholder="Password" class="w-full mb-3 px-3 py-2 border">
+      <button onclick="signup()" class="w-full btn-gold py-2 font-bold mb-3">Opret Konto</button>
+      <button onclick="googleSignIn()" class="w-full btn-google py-2 font-bold mb-3">Sign in with Google</button>
+      <p class="text-center text-sm">Har du allerede en konto? <a href="index.html" class="text-blue-600 hover:underline">Login her</a></p>
+    </div>
+    <div id="signup-success" class="hidden text-center">
+      <h2 class="text-2xl font-bold mb-3 western-text">Tillykke! Konto oprettet.</h2>
+      <p>En bekræftelses-email er blevet sendt til din e-mail. Tak for at registrere dig!</p>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
