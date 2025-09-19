@@ -11,8 +11,59 @@
 <link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
 
 <!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey:"YOUR_API_KEY",
+    authDomain:"YOUR_PROJECT_ID.firebaseapp.com",
+    projectId:"YOUR_PROJECT_ID",
+    storageBucket:"YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId:"YOUR_SENDER_ID",
+    appId:"YOUR_APP_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  // Handle login
+  window.login = function() {
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
+    signInWithEmailAndPassword(auth, email, password)
+      .then(userCredential => {
+        alert("Logget ind!");
+        document.getElementById("login-dropdown").classList.add("hidden");
+      })
+      .catch(err => alert(err.message));
+  }
+
+  window.mobileLogin = function() {
+    const email = document.getElementById("mobile-login-email").value;
+    const password = document.getElementById("mobile-login-password").value;
+    signInWithEmailAndPassword(auth, email, password)
+      .then(userCredential => {
+        alert("Logget ind!");
+        document.getElementById("mobile-login-form").classList.add("hidden");
+      })
+      .catch(err => alert(err.message));
+  }
+
+  // Update menu if logged in
+  onAuthStateChanged(auth, user => {
+    const loginMenu = document.getElementById("login-btn");
+    const mobileLoginBtn = document.getElementById("mobile-login-btn");
+    if(user) {
+      loginMenu.innerHTML = `${user.displayName || user.email} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
+      mobileLoginBtn.innerHTML = `${user.displayName || user.email} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
+    }
+  });
+
+  window.logout = function() {
+    signOut(auth).then(()=> location.reload()).catch(err=>alert(err.message));
+  }
+</script>
 
 <style>
 .nav-link { color: white; }
@@ -163,27 +214,6 @@ loginBtn.addEventListener('click',()=>loginDropdown.classList.toggle('hidden'));
 const mobileLoginBtn=document.getElementById('mobile-login-btn');
 const mobileLoginForm=document.getElementById('mobile-login-form');
 mobileLoginBtn.addEventListener('click',()=>mobileLoginForm.classList.toggle('hidden'));
-
-// Firebase
-const firebaseConfig = { apiKey:"YOUR_API_KEY", authDomain:"YOUR_PROJECT_ID.firebaseapp.com", projectId:"YOUR_PROJECT_ID" };
-const app=firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth();
-
-// Login functions
-function login(){
-  const email=document.getElementById("login-email").value;
-  const password=document.getElementById("login-password").value;
-  auth.signInWithEmailAndPassword(email,password)
-  .then(()=>{alert("Logget ind!"); window.location.href="forum.html";})
-  .catch(err=>alert(err.message));
-}
-function mobileLogin(){
-  const email=document.getElementById("mobile-login-email").value;
-  const password=document.getElementById("mobile-login-password").value;
-  auth.signInWithEmailAndPassword(email,password)
-  .then(()=>{alert("Logget ind!"); window.location.href="forum.html";})
-  .catch(err=>alert(err.message));
-}
 </script>
 
 </body>

@@ -7,13 +7,10 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
 
-<!-- Firebase v9+ modular SDK -->
 <script type="module">
-  // Import the functions you need
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, sendEmailVerification, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-  // Your web app's Firebase configuration
   const firebaseConfig = {
     apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
     authDomain: "branchcreek-bandits.firebaseapp.com",
@@ -24,7 +21,6 @@
     measurementId: "G-550TRD5SQ3"
   };
 
-  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
 
@@ -65,11 +61,11 @@ input, button { border-radius: 0 !important; }
 .btn-gold:hover { background-color: #b78a14; transform: translateY(-2px); }
 .btn-google { background-color: #4285F4; color: white; transition: all 0.3s ease; }
 .btn-google:hover { background-color: #3367D6; }
+a.back-home { display: inline-block; margin-top: 15px; color: #4285F4; text-decoration: underline; }
 </style>
 </head>
 <body class="bg-gray-100 font-sans">
 
-<!-- Signup Form -->
 <section class="py-20">
   <div class="container mx-auto px-6 max-w-lg bg-white shadow-lg p-8">
     <h1 class="text-3xl font-bold mb-6 text-center western-text">Opret Konto</h1>
@@ -84,6 +80,7 @@ input, button { border-radius: 0 !important; }
     <div id="signup-success" class="hidden text-center">
       <h2 class="text-2xl font-bold mb-3 western-text">Tillykke! Konto oprettet.</h2>
       <p>En bekræftelses-email er blevet sendt til din e-mail. Tak for at registrere dig!</p>
+      <a href="index.html" class="back-home">Gå tilbage til forsiden</a>
     </div>
   </div>
 </section>
