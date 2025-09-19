@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brachcreek Bandits Forum</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+<link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
+
+<style>
+.nav-link { color: white; }
+.nav-link:hover { color: #d4a017; }
+h1,h2,h3,h4,h5,h6 { font-family: 'Western', sans-serif; }
+.western-text { font-family: 'Western', sans-serif; }
+.btn-gold { background-color: #d4a017; transition: all 0.3s ease; }
+.btn-gold:hover { background-color: #b78a14; transform: translateY(-2px); }
+.forum-post:hover { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transform: translateY(-2px); }
+</style>
+</head>
+<body class="bg-gray-100 font-sans">
+
+<!-- Navigation -->
+<nav class="bg-black text-white shadow-lg">
+<div class="container mx-auto px-8 py-8 flex justify-between items-center">
+  <a href="index.html" class="flex items-center space-x-4">
+    <img src="https://scontent-cph2-1.xx.fbcdn.net/v/t39.30808-6/486356878_9742857432426186_6599031023968483380_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=2285d6&_nc_ohc=pLOCdCS-5B8Q7kNvwFTER7R&_nc_oc=AdnR99wp-pEKaV-6THZCiEU6b8Ny9BSt3ipXXV-YQvmiTjQn5NavYPNTrtQthElCT-I&_nc_zt=23&_nc_ht=scontent-cph2-1.xx&_nc_gid=JOcxiVtD0Utv27QeP2o4BQ&oh=00_AfbkRbXivYhEtim7EZ9ChOIeasZx-i5jNdi-RDn3FaUTMA&oe=68D33031" alt="Logo" class="h-20 w-20 md:h-40 md:w-40 rounded-full">
+    <span class="western-text text-3xl md:text-5xl">Branchcreek Bandits</span>
+  </a>
+
+  <div class="hidden md:flex items-center space-x-8">
+    <a href="about.html" class="nav-link font-medium">About</a>
+    <a href="events.html" class="nav-link font-medium">Events</a>
+    <a href="gallery.html" class="nav-link font-medium">Gallery</a>
+    <a href="forum.html" class="nav-link font-medium">Forum</a>
+    <a href="contact.html" class="nav-link font-medium">Contact</a>
+  </div>
+
+  <button id="menu-btn" class="md:hidden focus:outline-none"><i data-feather="menu"></i></button>
+</div>
+
+<div id="mobile-menu" class="hidden md:hidden bg-black text-white px-8 pb-6">
+  <a href="about.html" class="block py-2 nav-link">About</a>
+  <a href="events.html" class="block py-2 nav-link">Events</a>
+  <a href="gallery.html" class="block py-2 nav-link">Gallery</a>
+  <a href="forum.html" class="block py-2 nav-link">Forum</a>
+  <a href="contact.html" class="block py-2 nav-link">Contact</a>
+</div>
+</nav>
+
+<!-- Slideshow Section -->
+<section class="relative w-full overflow-hidden">
+  <div class="relative h-96 md:h-[500px]">
+    <!-- Slides -->
+    <div class="absolute inset-0 transition-opacity duration-1000 opacity-100 slide">
+      <img src="https://scontent-cph2-1.xx.fbcdn.net/v/t39.30808-6/506596000_3135406049944384_5613602650389673234_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=aa7b47&_nc_ohc=sJVlrMuzTlEQ7kNvwGeIiS2&_nc_oc=AdkvY-YVJjgt_u5wvAmOqO4rvg6P_AhA8HdbPFWItdgboo7M_V4et2Y3FViVpCQB6VA&_nc_zt=23&_nc_ht=scontent-cph2-1.xx&_nc_gid=6Arb6AF_EJZDQQPnWhdrIA&oh=00_Afac3hO-f4ZlHs6wkNTY5_w8twj1M-TXbe_BVqGhtMOnQg&oe=68D363B7" class="w-full h-full object-cover" alt="Slide 1">
+    </div>
+    <div class="absolute inset-0 transition-opacity duration-1000 opacity-0 slide">
+      <img src="https://scontent-cph2-1.xx.fbcdn.net/v/t39.30808-6/465272813_8885675894811015_9002022723692025362_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=aa7b47&_nc_ohc=21EG8vSWdZcQ7kNvwFuGmr5&_nc_oc=Adkny_vmiTvS2Du6uk4avMR29W1NDiI6iDuut4bcXWMdZXw6E7gf7rIkCt3dIIt4I-0&_nc_zt=23&_nc_ht=scontent-cph2-1.xx&_nc_gid=wT7sjnAvaPZjVQJxk0UVaQ&oh=00_Afb1IgGec0PYJ2JZBA_kSNG7UidloZTLr79oDEfj7Tgbfw&oe=68D37003" class="w-full h-full object-cover" alt="Slide 2">
+    </div>
+    <div class="absolute inset-0 transition-opacity duration-1000 opacity-0 slide">
+      <img src="https://scontent-cph2-1.xx.fbcdn.net/v/t39.30808-6/487808939_9761436310568298_1833673725142005689_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=aa7b47&_nc_ohc=f2cZZaLdK74Q7kNvwGhqnyk&_nc_oc=AdkVreN1Ymm4WoI7gaBqFHluCzaUWpYgg0mlvnYgqmuruNTr4QHB1ojYpOQ2lsdbSto&_nc_zt=23&_nc_ht=scontent-cph2-1.xx&_nc_gid=aTvGbvSmA3D8qnYTblxrow&oh=00_AfarhmNaF3hfh6Gf2KsNTSJijmHU8HDj4rdN3NzzALDw7Q&oe=68D3667D" class="w-full h-full object-cover" alt="Slide 3">
+    </div>
+  </div>
+</section>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+let currentIndex = 0;
+
+function showSlide(index) {
+  slides.forEach((slide, i) => {
+    slide.style.opacity = i === index ? '1' : '0';
+  });
+}
+
+function nextSlide() {
+  currentIndex = (currentIndex + 1) % slides.length;
+  showSlide(currentIndex);
+}
+
+// Show first slide initially
+showSlide(currentIndex);
+
+// Rotate slides every 5 seconds
+setInterval(nextSlide, 5000);
+</script>
+
+<!-- Forum Header -->
+<section class="bg-gray-800 text-white py-16">
+<div class="container mx-auto px-6 text-center">
+<h1 class="text-4xl md:text-5xl font-bold mb-6">Brachcreek Bandits Forum</h1>
+<p class="text-xl mb-8">Connect with fellow shooters, share tips, and discuss upcoming events</p>
+</div>
+</section>
+
+<!-- Forum Content -->
+<section class="py-12">
+<div class="container mx-auto px-6">
+  <div class="flex flex-col md:flex-row gap-8">
+    <!-- Main Forum Content -->
+    <div class="md:w-3/4">
+      <!-- Posts can go here -->
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-black text-white py-12">
+<div class="container mx-auto px-6">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+<div>
+<h3 class="text-xl font-bold mb-4">Brachcreek Bandits</h3>
+<p class="text-gray-400">Preserving the spirit of the Old West through Cowboy Action Shooting since 20115.</p>
+</div>
+<div></div>
+<div>
+<h3 class="text-xl font-bold mb-4">Contact</h3>
+<ul class="space-y-2 text-gray-400">
+<li class="flex items-center"><i data-feather="mail" class="mr-2"></i> contact@brachcreekbandits.com</li>
+<li class="flex items-center"><i data-feather="phone" class="mr-2"></i> (555) 123-4567</li>
+<li class="flex items-center"><i data-feather="map-pin" class="mr-2"></i> Brach Creek, TX</li>
+</ul>
+</div>
+<div></div>
+</div>
+</div>
+</footer>
+
+<script>
+AOS.init();
+feather.replace();
+const menuBtn = document.getElementById('menu-btn');
+const mobileMenu = document.getElementById('mobile-menu');
+menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+</script>
+
+</body>
+</html>
