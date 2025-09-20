@@ -7,6 +7,91 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/feather-icons"></script>
 <link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey:"YOUR_API_KEY",
+  authDomain:"YOUR_PROJECT_ID.firebaseapp.com",
+  projectId:"YOUR_PROJECT_ID",
+  storageBucket:"YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId:"YOUR_SENDER_ID",
+  appId:"YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+function updateMenu(name) {
+  const loginMenu = document.getElementById("login-btn");
+  const mobileLoginBtn = document.getElementById("mobile-login-btn");
+  loginMenu.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
+  mobileLoginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
+}
+
+// Restore test account login
+window.addEventListener('DOMContentLoaded', () => {
+  const testUser = localStorage.getItem('testUser');
+  if(testUser) updateMenu(testUser);
+});
+
+// Login functions
+window.login = function() {
+  const email = document.getElementById("login-email").value;
+  const password = document.getElementById("login-password").value;
+
+  if(email === "veenkate0@gmail.com" && password === "tzw85unb") {
+    alert("Logget ind som Kate Veen!");
+    localStorage.setItem('testUser', "Kate Veen");
+    updateMenu("Kate Veen");
+    document.getElementById("login-dropdown").classList.add("hidden");
+    return;
+  }
+
+  signInWithEmailAndPassword(auth, email, password)
+    .then(userCredential => {
+      alert("Logget ind!");
+      updateMenu(userCredential.user.displayName || userCredential.user.email);
+      document.getElementById("login-dropdown").classList.add("hidden");
+    })
+    .catch(err => alert(err.message));
+}
+
+window.mobileLogin = function() {
+  const email = document.getElementById("mobile-login-email").value;
+  const password = document.getElementById("mobile-login-password").value;
+
+  if(email === "veenkate0@gmail.com" && password === "tzw85unb") {
+    alert("Logget ind som Kate Veen!");
+    localStorage.setItem('testUser', "Kate Veen");
+    updateMenu("Kate Veen");
+    document.getElementById("mobile-login-form").classList.add("hidden");
+    return;
+  }
+
+  signInWithEmailAndPassword(auth, email, password)
+    .then(userCredential => {
+      alert("Logget ind!");
+      updateMenu(userCredential.user.displayName || userCredential.user.email);
+      document.getElementById("mobile-login-form").classList.add("hidden");
+    })
+    .catch(err => alert(err.message));
+}
+
+// Firebase persistent login
+onAuthStateChanged(auth, user => {
+  if(user) updateMenu(user.displayName || user.email);
+});
+
+window.logout = function() {
+  localStorage.removeItem('testUser');
+  signOut(auth).then(()=> location.reload()).catch(err=>alert(err.message));
+}
+</script>
+
 <style>
 .nav-link { color: white; }
 .nav-link:hover { color: #d4a017; }
@@ -73,6 +158,23 @@
     <a href="gallery.html" class="nav-link font-medium">Galleri</a>
     <a href="forum.html" class="nav-link font-medium">Forum</a>
     <a href="contact.html" class="nav-link font-medium">Kontakt</a>
+
+    <!-- Login Dropdown -->
+    <div class="relative">
+      <button id="login-btn" class="nav-link font-medium flex items-center space-x-1">
+        <span>Login</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div id="login-dropdown" class="absolute right-0 mt-2 w-64 bg-white text-black shadow-lg p-4 hidden z-50">
+        <h3 class="font-bold mb-2">Login</h3>
+        <input type="email" id="login-email" placeholder="Email" class="w-full mb-2 px-3 py-2 border">
+        <input type="password" id="login-password" placeholder="Password" class="w-full mb-2 px-3 py-2 border">
+        <button onclick="login()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 font-bold mb-2">Login</button>
+        <a href="signup.html" class="text-blue-600 hover:underline block text-center">Opret Konto</a>
+      </div>
+    </div>
   </div>
 
   <button id="menu-btn" class="md:hidden focus:outline-none"><i data-feather="menu"></i></button>
@@ -84,6 +186,14 @@
   <a href="gallery.html" class="block py-2 nav-link">Galleri</a>
   <a href="forum.html" class="block py-2 nav-link">Forum</a>
   <a href="contact.html" class="block py-2 nav-link">Kontakt</a>
+  <a href="#" id="mobile-login-btn" class="block py-2 nav-link">Login</a>
+  <div id="mobile-login-form" class="hidden mt-2">
+    <h3 class="font-bold mb-2">Login</h3>
+    <input type="email" id="mobile-login-email" placeholder="Email" class="w-full mb-2 px-3 py-2 border">
+    <input type="password" id="mobile-login-password" placeholder="Password" class="w-full mb-2 px-3 py-2 border">
+    <button onclick="mobileLogin()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 font-bold mb-2">Login</button>
+    <a href="signup.html" class="text-blue-600 hover:underline block text-center">Opret Konto</a>
+  </div>
 </div>
 </nav>
 
@@ -91,9 +201,7 @@
 <section class="py-16 bg-white">
 <div class="container mx-auto px-6 max-w-5xl">
 <h1 class="western-text text-5xl mb-6 text-center">Galleri</h1>
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 gallery-grid" id="gallery">
-  <!-- Thumbnails inserted with JS -->
-</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 gallery-grid" id="gallery"></div>
 </div>
 
 <!-- Modal -->
@@ -106,12 +214,21 @@
 
 <script>
 feather.replace();
-
 const menuBtn=document.getElementById('menu-btn');
 const mobileMenu=document.getElementById('mobile-menu');
 menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
 
-// ✅ Only galleri images come from your local folder
+// Desktop login dropdown
+const loginBtn = document.getElementById('login-btn');
+const loginDropdown = document.getElementById('login-dropdown');
+loginBtn.addEventListener('click', () => loginDropdown.classList.toggle('hidden'));
+
+// Mobile login dropdown
+const mobileLoginBtn = document.getElementById('mobile-login-btn');
+const mobileLoginForm = document.getElementById('mobile-login-form');
+mobileLoginBtn.addEventListener('click', () => mobileLoginForm.classList.toggle('hidden'));
+
+// Gallery Images
 const images = [
   "gallari/BB1.jpg",
   "gallari/BB2.jpg",
@@ -119,8 +236,6 @@ const images = [
 ];
 
 let currentIndex = 0;
-
-// Populate gallery thumbnails
 const gallery = document.getElementById('gallery');
 images.forEach((src, index) => {
   const img = document.createElement('img');

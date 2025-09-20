@@ -7,6 +7,96 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/feather-icons"></script>
 <link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey:"YOUR_API_KEY",
+  authDomain:"YOUR_PROJECT_ID.firebaseapp.com",
+  projectId:"YOUR_PROJECT_ID",
+  storageBucket:"YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId:"YOUR_SENDER_ID",
+  appId:"YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+// Update menu function
+function updateMenu(name) {
+  const loginMenu = document.getElementById("login-btn");
+  const mobileLoginBtn = document.getElementById("mobile-login-btn");
+  loginMenu.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
+  mobileLoginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
+}
+
+// Check if test account is logged in
+window.addEventListener('DOMContentLoaded', () => {
+  const testUser = localStorage.getItem('testUser');
+  if(testUser) updateMenu(testUser);
+});
+
+// Login function (desktop)
+window.login = function() {
+  const email = document.getElementById("login-email").value;
+  const password = document.getElementById("login-password").value;
+
+  // Test account
+  if(email === "veenkate0@gmail.com" && password === "tzw85unb") {
+    alert("Logget ind som Kate Veen!");
+    localStorage.setItem('testUser', "Kate Veen"); // Save test login
+    updateMenu("Kate Veen");
+    document.getElementById("login-dropdown").classList.add("hidden");
+    return;
+  }
+
+  signInWithEmailAndPassword(auth, email, password)
+    .then(userCredential => {
+      alert("Logget ind!");
+      updateMenu(userCredential.user.displayName || userCredential.user.email);
+      document.getElementById("login-dropdown").classList.add("hidden");
+    })
+    .catch(err => alert(err.message));
+}
+
+// Login function (mobile)
+window.mobileLogin = function() {
+  const email = document.getElementById("mobile-login-email").value;
+  const password = document.getElementById("mobile-login-password").value;
+
+  // Test account
+  if(email === "veenkate0@gmail.com" && password === "tzw85unb") {
+    alert("Logget ind som Kate Veen!");
+    localStorage.setItem('testUser', "Kate Veen"); // Save test login
+    updateMenu("Kate Veen");
+    document.getElementById("mobile-login-form").classList.add("hidden");
+    return;
+  }
+
+  signInWithEmailAndPassword(auth, email, password)
+    .then(userCredential => {
+      alert("Logget ind!");
+      updateMenu(userCredential.user.displayName || userCredential.user.email);
+      document.getElementById("mobile-login-form").classList.add("hidden");
+    })
+    .catch(err => alert(err.message));
+}
+
+// Firebase persistent login
+onAuthStateChanged(auth, user => {
+  if(user) updateMenu(user.displayName || user.email);
+});
+
+// Logout
+window.logout = function() {
+  localStorage.removeItem('testUser'); // Remove test account login
+  signOut(auth).then(()=> location.reload()).catch(err=>alert(err.message));
+}
+</script>
+
 <style>
 .nav-link { color: white; }
 .nav-link:hover { color: #d4a017; }
@@ -29,6 +119,23 @@
     <a href="gallery.html" class="nav-link font-medium">Galleri</a>
     <a href="forum.html" class="nav-link font-medium">Forum</a>
     <a href="contact.html" class="nav-link font-medium">Kontakt</a>
+
+    <!-- Login Dropdown -->
+    <div class="relative">
+      <button id="login-btn" class="nav-link font-medium flex items-center space-x-1">
+        <span>Login</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div id="login-dropdown" class="absolute right-0 mt-2 w-64 bg-white text-black shadow-lg p-4 hidden z-50">
+        <h3 class="font-bold mb-2">Login</h3>
+        <input type="email" id="login-email" placeholder="Email" class="w-full mb-2 px-3 py-2 border">
+        <input type="password" id="login-password" placeholder="Password" class="w-full mb-2 px-3 py-2 border">
+        <button onclick="login()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 font-bold mb-2">Login</button>
+        <a href="signup.html" class="text-blue-600 hover:underline block text-center">Opret Konto</a>
+      </div>
+    </div>
   </div>
 
   <button id="menu-btn" class="md:hidden focus:outline-none"><i data-feather="menu"></i></button>
@@ -40,6 +147,14 @@
   <a href="gallery.html" class="block py-2 nav-link">Galleri</a>
   <a href="forum.html" class="block py-2 nav-link">Forum</a>
   <a href="contact.html" class="block py-2 nav-link">Kontakt</a>
+  <a href="#" id="mobile-login-btn" class="block py-2 nav-link">Login</a>
+  <div id="mobile-login-form" class="hidden mt-2">
+    <h3 class="font-bold mb-2">Login</h3>
+    <input type="email" id="mobile-login-email" placeholder="Email" class="w-full mb-2 px-3 py-2 border">
+    <input type="password" id="mobile-login-password" placeholder="Password" class="w-full mb-2 px-3 py-2 border">
+    <button onclick="mobileLogin()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 font-bold mb-2">Login</button>
+    <a href="signup.html" class="text-blue-600 hover:underline block text-center">Opret Konto</a>
+  </div>
 </div>
 </nav>
 
@@ -47,12 +162,52 @@
 <section class="py-16 bg-white">
 <div class="container mx-auto px-6 max-w-4xl">
 <h1 class="western-text text-5xl mb-6 text-center">Information</h1>
-<p class="text-gray-700 mb-4">
+<p class="text-gray-700 mb-2 text-center">
 Branchcreek Bandits er en skydeklub som blev grundlagt i 2015. Vi skyder disciplinen “Westernskydning” som i USA også er kendt under navnet ”Cowboy Action Shooting”. En unik og dynamisk skydesport, hvor deltagerne konkurrerer med den type våben, der blev brugt i perioden kaldet ”The Wild West” (fra ca. år 1850 til 1890’erne) Der skydes med single action revolvere, lever eller pump action rifler, dobbeltløbede, pump (model 1897) og lever action (model 1883) haglgeværer. ​ Hver skytte har et western navn eller ”alias” som de selv vælger og skydningen foregår i tidstypisk påklædning. Nogle går ”all in” og vælger et komplet autentisk outfit, hvor andre nøjes med cowboy støvler, blue jeans og en cowboy hat. Deltagerne skal på tid skyde sig igennem et ”stage”, som er konstrueret og inspireret af The Wild West. Hvert stage er sat forskelligt op med stålplader i forskellige former, brugt som mål, der giver en klar og høj ”klang”, når de bliver ramt af projektiler. ​ Som regel skal en deltager skifte mellem flere forskellige stillinger under skydningen, hvilket er med til at gøre sporten helt anderles fra de gængse skydediscipliner Sikkerhed er selvfølgelig højeste prioritet på banen. Under hele skydningen er skydebriller påbudt sammen med godkendt høreværn. Alle sikkerhedsregler mht våbenhåndtering bliver strengt overholdt. Efter en prøveskydning kan en skytte stille op til en Western Licens skydning. Dette tager som regel et par timer under vejledning af en godkendt instruktør (Range Officer). Når man har overstået licens skydningen og er blevet godkendt, må man trække revolver fra hylster, skyde på stålmål og ansøge om et haglgevær på SKV licens til western skydning. 
 </p>
-
-</p>
 </div>
+</section>
+
+<!-- Informationsbokse Section -->
+<section class="py-12 bg-gray-100">
+  <div class="container mx-auto px-6">
+    <h2 class="text-3xl font-bold mb-8 text-center western-text">Læs Mere Om ...</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+ <!-- Kort 1 -->
+<a href="about.html" class="block bg-white shadow-lg rounded-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2">
+  <div class="overflow-hidden">
+    <img src="https://assets.basspro.com/image/upload/f_auto/dpr_2.0/t_Prod_PLPThumb/c_scale,w_220/v1/ProductImages/450/master1_101637840_main?_a=DAJHqpDaZAAA" 
+         class="w-full transform scale-90 transition-transform duration-300 hover:scale-100 mx-auto object-cover">
+  </div>
+  <div class="p-6">
+    <h3 class="text-xl font-bold mb-2">Western arsenalet</h3>
+    <p class="text-gray-700">Lær mere om hvilke våben der bliver brugt/kan bruges i CAS sporten.</p>
+  </div>
+</a>
+
+
+
+      <!-- Kort 2 -->
+      <a href="events.html" class="block bg-white shadow-lg rounded-lg overflow-hidden transform hover:-translate-y-2 transition-all duration-300">
+        <img src="https://scontent-cph2-1.xx.fbcdn.net/v/t39.30808-6/465272813_8885675894811015_9002022723692025362_n.jpg" alt="Begivenheder" class="w-full h-48 object-cover">
+        <div class="p-6">
+          <h3 class="text-xl font-bold mb-2">Begivenheder</h3>
+          <p class="text-gray-700">Se kommende skydninger, turneringer og sociale arrangementer.</p>
+        </div>
+      </a>
+
+      <!-- Kort 3 -->
+      <a href="gallery.html" class="block bg-white shadow-lg rounded-lg overflow-hidden transform hover:-translate-y-2 transition-all duration-300">
+        <img src="https://scontent-cph2-1.xx.fbcdn.net/v/t39.30808-6/487808939_9761436310568298_1833673725142005689_n.jpg" alt="Galleri" class="w-full h-48 object-cover">
+        <div class="p-6">
+          <h3 class="text-xl font-bold mb-2">Galleri</h3>
+          <p class="text-gray-700">Se billeder fra vores aktiviteter og events gennem årene.</p>
+        </div>
+      </a>
+
+    </div>
+  </div>
 </section>
 
 <!-- Footer -->
@@ -70,7 +225,6 @@ Branchcreek Bandits er en skydeklub som blev grundlagt i 2015. Vi skyder discipl
 <li class="flex items-center"><i data-feather="mail" class="mr-2"></i> contact@brachcreekbandits.com</li>
 <li class="flex items-center"><i data-feather="phone" class="mr-2"></i> (555) 123-4567</li>
 <li class="flex items-center"><i data-feather="map-pin" class="mr-2"></i> Djurske Sortkudtsskytter, Næsgårdsvej 3, 8600 Grenaa</li>
-</ul></li>
 </ul>
 </div>
 <div></div>
@@ -83,6 +237,16 @@ feather.replace();
 const menuBtn = document.getElementById('menu-btn');
 const mobileMenu = document.getElementById('mobile-menu');
 menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+
+// Desktop login dropdown
+const loginBtn = document.getElementById('login-btn');
+const loginDropdown = document.getElementById('login-dropdown');
+loginBtn.addEventListener('click', () => loginDropdown.classList.toggle('hidden'));
+
+// Mobile login dropdown
+const mobileLoginBtn = document.getElementById('mobile-login-btn');
+const mobileLoginForm = document.getElementById('mobile-login-form');
+mobileLoginBtn.addEventListener('click', () => mobileLoginForm.classList.toggle('hidden'));
 </script>
 
 </body>

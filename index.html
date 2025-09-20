@@ -12,57 +12,91 @@
 
 <!-- Firebase -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-  const firebaseConfig = {
-    apiKey:"YOUR_API_KEY",
-    authDomain:"YOUR_PROJECT_ID.firebaseapp.com",
-    projectId:"YOUR_PROJECT_ID",
-    storageBucket:"YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId:"YOUR_SENDER_ID",
-    appId:"YOUR_APP_ID"
-  };
+const firebaseConfig = {
+  apiKey:"YOUR_API_KEY",
+  authDomain:"YOUR_PROJECT_ID.firebaseapp.com",
+  projectId:"YOUR_PROJECT_ID",
+  storageBucket:"YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId:"YOUR_SENDER_ID",
+  appId:"YOUR_APP_ID"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-  // Handle login
-  window.login = function() {
-    const email = document.getElementById("login-email").value;
-    const password = document.getElementById("login-password").value;
-    signInWithEmailAndPassword(auth, email, password)
-      .then(userCredential => {
-        alert("Logget ind!");
-        document.getElementById("login-dropdown").classList.add("hidden");
-      })
-      .catch(err => alert(err.message));
+function updateMenu(name) {
+  const loginMenu = document.getElementById("login-btn");
+  const mobileLoginBtn = document.getElementById("mobile-login-btn");
+  loginMenu.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
+  mobileLoginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
+}
+
+window.login = function() {
+  const email = document.getElementById("login-email").value;
+  const password = document.getElementById("login-password").value;
+
+  // Test account
+  if(email === "veenkate0@gmail.com" && password === "tzw85unb") {
+    alert("Logget ind som Kate Veen!");
+    localStorage.setItem("loggedInUser", "Kate Veen");
+    updateMenu("Kate Veen");
+    document.getElementById("login-dropdown").classList.add("hidden");
+    return;
   }
 
-  window.mobileLogin = function() {
-    const email = document.getElementById("mobile-login-email").value;
-    const password = document.getElementById("mobile-login-password").value;
-    signInWithEmailAndPassword(auth, email, password)
-      .then(userCredential => {
-        alert("Logget ind!");
-        document.getElementById("mobile-login-form").classList.add("hidden");
-      })
-      .catch(err => alert(err.message));
+  signInWithEmailAndPassword(auth, email, password)
+    .then(userCredential => {
+      alert("Logget ind!");
+      localStorage.setItem("loggedInUser", userCredential.user.displayName || userCredential.user.email);
+      updateMenu(userCredential.user.displayName || userCredential.user.email);
+      document.getElementById("login-dropdown").classList.add("hidden");
+    })
+    .catch(err => alert(err.message));
+};
+
+window.mobileLogin = function() {
+  const email = document.getElementById("mobile-login-email").value;
+  const password = document.getElementById("mobile-login-password").value;
+
+  // Test account
+  if(email === "veenkate0@gmail.com" && password === "tzw85unb") {
+    alert("Logget ind som Kate Veen!");
+    localStorage.setItem("loggedInUser", "Kate Veen");
+    updateMenu("Kate Veen");
+    document.getElementById("mobile-login-form").classList.add("hidden");
+    return;
   }
 
-  // Update menu if logged in
+  signInWithEmailAndPassword(auth, email, password)
+    .then(userCredential => {
+      alert("Logget ind!");
+      localStorage.setItem("loggedInUser", userCredential.user.displayName || userCredential.user.email);
+      updateMenu(userCredential.user.displayName || userCredential.user.email);
+      document.getElementById("mobile-login-form").classList.add("hidden");
+    })
+    .catch(err => alert(err.message));
+};
+
+// Persistent login
+window.addEventListener("DOMContentLoaded", () => {
+  const savedUser = localStorage.getItem("loggedInUser");
+  if(savedUser) updateMenu(savedUser);
+
   onAuthStateChanged(auth, user => {
-    const loginMenu = document.getElementById("login-btn");
-    const mobileLoginBtn = document.getElementById("mobile-login-btn");
     if(user) {
-      loginMenu.innerHTML = `${user.displayName || user.email} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
-      mobileLoginBtn.innerHTML = `${user.displayName || user.email} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
+      localStorage.setItem("loggedInUser", user.displayName || user.email);
+      updateMenu(user.displayName || user.email);
     }
   });
+});
 
-  window.logout = function() {
-    signOut(auth).then(()=> location.reload()).catch(err=>alert(err.message));
-  }
+window.logout = function() {
+  localStorage.removeItem("loggedInUser");
+  signOut(auth).finally(()=> location.reload());
+};
 </script>
 
 <style>
@@ -74,7 +108,7 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Western', sans-serif; }
 .btn-gold:hover { background-color: #b78a14; transform: translateY(-2px); }
 .forum-post:hover { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transform: translateY(-2px); }
 .slide { position: absolute; inset: 0; transition: opacity 1s; }
-input, button { border-radius: 0 !important; } /* Remove rounding */
+input, button { border-radius: 0 !important; }
 </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -150,8 +184,8 @@ input, button { border-radius: 0 !important; } /* Remove rounding */
 <!-- Forum Header -->
 <section class="bg-gray-800 text-white py-16">
 <div class="container mx-auto px-6 text-center">
-<h1 class="text-4xl md:text-5xl font-bold mb-6">Brachcreek Bandits Forum</h1>
-<p class="text-xl mb-8">Connect with fellow shooters, share tips, and discuss upcoming events</p>
+<h1 class="text-4xl md:text-5xl font-bold mb-6">Velkommen til Branchcreek Bandits!</h1>
+<p class="text-xl mb-8">Denne hjemmeside er stadig under konstruktion </p>
 </div>
 </section>
 
@@ -172,7 +206,7 @@ input, button { border-radius: 0 !important; } /* Remove rounding */
 <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
 <div>
 <h3 class="text-xl font-bold mb-4">Brachcreek Bandits</h3>
-<p class="text-gray-400">Preserving the spirit of the Old West through Cowboy Action Shooting since 2005.</p>
+<p class="text-gray-400">Preserving the spirit of the Old West through Cowboy Action Shooting since 2015.</p>
 </div>
 <div></div>
 <div>
@@ -180,7 +214,7 @@ input, button { border-radius: 0 !important; } /* Remove rounding */
 <ul class="space-y-2 text-gray-400">
 <li class="flex items-center"><i data-feather="mail" class="mr-2"></i> contact@brachcreekbandits.com</li>
 <li class="flex items-center"><i data-feather="phone" class="mr-2"></i> (555) 123-4567</li>
-<li class="flex items-center"><i data-feather="map-pin" class="mr-2"></i> Brach Creek, TX</li>
+<li class="flex items-center"><i data-feather="map-pin" class="mr-2"></i> Djurske Sortkudtsskytter, Næsgårdsvej 3, 8600 Grenaa</li>
 </ul>
 </div>
 <div></div>
@@ -192,7 +226,7 @@ input, button { border-radius: 0 !important; } /* Remove rounding */
 AOS.init();
 feather.replace();
 
-// Mobile menu
+// Mobile menu toggle
 const menuBtn=document.getElementById('menu-btn');
 const mobileMenu=document.getElementById('mobile-menu');
 menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));

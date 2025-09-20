@@ -1,131 +1,221 @@
 <!DOCTYPE html>
 <html lang="da">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Brachcreek Bandits Forum</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brachcreek Bandits Forum - Threads</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+<link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"></script>
-
-  <style>
-    .nav-link:hover { color: #d4a017; }
-  </style>
+<style>
+  .nav-link:hover { color: #d4a017; }
+  .western-text { font-family: 'Western', sans-serif; }
+</style>
 </head>
 <body class="bg-gray-100 font-sans">
 
-  <!-- Navigation -->
+<!-- Navigation -->
 <nav class="bg-black text-white shadow-lg">
-<div class="container mx-auto px-8 py-8 flex justify-between items-center">
-  <a href="index.html" class="flex items-center space-x-4">
-    <img src="https://scontent-cph2-1.xx.fbcdn.net/v/t39.30808-6/486356878_9742857432426186_6599031023968483380_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=2285d6&_nc_ohc=pLOCdCS-5B8Q7kNvwFTER7R&_nc_oc=AdnR99wp-pEKaV-6THZCiEU6b8Ny9BSt3ipXXV-YQvmiTjQn5NavYPNTrtQthElCT-I&_nc_zt=23&_nc_ht=scontent-cph2-1.xx&_nc_gid=JOcxiVtD0Utv27QeP2o4BQ&oh=00_AfbkRbXivYhEtim7EZ9ChOIeasZx-i5jNdi-RDn3FaUTMA&oe=68D33031" alt="Logo" class="h-20 w-20 md:h-40 md:w-40 rounded-full">
-    <span class="western-text text-3xl md:text-5xl">Branchcreek Bandits</span>
-  </a>
-      <div class="hidden md:flex items-center space-x-8">
-        <a href="about.html" class="nav-link font-medium">Information</a>
-        <a href="events.html" class="nav-link font-medium">Begivenheder</a>
-        <a href="gallery.html" class="nav-link font-medium">Galleri</a>
-        <a href="forum.html" class="nav-link font-medium font-bold text-yellow-400">Forum</a>
-        <a href="contact.html" class="nav-link font-medium">Kontakt</a>
-      </div>
-      <button class="md:hidden focus:outline-none">
-        <i data-feather="menu"></i>
-      </button>
-    </div>
-  </nav>
+  <div class="container mx-auto px-8 py-8 flex justify-between items-center">
+    <a href="index.html" class="flex items-center space-x-4">
+      <span class="western-text text-3xl md:text-5xl">Branchcreek Bandits</span>
+    </a>
 
-  <!-- Forum Header -->
-  <section class="bg-gray-800 text-white py-16">
-    <div class="container mx-auto px-6 text-center">
-      <h1 class="text-4xl md:text-5xl font-bold mb-6">Brachcreek Bandits Forum</h1>
-      <p class="text-xl mb-8">Connect with fellow shooters, share tips, and discuss upcoming events</p>
-      <div id="user-info" class="text-lg mb-4"></div>
-      <button id="logout-btn" onclick="logout()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg hidden">
-        Log ud
-      </button>
-      <p class="mt-4" id="login-link" style="display:none;">
-        <a href="login.html" class="underline text-yellow-400">Klik her for at logge ind eller oprette en konto</a>
-      </p>
-    </div>
-  </section>
+    <div class="hidden md:flex items-center space-x-8">
+      <a href="about.html" class="nav-link font-medium">Information</a>
+      <a href="events.html" class="nav-link font-medium">Begivenheder</a>
+      <a href="gallery.html" class="nav-link font-medium">Galleri</a>
+      <a href="forum.html" class="nav-link font-medium font-bold text-yellow-400">Forum</a>
+      <a href="contact.html" class="nav-link font-medium">Kontakt</a>
 
-  <!-- Forum Content -->
-  <section class="py-12">
-    <div class="container mx-auto px-6">
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold mb-4">Forum Topics</h2>
-        <p class="text-gray-700">
-          Dette er hvor forumindholdet vil blive vist, når vi tilføjer funktioner til at oprette indlæg og kommentarer.
-        </p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="bg-black text-white py-12">
-    <div class="container mx-auto px-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <div>
-          <h3 class="text-xl font-bold mb-4">Brachcreek Bandits</h3>
-          <p class="text-gray-400">Preserving the spirit of the Old West through Cowboy Action Shooting since 2005.</p>
+      <div class="relative">
+        <button id="login-btn" class="nav-link font-medium flex items-center space-x-1">
+          <span>Login</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div id="login-dropdown" class="absolute right-0 mt-2 w-64 bg-white text-black shadow-lg p-4 hidden z-50">
+          <h3 class="font-bold mb-2">Login</h3>
+          <input type="email" id="login-email" placeholder="Email" class="w-full mb-2 px-3 py-2 border">
+          <input type="password" id="login-password" placeholder="Password" class="w-full mb-2 px-3 py-2 border">
+          <button onclick="login(document.getElementById('login-email').value, document.getElementById('login-password').value)" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 font-bold mb-2">Login</button>
+          <a href="signup.html" class="text-blue-600 hover:underline block text-center">Opret Konto</a>
         </div>
-        <div></div>
-        <div>
-          <h3 class="text-xl font-bold mb-4">Contact</h3>
-          <ul class="space-y-2 text-gray-400">
-            <li class="flex items-center"><i data-feather="mail" class="mr-2"></i> contact@brachcreekbandits.com</li>
-            <li class="flex items-center"><i data-feather="phone" class="mr-2"></i> (555) 123-4567</li>
-            <li class="flex items-center"><i data-feather="map-pin" class="mr-2"></i> Brach Creek, TX</li>
-          </ul>
-        </div>
-        <div></div>
       </div>
+
+      <button id="logout-btn" onclick="logout()" class="ml-2 text-red-500 font-bold hidden">Log ud</button>
     </div>
-  </footer>
 
-  <script>
-    AOS.init();
-    feather.replace();
+    <button id="menu-btn" class="md:hidden focus:outline-none"><i data-feather="menu"></i></button>
+  </div>
 
-    // Firebase config (replace with your real keys)
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-    };
+  <div id="mobile-menu" class="hidden md:hidden bg-black text-white px-8 pb-6">
+    <a href="about.html" class="block py-2 nav-link">Information</a>
+    <a href="events.html" class="block py-2 nav-link">Begivenheder</a>
+    <a href="gallery.html" class="block py-2 nav-link">Galleri</a>
+    <a href="forum.html" class="block py-2 nav-link font-bold text-yellow-400">Forum</a>
+    <a href="contact.html" class="block py-2 nav-link">Kontakt</a>
+  </div>
+</nav>
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
+<!-- Forum Header -->
+<section class="bg-gray-800 text-white py-16">
+  <div class="container mx-auto px-6 text-center">
+    <h1 class="western-text text-4xl md:text-5xl font-bold mb-6">Forum Threads</h1>
+    <p class="text-xl mb-8">Browse and create threads to discuss Western Shooting and events.</p>
+    <div id="user-info" class="text-lg mb-4"></div>
+    <button id="new-thread-btn" class="bg-yellow-600 hover:bg-yellow-700 py-2 px-4 font-bold rounded hidden mb-4">Opret Ny Tråd</button>
+  </div>
+</section>
 
-    const userInfo = document.getElementById("user-info");
-    const logoutBtn = document.getElementById("logout-btn");
-    const loginLink = document.getElementById("login-link");
+<!-- Threads Section -->
+<section class="py-12">
+  <div class="container mx-auto px-6 max-w-4xl">
+    <div id="thread-form" class="hidden mb-6 bg-white p-6 rounded-lg shadow">
+      <h2 class="text-2xl font-bold mb-4">Ny Tråd</h2>
+      <input id="thread-title" class="w-full mb-2 px-3 py-2 border" placeholder="Tråd Titel">
+      <textarea id="thread-body" class="w-full mb-2 px-3 py-2 border" placeholder="Indledende indlæg"></textarea>
+      <button onclick="createThread()" class="bg-yellow-600 hover:bg-yellow-700 py-2 px-4 font-bold text-white rounded">Opret Tråd</button>
+    </div>
 
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        // User is logged in
-        userInfo.innerText = `Velkommen, ${user.email}`;
-        logoutBtn.classList.remove("hidden");
-        loginLink.style.display = "none";
-      } else {
-        // User is NOT logged in
-        userInfo.innerText = "Hej! Vi kan se, at du ikke er logget ind. For at få adgang til forumet skal du oprette en konto.";
-        logoutBtn.classList.add("hidden");
-        loginLink.style.display = "block";
-      }
-    });
+    <div id="threads-container"></div>
+  </div>
+</section>
 
-    function logout() {
-      auth.signOut().then(() => {
-        window.location.reload();
-      });
-    }
-  </script>
+<!-- Footer -->
+<footer class="bg-black text-white py-12">
+  <div class="container mx-auto px-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div>
+        <h3 class="text-xl font-bold mb-4">Brachcreek Bandits</h3>
+        <p class="text-gray-400">Preserving the spirit of the Old West through Cowboy Action Shooting since 2005.</p>
+      </div>
+      <div></div>
+      <div>
+        <h3 class="text-xl font-bold mb-4">Contact</h3>
+        <ul class="space-y-2 text-gray-400">
+          <li class="flex items-center"><i data-feather="mail" class="mr-2"></i> contact@brachcreekbandits.com</li>
+          <li class="flex items-center"><i data-feather="phone" class="mr-2"></i> (555) 123-4567</li>
+          <li class="flex items-center"><i data-feather="map-pin" class="mr-2"></i> Brach Creek, TX</li>
+        </ul>
+      </div>
+      <div></div>
+    </div>
+  </div>
+</footer>
 
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+// Firebase
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Elements
+const userInfo = document.getElementById("user-info");
+const logoutBtn = document.getElementById("logout-btn");
+const newThreadBtn = document.getElementById("new-thread-btn");
+const threadForm = document.getElementById("thread-form");
+const threadsContainer = document.getElementById("threads-container");
+
+// Login function
+window.login = function(email, password) {
+  if(email === "veenkate0@gmail.com" && password === "tzw85unb") {
+    updateMenu("Kate Veen");
+    return;
+  }
+  if(firebaseConfig.apiKey !== "YOUR_API_KEY") {
+    signInWithEmailAndPassword(auth, email, password)
+      .then(userCredential => updateMenu(userCredential.user.displayName || userCredential.user.email))
+      .catch(err => alert("Firebase login failed: " + err.message));
+  } else {
+    alert("Firebase not configured. Kate Veen test login works for testing.");
+  }
+}
+
+function updateMenu(name) {
+  userInfo.innerText = `Velkommen, ${name}`;
+  logoutBtn.classList.remove("hidden");
+  newThreadBtn.classList.remove("hidden");
+  threadForm.classList.add("hidden");
+}
+
+// Logout
+window.logout = function() {
+  userInfo.innerText = "";
+  logoutBtn.classList.add("hidden");
+  newThreadBtn.classList.add("hidden");
+  threadForm.classList.add("hidden");
+  if(firebaseConfig.apiKey !== "YOUR_API_KEY") signOut(auth).catch(err => console.error(err.message));
+}
+
+// Persistent login
+onAuthStateChanged(auth, user => {
+  if(user) updateMenu(user.displayName || user.email);
+});
+
+// Show thread form
+newThreadBtn.addEventListener("click", () => {
+  threadForm.classList.toggle("hidden");
+});
+
+// Create thread
+window.createThread = async function() {
+  const title = document.getElementById("thread-title").value.trim();
+  const body = document.getElementById("thread-body").value.trim();
+  if(!title || !body) return alert("Titel og indhold kræves");
+
+  await addDoc(collection(db, "threads"), {
+    title,
+    body,
+    author: auth.currentUser ? (auth.currentUser.displayName || auth.currentUser.email) : "Kate Veen",
+    timestamp: serverTimestamp()
+  });
+
+  document.getElementById("thread-title").value = "";
+  document.getElementById("thread-body").value = "";
+  threadForm.classList.add("hidden");
+}
+
+// Load threads
+const q = query(collection(db, "threads"), orderBy("timestamp", "desc"));
+onSnapshot(q, snapshot => {
+  threadsContainer.innerHTML = "";
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    const div = document.createElement("div");
+    div.className = "bg-white p-4 rounded-lg shadow mb-4";
+    div.innerHTML = `
+      <h3 class="font-bold text-xl">${data.title}</h3>
+      <p class="text-gray-700 mb-1">${data.body}</p>
+      <p class="text-gray-400 text-sm">By ${data.author}</p>
+      <a href="thread.html?id=${doc.id}" class="text-blue-600 hover:underline">Se tråd & svar</a>
+    `;
+    threadsContainer.appendChild(div);
+  });
+});
+</script>
+
+<script>
+const menuBtn = document.getElementById('menu-btn');
+const mobileMenu = document.getElementById('mobile-menu');
+menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+
+const loginBtn = document.getElementById('login-btn');
+const loginDropdown = document.getElementById('login-dropdown');
+loginBtn.addEventListener('click', () => loginDropdown.classList.toggle('hidden'));
+
+feather.replace();
+</script>
 </body>
 </html>
