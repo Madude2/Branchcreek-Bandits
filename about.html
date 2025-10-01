@@ -26,8 +26,7 @@
   <div class="container mx-auto px-6 max-w-4xl">
     <h1 class="western-text text-5xl mb-6 text-center">Information</h1>
     <p class="text-gray-700 leading-relaxed">
-      Branchcreek Bandits er en skydeklub som blev grundlagt i 2015. Vi skyder disciplinen “Westernskydning” som i USA også er kendt under navnet ”Cowboy Action Shooting”. En unik og dynamisk skydesport, hvor deltagerne konkurrerer med den type våben, der blev brugt i perioden kaldet ”The Wild West” (fra ca. år 1850 til 1890’erne) Der skydes med single action revolvere, lever eller pump action rifler, dobbeltløbede, pump (model 1897) og lever action (model 1883) haglgeværer. ​ Hver skytte har et western navn eller ”alias” som de selv vælger og skydningen foregår i tidstypisk påklædning. Nogle går ”all in” og vælger et komplet autentisk outfit, hvor andre nøjes med cowboy støvler, blue jeans og en cowboy hat. Deltagerne skal på tid skyde sig igennem et ”stage”, som er konstrueret og inspireret af The Wild West. Hvert stage er sat forskelligt op med stålplader i forskellige former, brugt som mål, der giver en klar og høj ”klang”, når de bliver ramt af projektiler. ​ Som regel skal en deltager skifte mellem flere forskellige stillinger under skydningen, hvilket er med til at gøre sporten helt anderles fra de gængse skydediscipliner Sikkerhed er selvfølgelig højeste prioritet på banen. Under hele skydningen er skydebriller påbudt sammen med godkendt høreværn. Alle sikkerhedsregler mht våbenhåndtering bliver strengt overholdt. Efter en prøveskydning kan en skytte stille op til en Western Licens skydning. Dette tager som regel et par timer under vejledning af en godkendt instruktør (Range Officer). Når man har overstået licens skydningen og er blevet godkendt, må man trække revolver fra hylster, skyde på stålmål og ansøge om et haglgevær på SKV licens til western skydning.
-    </p>
+      Branchcreek Bandits er en skydeklub som blev grundlagt i 2015. Vi skyder disciplinen “Westernskydning” som i USA også er kendt under navnet ”Cowboy Action Shooting”. En unik og dynamisk skydesport, hvor deltagerne konkurrerer med den type våben, der blev brugt i perioden kaldet ”The Wild West” (fra ca. år 1850 til 1890’erne) Der skydes med single action revolvere, lever eller pump action rifler, dobbeltløbede, pump (model 1897) og lever action (model 1883) haglgeværer. ​ Hver skytte har et western navn eller ”alias” som de selv vælger og skydningen foregår i tidstypisk påklædning. Nogle går ”all in” og vælger et komplet autentisk outfit, hvor andre nøjes med cowboy støvler, blue jeans og en cowboy hat. Deltagerne skal på tid skyde sig igennem et ”stage”, som er konstrueret og inspireret af The Wild West. Hvert stage er sat forskelligt op med stålplader i forskellige former, brugt som mål, der giver en klar og høj ”klang”, når de bliver ramt af projektiler. ​ Som regel skal en deltager skifte mellem flere forskellige stillinger under skydningen, hvilket er med til at gøre sporten helt anderles fra de gængse skydediscipliner Sikkerhed er selvfølgelig højeste prioritet på banen. Under hele skydningen er skydebriller påbudt sammen med godkendt høreværn. Alle sikkerhedsregler mht våbenhåndtering bliver strengt overholdt. Efter en prøveskydning kan en skytte stille op til en Western Licens skydning. Dette tager som regel et par timer under vejledning af en godkendt instruktør (Range Officer). Når man har overstået licens skydningen og er blevet godkendt, må man trække revolver fra hylster, skyde på stålmål og ansøge om et haglgevær på SKV licens til western skydning.  </p>
   </div>
 </section>
 
@@ -36,7 +35,6 @@
   <div class="container mx-auto px-6">
     <h2 class="text-3xl font-bold mb-8 text-center western-text">Læs Mere Om ...</h2>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-
       <a href="about.html" class="block bg-white shadow-lg rounded-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2">
         <img src="https://assets.basspro.com/image/upload/f_auto/dpr_2.0/t_Prod_PLPThumb/c_scale,w_220/v1/ProductImages/450/master1_101637840_main?_a=DAJHqpDaZAAA" class="w-full object-cover">
         <div class="p-6">
@@ -72,36 +70,33 @@
 <script>
 feather.replace();
 
-// Include HTML
+// Load HTML fragments
 function includeHTML(file, elementId, callback){
-  fetch(file)
-    .then(res => res.text())
-    .then(data => {
-      document.getElementById(elementId).innerHTML = data;
-      if(callback) callback();
-      feather.replace();
-    })
-    .catch(err => console.error(err));
+  fetch(file).then(res=>res.text())
+             .then(data=>{ document.getElementById(elementId).innerHTML = data; if(callback) callback(); feather.replace(); })
+             .catch(err=>console.error(err));
 }
 
-// Load Navbar + Footer
-includeHTML("nav.html", "navbar");
-includeHTML("footer.html", "footer");
+// Load navbar first, then setup auth
+includeHTML("nav.html","navbar",()=>{
+  setupAuth(); // Initialize Firebase auth after navbar exists
 
-// Menu toggles
-document.addEventListener('DOMContentLoaded', () => {
-  const menuBtn = document.getElementById('menu-btn');
-  const mobileMenu = document.getElementById('mobile-menu');
-  if(menuBtn) menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+  // Mobile menu toggle
+  const menuBtn=document.getElementById('menu-btn');
+  const mobileMenu=document.getElementById('mobile-menu');
+  if(menuBtn && mobileMenu) menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
 
-  const loginBtn = document.getElementById('login-btn');
-  const loginDropdown = document.getElementById('login-dropdown');
-  if(loginBtn) loginBtn.addEventListener('click', () => loginDropdown.classList.toggle('hidden'));
+  // Login dropdown toggle
+  const loginBtn=document.getElementById('login-btn');
+  const loginDropdown=document.getElementById('login-dropdown');
+  if(loginBtn && loginDropdown) loginBtn.addEventListener('click',()=>loginDropdown.classList.toggle('hidden'));
 
-  const mobileLoginBtn = document.getElementById('mobile-login-btn');
-  const mobileLoginForm = document.getElementById('mobile-login-form');
-  if(mobileLoginBtn) mobileLoginBtn.addEventListener('click', () => mobileLoginForm.classList.toggle('hidden'));
+  const mobileLoginBtn=document.getElementById('mobile-login-btn');
+  const mobileLoginForm=document.getElementById('mobile-login-form');
+  if(mobileLoginBtn && mobileLoginForm) mobileLoginBtn.addEventListener('click',()=>mobileLoginForm.classList.toggle('hidden'));
 });
+
+includeHTML("footer.html","footer");
 </script>
 
 <!-- Firebase Auth -->
