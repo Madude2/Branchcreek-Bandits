@@ -13,38 +13,34 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Western', sans-serif; }
 input, button { border-radius: 0 !important; }
 .btn-gold { background-color: #d4a017; transition: all 0.3s ease; }
 .btn-gold:hover { background-color: #b78a14; transform: translateY(-2px); }
-
 a.back-home { display: inline-block; margin-top: 15px; color: #4285F4; text-decoration: underline; }
 </style>
 </head>
-<body class="bg-gray-100 font-sans flex flex-col min-h-screen">
+<body class="bg-gray-100 font-sans">
 
 <!-- Dynamic Navbar -->
 <div id="navbar"></div>
 
-<!-- Main Content -->
-<div class="flex-grow">
-  <section class="py-20">
-    <div class="container mx-auto px-6 max-w-lg bg-white shadow-lg p-8">
-      <h1 class="text-3xl font-bold mb-6 text-center western-text">Opret Konto</h1>
+<section class="py-20">
+  <div class="container mx-auto px-6 max-w-lg bg-white shadow-lg p-8">
+    <h1 class="text-3xl font-bold mb-6 text-center western-text">Opret Konto</h1>
 
-      <div id="signup-form">
-        <input type="text" id="signup-name" placeholder="Navn" class="w-full mb-3 px-3 py-2 border">
-        <input type="email" id="signup-email" placeholder="Email" class="w-full mb-3 px-3 py-2 border">
-        <input type="password" id="signup-password" placeholder="Password" class="w-full mb-3 px-3 py-2 border">
-        <button onclick="signup()" class="w-full btn-gold py-2 font-bold mb-3">Opret Konto</button>
-
-        <p class="text-center text-sm">Har du allerede en konto? <a href="index.html" class="text-blue-600 hover:underline">Login her</a></p>
-      </div>
-
-      <div id="signup-success" class="hidden text-center">
-        <h2 class="text-2xl font-bold mb-3 western-text">Tillykke! Konto oprettet.</h2>
-        <p>En bekræftelses-email er blevet sendt til din e-mail. Tak for at registrere dig!</p>
-        <a href="index.html" class="back-home">Gå tilbage til forsiden</a>
-      </div>
+    <div id="signup-form">
+      <input type="text" id="signup-name" placeholder="Navn" class="w-full mb-3 px-3 py-2 border">
+      <input type="email" id="signup-email" placeholder="Email" class="w-full mb-3 px-3 py-2 border">
+      <input type="password" id="signup-password" placeholder="Password" class="w-full mb-3 px-3 py-2 border">
+      <button onclick="signup()" class="w-full btn-gold py-2 font-bold mb-3">Opret Konto</button>
+      
+      <p class="text-center text-sm">Har du allerede en konto? <a href="index.html" class="text-blue-600 hover:underline">Login her</a></p>
     </div>
-  </section>
-</div>
+
+    <div id="signup-success" class="hidden text-center">
+      <h2 class="text-2xl font-bold mb-3 western-text">Tillykke! Konto oprettet.</h2>
+      <p>En bekræftelses-email er blevet sendt til din e-mail. Tak for at registrere dig!</p>
+      <a href="index.html" class="back-home">Gå tilbage til forsiden</a>
+    </div>
+  </div>
+</section>
 
 <!-- Dynamic Footer -->
 <div id="footer"></div>
@@ -70,7 +66,57 @@ includeHTML("footer.html", "footer");
 </script>
 
 <!-- Firebase Auth -->
-<script type="module" src="js/signup-auth.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
+  authDomain: "branchcreek-bandits.firebaseapp.com",
+  projectId: "branchcreek-bandits",
+  storageBucket: "branchcreek-bandits.firebasestorage.app",
+  messagingSenderId: "828305260971",
+  appId: "1:828305260971:web:6c3601fc97601a9621d2ee",
+  measurementId: "G-550TRD5SQ3"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+window.signup = function() {
+  const name = document.getElementById("signup-name").value;
+  const email = document.getElementById("signup-email").value;
+  const password = document.getElementById("signup-password").value;
+
+  if (!name || !email || !password) {
+    alert("Udfyld venligst alle felter.");
+    return;
+  }
+
+  createUserWithEmailAndPassword(auth, email, password)
+    .then(userCredential => {
+      // Set displayName
+      return updateProfile(userCredential.user, { displayName: name })
+        .then(() => {
+          // Update navbar if it exists
+          const loginBtn = document.getElementById("login-btn");
+          const mobileLoginBtn = document.getElementById("mobile-login-btn");
+          if (loginBtn) loginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
+          if (mobileLoginBtn) mobileLoginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
+
+          // Show success message
+          document.getElementById("signup-form").classList.add("hidden");
+          document.getElementById("signup-success").classList.remove("hidden");
+        });
+    })
+    .catch(err => alert(err.message));
+};
+
+// Optional logout function
+window.logout = function() {
+  auth.signOut().then(() => location.reload()).catch(err => alert(err.message));
+};
+</script>
 
 </body>
 </html>
