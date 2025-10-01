@@ -80,50 +80,77 @@ window.setupAuth = function(){
     if(mobileLoginBtn) mobileLoginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
   }
 
+  function unlockForum(){
+    document.getElementById("forum-content").style.display="block";
+    document.getElementById("login-warning").style.display="none";
+  }
+
+  function lockForum(){
+    document.getElementById("forum-content").style.display="none";
+    document.getElementById("login-warning").style.display="block";
+  }
+
+  // Desktop login
   window.login = function(){
     const email = document.getElementById("login-email").value;
     const password = document.getElementById("login-password").value;
 
     signInWithEmailAndPassword(auth,email,password)
       .then(userCredential=>{
-        updateMenu(userCredential.user.displayName||userCredential.user.email);
+        const user = userCredential.user;
+        if(!user.emailVerified){
+          alert("Du skal bekræfte din e-mail før du kan bruge forum.");
+          signOut(auth);
+          lockForum();
+          return;
+        }
+        updateMenu(user.displayName||user.email);
         document.getElementById("login-dropdown").classList.add("hidden");
         unlockForum();
       })
       .catch(err=>alert(err.message));
   }
 
+  // Mobile login
   window.mobileLogin = function(){
     const email = document.getElementById("mobile-login-email").value;
     const password = document.getElementById("mobile-login-password").value;
 
     signInWithEmailAndPassword(auth,email,password)
       .then(userCredential=>{
-        updateMenu(userCredential.user.displayName||userCredential.user.email);
+        const user = userCredential.user;
+        if(!user.emailVerified){
+          alert("Du skal bekræfte din e-mail før du kan bruge forum.");
+          signOut(auth);
+          lockForum();
+          return;
+        }
+        updateMenu(user.displayName||user.email);
         document.getElementById("mobile-login-form").classList.add("hidden");
         unlockForum();
       })
       .catch(err=>alert(err.message));
   }
 
+  // Page-level persistent login + email verification
   onAuthStateChanged(auth,user=>{
-    if(user){
+    if(user && user.emailVerified){
       updateMenu(user.displayName||user.email);
       unlockForum();
+    } else if(user && !user.emailVerified){
+      alert("Du skal bekræfte din e-mail før du kan bruge forum.");
+      signOut(auth);
+      lockForum();
+    } else {
+      lockForum();
     }
   });
 
   window.logout = function(){
     signOut(auth).then(()=>{
-      document.getElementById("forum-content").style.display="none";
-      document.getElementById("login-warning").style.display="block";
+      lockForum();
       location.reload();
     }).catch(err=>alert(err.message));
-  }
-
-  function unlockForum(){
-    document.getElementById("forum-content").style.display="block";
-    document.getElementById("login-warning").style.display="none";
   }
 }
 </script>

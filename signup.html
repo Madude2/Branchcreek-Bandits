@@ -37,6 +37,7 @@ a.back-home { display: inline-block; margin-top: 15px; color: #4285F4; text-deco
     <div id="signup-success" class="hidden text-center">
       <h2 class="text-2xl font-bold mb-3 western-text">Tillykke! Konto oprettet.</h2>
       <p>En bekræftelses-email er blevet sendt til din e-mail. Tak for at registrere dig!</p>
+      <p>Hvis du ikke kan finde din mail, så tjek din spam mappe.</p>
       <a href="index.html" class="back-home">Gå tilbage til forsiden</a>
     </div>
   </div>
@@ -68,7 +69,7 @@ includeHTML("footer.html", "footer");
 <!-- Firebase Auth -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
@@ -84,38 +85,33 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
 window.signup = function() {
-  const name = document.getElementById("signup-name").value;
-  const email = document.getElementById("signup-email").value;
+  const name = document.getElementById("signup-name").value.trim();
+  const email = document.getElementById("signup-email").value.trim();
   const password = document.getElementById("signup-password").value;
 
-  if (!name || !email || !password) {
-    alert("Udfyld venligst alle felter.");
+  if(!name || !email || !password){
+    alert("Udfyld alle felter");
     return;
   }
 
   createUserWithEmailAndPassword(auth, email, password)
     .then(userCredential => {
-      // Set displayName
-      return updateProfile(userCredential.user, { displayName: name })
-        .then(() => {
-          // Update navbar if it exists
-          const loginBtn = document.getElementById("login-btn");
-          const mobileLoginBtn = document.getElementById("mobile-login-btn");
-          if (loginBtn) loginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
-          if (mobileLoginBtn) mobileLoginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
+      const user = userCredential.user;
 
-          // Show success message
-          document.getElementById("signup-form").classList.add("hidden");
-          document.getElementById("signup-success").classList.remove("hidden");
+      // Set displayName
+      return updateProfile(user, { displayName: name })
+        .then(() => {
+          // Send verification email
+          return sendEmailVerification(user)
+            .then(() => {
+              // Show success message
+              document.getElementById("signup-form").classList.add("hidden");
+              document.getElementById("signup-success").classList.remove("hidden");
+            });
         });
     })
     .catch(err => alert(err.message));
-};
-
-// Optional logout function
-window.logout = function() {
-  auth.signOut().then(() => location.reload()).catch(err => alert(err.message));
-};
+}
 </script>
 
 </body>

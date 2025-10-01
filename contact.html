@@ -44,36 +44,39 @@
 <script>
 feather.replace();
 
-// Include HTML
+// Include HTML fragments
 function includeHTML(file, elementId, callback){
-  fetch(file)
-    .then(res => res.text())
-    .then(data => {
-      document.getElementById(elementId).innerHTML = data;
-      if(callback) callback();
-      feather.replace();
-    })
-    .catch(err => console.error(err));
+  fetch(file).then(res => res.text())
+             .then(data => {
+               document.getElementById(elementId).innerHTML = data;
+               if(callback) callback();
+               feather.replace();
+             })
+             .catch(err => console.error(err));
 }
 
-// Load Navbar + Footer
-includeHTML("nav.html", "navbar");
-includeHTML("footer.html", "footer");
+// Load Navbar first, then setup auth
+includeHTML("nav.html", "navbar", () => {
+  setupAuth(); // Initialize Firebase auth after navbar exists
 
-// Mobile menu toggle
-document.addEventListener('DOMContentLoaded', () => {
+  // Desktop menu toggle
   const menuBtn = document.getElementById('menu-btn');
   const mobileMenu = document.getElementById('mobile-menu');
-  if(menuBtn) menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+  if(menuBtn && mobileMenu) menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
 
+  // Desktop login dropdown toggle
   const loginBtn = document.getElementById('login-btn');
   const loginDropdown = document.getElementById('login-dropdown');
-  if(loginBtn) loginBtn.addEventListener('click', () => loginDropdown.classList.toggle('hidden'));
+  if(loginBtn && loginDropdown) loginBtn.addEventListener('click', () => loginDropdown.classList.toggle('hidden'));
 
+  // Mobile login toggle
   const mobileLoginBtn = document.getElementById('mobile-login-btn');
   const mobileLoginForm = document.getElementById('mobile-login-form');
-  if(mobileLoginBtn) mobileLoginBtn.addEventListener('click', () => mobileLoginForm.classList.toggle('hidden'));
+  if(mobileLoginBtn && mobileLoginForm) mobileLoginBtn.addEventListener('click', () => mobileLoginForm.classList.toggle('hidden'));
 });
+
+// Footer
+includeHTML("footer.html", "footer");
 </script>
 
 <!-- Firebase Auth -->
