@@ -3,209 +3,145 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Begivenheder - Brachcreek Bandits</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/feather-icons"></script>
-<link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
+<title>Begivenheder - Branchcreek Bandits</title>
 
-<!-- Firebase -->
+<!-- Tailwind + Fonts + Icons -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+
+<style>
+.nav-link { color: white; }
+.nav-link:hover { color: #d4a017; }
+h1,h2,h3,h4,h5,h6 { font-family: 'Western', sans-serif; }
+.western-text { font-family: 'Western', sans-serif; }
+.btn-gold { background-color: #d4a017; transition: all 0.3s ease; }
+.btn-gold:hover { background-color: #b78a14; transform: translateY(-2px); }
+</style>
+</head>
+<body class="bg-gray-100 font-sans flex flex-col min-h-screen">
+
+<!-- Dynamic Navbar -->
+<div id="navbar"></div>
+
+<!-- Main Content -->
+<div class="flex-grow">
+  <!-- Events Content -->
+  <section class="py-16">
+    <div class="container mx-auto px-6">
+      <h1 class="western-text text-5xl mb-8 text-center">Begivenheder</h1>
+      <p class="text-gray-700 mb-4">Her vil du finde kommende skydninger, turneringer og sociale arrangementer.</p>
+
+      <!-- Example event cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+          <h2 class="text-xl font-bold mb-2">Cowboy Skydestævne</h2>
+          <p class="text-gray-700">Dato: 15. Oktober 2025<br>Sted: Djurske Sortkudtsskytter</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+          <h2 class="text-xl font-bold mb-2">Western Workshop</h2>
+          <p class="text-gray-700">Dato: 20. Oktober 2025<br>Sted: Branchcreek Clubhouse</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Dynamic Footer -->
+<div id="footer"></div>
+
+<!-- Firebase Auth -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey:"YOUR_API_KEY",
-  authDomain:"YOUR_PROJECT_ID.firebaseapp.com",
-  projectId:"YOUR_PROJECT_ID",
-  storageBucket:"YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId:"YOUR_SENDER_ID",
-  appId:"YOUR_APP_ID"
+  apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
+  authDomain: "branchcreek-bandits.firebaseapp.com",
+  projectId: "branchcreek-bandits",
+  storageBucket: "branchcreek-bandits.firebasestorage.app",
+  messagingSenderId: "828305260971",
+  appId: "1:828305260971:web:6c3601fc97601a9621d2ee",
+  measurementId: "G-550TRD5SQ3"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// Update menu function
-function updateMenu(name) {
-  const loginMenu = document.getElementById("login-btn");
-  const mobileLoginBtn = document.getElementById("mobile-login-btn");
-  loginMenu.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
-  mobileLoginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
-}
-
-// Check if test account is logged in
-window.addEventListener('DOMContentLoaded', () => {
-  const testUser = localStorage.getItem('testUser');
-  if(testUser) updateMenu(testUser);
-});
-
-// Login functions
-window.login = function() {
-  const email = document.getElementById("login-email").value;
-  const password = document.getElementById("login-password").value;
-
-  if(email === "veenkate0@gmail.com" && password === "tzw85unb") {
-    alert("Logget ind som Kate Veen!");
-    localStorage.setItem('testUser', "Kate Veen");
-    updateMenu("Kate Veen");
-    document.getElementById("login-dropdown").classList.add("hidden");
-    return;
+window.setupAuth = function() {
+  function updateMenu(name) {
+    const loginBtn = document.getElementById("login-btn");
+    const mobileLoginBtn = document.getElementById("mobile-login-btn");
+    if(loginBtn) loginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
+    if(mobileLoginBtn) mobileLoginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
   }
 
-  signInWithEmailAndPassword(auth, email, password)
-    .then(userCredential => {
-      alert("Logget ind!");
-      updateMenu(userCredential.user.displayName || userCredential.user.email);
-      document.getElementById("login-dropdown").classList.add("hidden");
-    })
-    .catch(err => alert(err.message));
-}
+  window.login = function() {
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
 
-window.mobileLogin = function() {
-  const email = document.getElementById("mobile-login-email").value;
-  const password = document.getElementById("mobile-login-password").value;
-
-  if(email === "veenkate0@gmail.com" && password === "tzw85unb") {
-    alert("Logget ind som Kate Veen!");
-    localStorage.setItem('testUser', "Kate Veen");
-    updateMenu("Kate Veen");
-    document.getElementById("mobile-login-form").classList.add("hidden");
-    return;
+    signInWithEmailAndPassword(auth,email,password)
+      .then(userCredential => {
+        updateMenu(userCredential.user.displayName || userCredential.user.email);
+        document.getElementById("login-dropdown").classList.add("hidden");
+      })
+      .catch(err=>alert(err.message));
   }
 
-  signInWithEmailAndPassword(auth, email, password)
-    .then(userCredential => {
-      alert("Logget ind!");
-      updateMenu(userCredential.user.displayName || userCredential.user.email);
-      document.getElementById("mobile-login-form").classList.add("hidden");
-    })
-    .catch(err => alert(err.message));
-}
+  window.mobileLogin = function() {
+    const email = document.getElementById("mobile-login-email").value;
+    const password = document.getElementById("mobile-login-password").value;
 
-// Firebase persistent login
-onAuthStateChanged(auth, user => {
-  if(user) updateMenu(user.displayName || user.email);
-});
+    signInWithEmailAndPassword(auth,email,password)
+      .then(userCredential => {
+        updateMenu(userCredential.user.displayName || userCredential.user.email);
+        document.getElementById("mobile-login-form").classList.add("hidden");
+      })
+      .catch(err=>alert(err.message));
+  }
 
-// Logout
-window.logout = function() {
-  localStorage.removeItem('testUser');
-  signOut(auth).then(()=> location.reload()).catch(err=>alert(err.message));
+  onAuthStateChanged(auth,user=>{
+    if(user) updateMenu(user.displayName || user.email);
+  });
+
+  window.logout = function() {
+    signOut(auth).then(()=> location.reload()).catch(err=>alert(err.message));
+  }
 }
 </script>
-
-<style>
-.nav-link { color: white; }
-.nav-link:hover { color: #d4a017; }
-.western-text { font-family: 'Western', sans-serif; }
-</style>
-</head>
-<body class="bg-gray-100 font-sans">
-
-<!-- Navigation -->
-<nav class="bg-black text-white shadow-lg">
-<div class="container mx-auto px-8 py-8 flex justify-between items-center">
-  <a href="index.html" class="flex items-center space-x-4">
-    <img src="https://scontent-cph2-1.xx.fbcdn.net/v/t39.30808-6/486356878_9742857432426186_6599031023968483380_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=2285d6&_nc_ohc=pLOCdCS-5B8Q7kNvwFTER7R&_nc_oc=AdnR99wp-pEKaV-6THZCiEU6b8Ny9BSt3ipXXV-YQvmiTjQn5NavYPNTrtQthElCT-I&_nc_zt=23&_nc_ht=scontent-cph2-1.xx&_nc_gid=JOcxiVtD0Utv27QeP2o4BQ&oh=00_AfbkRbXivYhEtim7EZ9ChOIeasZx-i5jNdi-RDn3FaUTMA&oe=68D33031" alt="Logo" class="h-20 w-20 md:h-40 md:w-40 rounded-full">
-    <span class="western-text text-3xl md:text-5xl">Branchcreek Bandits</span>
-  </a>
-
-  <div class="hidden md:flex items-center space-x-8">
-    <a href="about.html" class="nav-link font-medium">Information</a>
-    <a href="events.html" class="nav-link font-medium">Begivenheder</a>
-    <a href="gallery.html" class="nav-link font-medium">Galleri</a>
-    <a href="forum.html" class="nav-link font-medium">Forum</a>
-    <a href="contact.html" class="nav-link font-medium">Kontakt</a>
-
-    <!-- Login Dropdown -->
-    <div class="relative">
-      <button id="login-btn" class="nav-link font-medium flex items-center space-x-1">
-        <span>Login</span>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-        </svg>
-      </button>
-      <div id="login-dropdown" class="absolute right-0 mt-2 w-64 bg-white text-black shadow-lg p-4 hidden z-50">
-        <h3 class="font-bold mb-2">Login</h3>
-        <input type="email" id="login-email" placeholder="Email" class="w-full mb-2 px-3 py-2 border">
-        <input type="password" id="login-password" placeholder="Password" class="w-full mb-2 px-3 py-2 border">
-        <button onclick="login()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 font-bold mb-2">Login</button>
-        <a href="signup.html" class="text-blue-600 hover:underline block text-center">Opret Konto</a>
-      </div>
-    </div>
-  </div>
-
-  <button id="menu-btn" class="md:hidden focus:outline-none"><i data-feather="menu"></i></button>
-</div>
-
-<div id="mobile-menu" class="hidden md:hidden bg-black text-white px-8 pb-6">
-  <a href="about.html" class="block py-2 nav-link">Information</a>
-  <a href="events.html" class="block py-2 nav-link">Begivenheder</a>
-  <a href="gallery.html" class="block py-2 nav-link">Galleri</a>
-  <a href="forum.html" class="block py-2 nav-link">Forum</a>
-  <a href="contact.html" class="block py-2 nav-link">Kontakt</a>
-  <a href="#" id="mobile-login-btn" class="block py-2 nav-link">Login</a>
-  <div id="mobile-login-form" class="hidden mt-2">
-    <h3 class="font-bold mb-2">Login</h3>
-    <input type="email" id="mobile-login-email" placeholder="Email" class="w-full mb-2 px-3 py-2 border">
-    <input type="password" id="mobile-login-password" placeholder="Password" class="w-full mb-2 px-3 py-2 border">
-    <button onclick="mobileLogin()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 font-bold mb-2">Login</button>
-    <a href="signup.html" class="text-blue-600 hover:underline block text-center">Opret Konto</a>
-  </div>
-</div>
-</nav>
-
-<!-- Events Content -->
-<section class="py-16 bg-white">
-<div class="container mx-auto px-6 max-w-4xl">
-<h1 class="western-text text-5xl mb-6 text-center">Begivenheder</h1>
-<p class="text-gray-700 mb-4">
-Her finder du alle kommende events og konkurrencer arrangeret af Brachcreek Bandits. Vi holder løbende Cowboy Action Shooting events for alle niveauer.
-</p>
-<p class="text-gray-700 mb-4">
-Tjek vores kalender regelmæssigt for at holde dig opdateret på nye begivenheder.
-</p>
-</div>
-</section>
-
-<!-- Footer -->
-<footer class="bg-black text-white py-12">
-<div class="container mx-auto px-6">
-<div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-<div>
-<h3 class="text-xl font-bold mb-4">Brachcreek Bandits</h3>
-<p class="text-gray-400">Preserving the spirit of the Old West through Cowboy Action Shooting since 2005.</p>
-</div>
-<div></div>
-<div>
-<h3 class="text-xl font-bold mb-4">Contact</h3>
-<ul class="space-y-2 text-gray-400">
-<li class="flex items-center"><i data-feather="mail" class="mr-2"></i> contact@brachcreekbandits.com</li>
-<li class="flex items-center"><i data-feather="phone" class="mr-2"></i> (555) 123-4567</li>
-<li class="flex items-center"><i data-feather="map-pin" class="mr-2"></i> Djurske Sortkudtsskytter, Næsgårdsvej 3, 8600 Grenaa</li>
-</ul>
-</div>
-<div></div>
-</div>
-</div>
-</footer>
 
 <script>
-feather.replace();
-const menuBtn=document.getElementById('menu-btn');
-const mobileMenu=document.getElementById('mobile-menu');
-menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
+// Load navbar and footer dynamically
+function includeHTML(file, elementId, callback){
+  fetch(file)
+    .then(res => res.text())
+    .then(data => {
+      document.getElementById(elementId).innerHTML = data;
+      if(callback) callback();
+      feather.replace();
+    })
+    .catch(err => console.error(err));
+}
 
-// Desktop login dropdown
-const loginBtn = document.getElementById('login-btn');
-const loginDropdown = document.getElementById('login-dropdown');
-loginBtn.addEventListener('click', () => loginDropdown.classList.toggle('hidden'));
+// Navbar
+includeHTML("nav.html", "navbar", () => {
+  const menuBtn=document.getElementById('menu-btn');
+  const mobileMenu=document.getElementById('mobile-menu');
+  if(menuBtn) menuBtn.addEventListener('click', ()=>mobileMenu.classList.toggle('hidden'));
 
-// Mobile login dropdown
-const mobileLoginBtn = document.getElementById('mobile-login-btn');
-const mobileLoginForm = document.getElementById('mobile-login-form');
-mobileLoginBtn.addEventListener('click', () => mobileLoginForm.classList.toggle('hidden'));
+  const loginBtn=document.getElementById('login-btn');
+  const loginDropdown=document.getElementById('login-dropdown');
+  if(loginBtn) loginBtn.addEventListener('click', ()=>loginDropdown.classList.toggle('hidden'));
+
+  const mobileLoginBtn=document.getElementById('mobile-login-btn');
+  const mobileLoginForm=document.getElementById('mobile-login-form');
+  if(mobileLoginBtn) mobileLoginBtn.addEventListener('click', ()=>mobileLoginForm.classList.toggle('hidden'));
+
+  setupAuth(); // ✅ Setup Firebase auth AFTER navbar exists
+});
+
+// Footer
+includeHTML("footer.html","footer");
 </script>
-
 </body>
 </html>

@@ -3,94 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Galleri - Brachcreek Bandits</title>
+<title>Galleri - Branchcreek Bandits</title>
+
+<!-- Tailwind + Fonts + Icons -->
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/feather-icons"></script>
+<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 <link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
-
-<!-- Firebase -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-
-const firebaseConfig = {
-  apiKey:"YOUR_API_KEY",
-  authDomain:"YOUR_PROJECT_ID.firebaseapp.com",
-  projectId:"YOUR_PROJECT_ID",
-  storageBucket:"YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId:"YOUR_SENDER_ID",
-  appId:"YOUR_APP_ID"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-function updateMenu(name) {
-  const loginMenu = document.getElementById("login-btn");
-  const mobileLoginBtn = document.getElementById("mobile-login-btn");
-  loginMenu.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
-  mobileLoginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
-}
-
-// Restore test account login
-window.addEventListener('DOMContentLoaded', () => {
-  const testUser = localStorage.getItem('testUser');
-  if(testUser) updateMenu(testUser);
-});
-
-// Login functions
-window.login = function() {
-  const email = document.getElementById("login-email").value;
-  const password = document.getElementById("login-password").value;
-
-  if(email === "veenkate0@gmail.com" && password === "tzw85unb") {
-    alert("Logget ind som Kate Veen!");
-    localStorage.setItem('testUser', "Kate Veen");
-    updateMenu("Kate Veen");
-    document.getElementById("login-dropdown").classList.add("hidden");
-    return;
-  }
-
-  signInWithEmailAndPassword(auth, email, password)
-    .then(userCredential => {
-      alert("Logget ind!");
-      updateMenu(userCredential.user.displayName || userCredential.user.email);
-      document.getElementById("login-dropdown").classList.add("hidden");
-    })
-    .catch(err => alert(err.message));
-}
-
-window.mobileLogin = function() {
-  const email = document.getElementById("mobile-login-email").value;
-  const password = document.getElementById("mobile-login-password").value;
-
-  if(email === "veenkate0@gmail.com" && password === "tzw85unb") {
-    alert("Logget ind som Kate Veen!");
-    localStorage.setItem('testUser', "Kate Veen");
-    updateMenu("Kate Veen");
-    document.getElementById("mobile-login-form").classList.add("hidden");
-    return;
-  }
-
-  signInWithEmailAndPassword(auth, email, password)
-    .then(userCredential => {
-      alert("Logget ind!");
-      updateMenu(userCredential.user.displayName || userCredential.user.email);
-      document.getElementById("mobile-login-form").classList.add("hidden");
-    })
-    .catch(err => alert(err.message));
-}
-
-// Firebase persistent login
-onAuthStateChanged(auth, user => {
-  if(user) updateMenu(user.displayName || user.email);
-});
-
-window.logout = function() {
-  localStorage.removeItem('testUser');
-  signOut(auth).then(()=> location.reload()).catch(err=>alert(err.message));
-}
-</script>
 
 <style>
 .nav-link { color: white; }
@@ -142,91 +60,69 @@ window.logout = function() {
 #next-btn { right: 1rem; top: 50%; transform: translateY(-50%); }
 </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="bg-gray-100 font-sans flex flex-col min-h-screen">
 
-<!-- Navigation -->
-<nav class="bg-black text-white shadow-lg">
-<div class="container mx-auto px-8 py-8 flex justify-between items-center">
-  <a href="index.html" class="flex items-center space-x-4">
-    <img src="https://scontent-cph2-1.xx.fbcdn.net/v/t39.30808-6/486356878_9742857432426186_6599031023968483380_n.jpg?_nc_cat=101&ccb=1-7&_nc_sid=2285d6&_nc_ohc=pLOCdCS-5B8Q7kNvwFTER7R&_nc_oc=AdnR99wp-pEKaV-6THZCiEU6b8Ny9BSt3ipXXV-YQvmiTjQn5NavYPNTrtQthElCT-I&_nc_zt=23&_nc_ht=scontent-cph2-1.xx&_nc_gid=JOcxiVtD0Utv27QeP2o4BQ&oh=00_AfbkRbXivYhEtim7EZ9ChOIeasZx-i5jNdi-RDn3FaUTMA&oe=68D33031" alt="Logo" class="h-20 w-20 md:h-40 md:w-40 rounded-full">
-    <span class="western-text text-3xl md:text-5xl">Branchcreek Bandits</span>
-  </a>
+<!-- Dynamic Navbar -->
+<div id="navbar"></div>
 
-  <div class="hidden md:flex items-center space-x-8">
-    <a href="about.html" class="nav-link font-medium">Information</a>
-    <a href="events.html" class="nav-link font-medium">Begivenheder</a>
-    <a href="gallery.html" class="nav-link font-medium">Galleri</a>
-    <a href="forum.html" class="nav-link font-medium">Forum</a>
-    <a href="contact.html" class="nav-link font-medium">Kontakt</a>
-
-    <!-- Login Dropdown -->
-    <div class="relative">
-      <button id="login-btn" class="nav-link font-medium flex items-center space-x-1">
-        <span>Login</span>
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-        </svg>
-      </button>
-      <div id="login-dropdown" class="absolute right-0 mt-2 w-64 bg-white text-black shadow-lg p-4 hidden z-50">
-        <h3 class="font-bold mb-2">Login</h3>
-        <input type="email" id="login-email" placeholder="Email" class="w-full mb-2 px-3 py-2 border">
-        <input type="password" id="login-password" placeholder="Password" class="w-full mb-2 px-3 py-2 border">
-        <button onclick="login()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 font-bold mb-2">Login</button>
-        <a href="signup.html" class="text-blue-600 hover:underline block text-center">Opret Konto</a>
-      </div>
+<!-- Main Content -->
+<div class="flex-grow">
+  <!-- Gallery Section -->
+  <section class="py-16 bg-white">
+    <div class="container mx-auto px-6 max-w-5xl">
+      <h1 class="western-text text-5xl mb-6 text-center">Galleri</h1>
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 gallery-grid" id="gallery"></div>
     </div>
-  </div>
 
-  <button id="menu-btn" class="md:hidden focus:outline-none"><i data-feather="menu"></i></button>
+    <!-- Modal -->
+    <div id="modal" class="flex">
+      <img id="modal-img" src="">
+      <span id="close-btn" class="modal-control" onclick="closeModal()">&times;</span>
+      <span id="prev-btn" class="modal-control" onclick="prevImage()">&#10094;</span>
+      <span id="next-btn" class="modal-control" onclick="nextImage()">&#10095;</span>
+    </div>
+  </section>
 </div>
 
-<div id="mobile-menu" class="hidden md:hidden bg-black text-white px-8 pb-6">
-  <a href="about.html" class="block py-2 nav-link">Information</a>
-  <a href="events.html" class="block py-2 nav-link">Begivenheder</a>
-  <a href="gallery.html" class="block py-2 nav-link">Galleri</a>
-  <a href="forum.html" class="block py-2 nav-link">Forum</a>
-  <a href="contact.html" class="block py-2 nav-link">Kontakt</a>
-  <a href="#" id="mobile-login-btn" class="block py-2 nav-link">Login</a>
-  <div id="mobile-login-form" class="hidden mt-2">
-    <h3 class="font-bold mb-2">Login</h3>
-    <input type="email" id="mobile-login-email" placeholder="Email" class="w-full mb-2 px-3 py-2 border">
-    <input type="password" id="mobile-login-password" placeholder="Password" class="w-full mb-2 px-3 py-2 border">
-    <button onclick="mobileLogin()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 font-bold mb-2">Login</button>
-    <a href="signup.html" class="text-blue-600 hover:underline block text-center">Opret Konto</a>
-  </div>
-</div>
-</nav>
+<!-- Dynamic Footer -->
+<div id="footer"></div>
 
-<!-- Gallery Section -->
-<section class="py-16 bg-white">
-<div class="container mx-auto px-6 max-w-5xl">
-<h1 class="western-text text-5xl mb-6 text-center">Galleri</h1>
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 gallery-grid" id="gallery"></div>
-</div>
-
-<!-- Modal -->
-<div id="modal" class="flex">
-  <img id="modal-img" src="">
-  <span id="close-btn" class="modal-control" onclick="closeModal()">&times;</span>
-  <span id="prev-btn" class="modal-control" onclick="prevImage()">&#10094;</span>
-  <span id="next-btn" class="modal-control" onclick="nextImage()">&#10095;</span>
-</div>
-
+<!-- Scripts -->
 <script>
 feather.replace();
-const menuBtn=document.getElementById('menu-btn');
-const mobileMenu=document.getElementById('mobile-menu');
-menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
 
-// Desktop login dropdown
-const loginBtn = document.getElementById('login-btn');
-const loginDropdown = document.getElementById('login-dropdown');
-loginBtn.addEventListener('click', () => loginDropdown.classList.toggle('hidden'));
+// Include HTML
+function includeHTML(file, elementId, callback){
+  fetch(file)
+    .then(res => res.text())
+    .then(data => {
+      document.getElementById(elementId).innerHTML = data;
+      if(callback) callback();
+      feather.replace();
+    })
+    .catch(err => console.error(err));
+}
 
-// Mobile login dropdown
-const mobileLoginBtn = document.getElementById('mobile-login-btn');
-const mobileLoginForm = document.getElementById('mobile-login-form');
-mobileLoginBtn.addEventListener('click', () => mobileLoginForm.classList.toggle('hidden'));
+// Load Navbar + Footer
+includeHTML("nav.html", "navbar", () => {
+  // Mobile menu toggle
+  const menuBtn = document.getElementById('menu-btn');
+  const mobileMenu = document.getElementById('mobile-menu');
+  if(menuBtn) menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+
+  const loginBtn = document.getElementById('login-btn');
+  const loginDropdown = document.getElementById('login-dropdown');
+  if(loginBtn) loginBtn.addEventListener('click', () => loginDropdown.classList.toggle('hidden'));
+
+  const mobileLoginBtn = document.getElementById('mobile-login-btn');
+  const mobileLoginForm = document.getElementById('mobile-login-form');
+  if(mobileLoginBtn) mobileLoginBtn.addEventListener('click', () => mobileLoginForm.classList.toggle('hidden'));
+
+  // ✅ Setup Firebase auth after navbar exists
+  setupAuth();
+});
+
+includeHTML("footer.html", "footer");
 
 // Gallery Images
 const images = [
@@ -268,6 +164,66 @@ function nextImage(){
 function prevImage(){
   currentIndex = (currentIndex - 1 + images.length) % images.length;
   document.getElementById('modal-img').src = images[currentIndex];
+}
+</script>
+
+<!-- Firebase Auth -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
+  authDomain: "branchcreek-bandits.firebaseapp.com",
+  projectId: "branchcreek-bandits",
+  storageBucket: "branchcreek-bandits.firebasestorage.app",
+  messagingSenderId: "828305260971",
+  appId: "1:828305260971:web:6c3601fc97601a9621d2ee",
+  measurementId: "G-550TRD5SQ3"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+window.setupAuth = function() {
+  function updateMenu(name) {
+    const loginBtn = document.getElementById("login-btn");
+    const mobileLoginBtn = document.getElementById("mobile-login-btn");
+    if(loginBtn) loginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
+    if(mobileLoginBtn) mobileLoginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
+  }
+
+  window.login = function() {
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
+
+    signInWithEmailAndPassword(auth,email,password)
+      .then(userCredential => {
+        updateMenu(userCredential.user.displayName || userCredential.user.email);
+        document.getElementById("login-dropdown").classList.add("hidden");
+      })
+      .catch(err=>alert(err.message));
+  }
+
+  window.mobileLogin = function() {
+    const email = document.getElementById("mobile-login-email").value;
+    const password = document.getElementById("mobile-login-password").value;
+
+    signInWithEmailAndPassword(auth,email,password)
+      .then(userCredential => {
+        updateMenu(userCredential.user.displayName || userCredential.user.email);
+        document.getElementById("mobile-login-form").classList.add("hidden");
+      })
+      .catch(err=>alert(err.message));
+  }
+
+  onAuthStateChanged(auth,user=>{
+    if(user) updateMenu(user.displayName || user.email);
+  });
+
+  window.logout = function() {
+    signOut(auth).then(()=> location.reload()).catch(err=>alert(err.message));
+  }
 }
 </script>
 

@@ -1,60 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="da">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - Brachcreek Bandits</title>
+  <title>Login - Branchcreek Bandits</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"></script>
+  <link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
 </head>
-<body class="bg-gray-900 text-white flex items-center justify-center h-screen">
+<body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
 
   <div class="bg-gray-800 p-8 rounded-2xl shadow-lg w-96">
-    <h2 class="text-2xl font-bold text-center mb-6">Login / Signup</h2>
+    <h2 class="text-2xl font-bold text-center mb-6">Login</h2>
 
-    <input id="email" type="email" placeholder="Email" class="w-full mb-3 px-3 py-2 text-black rounded-lg">
-    <input id="password" type="password" placeholder="Password" class="w-full mb-3 px-3 py-2 text-black rounded-lg">
+    <input id="login-email" type="email" placeholder="Email" class="w-full mb-3 px-3 py-2 text-black rounded-lg">
+    <input id="login-password" type="password" placeholder="Password" class="w-full mb-3 px-3 py-2 text-black rounded-lg">
 
-    <button onclick="login()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 rounded-lg font-bold mb-2">Login</button>
-    <button onclick="signup()" class="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg font-bold">Sign Up</button>
+    <button onclick="loginUser()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 rounded-lg font-bold mb-2">
+      Login
+    </button>
+
+    <p class="text-center text-sm">Har du ikke en konto? <a href="signup.html" class="text-blue-600 hover:underline">Opret konto her</a></p>
   </div>
 
+  <!-- Include shared auth system -->
+  <script type="module" src="js/auth.js"></script>
+
   <script>
-    // ✅ Replace this with your Firebase project config
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-    };
+    function loginUser() {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
 
-    // Init Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
+      if (!email || !password) {
+        alert("Udfyld både email og password");
+        return;
+      }
 
-    // Login
-    function login() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      auth.signInWithEmailAndPassword(email, password)
+      // Use the global auth.js login
+      window.login(email, password)
         .then(() => {
-          window.location.href = "forum.html"; // redirect after login
+          // Redirect to forum or homepage after successful login
+          window.location.href = "forum.html";
         })
-        .catch(err => alert(err.message));
+        .catch(err => console.error(err));
     }
 
-    // Signup
-    function signup() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(() => {
-          window.location.href = "forum.html"; // redirect after signup
-        })
-        .catch(err => alert(err.message));
-    }
+    // Redirect if already logged in
+    window.onUserStateChanged((user) => {
+      if (user) {
+        window.location.href = "forum.html";
+      }
+    });
   </script>
+
 </body>
 </html>
