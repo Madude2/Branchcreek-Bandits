@@ -1,4 +1,4 @@
-<nav class="bg-black text-white shadow-lg">
+<nav class="bg-black text-white shadow-lg relative">
   <div class="container mx-auto px-8 py-6 flex justify-between items-center">
     <!-- Logo + Site Name -->
     <a href="index.html" class="flex items-center space-x-4">
@@ -8,27 +8,41 @@
 
     <!-- Desktop Links -->
     <div class="hidden md:flex items-center space-x-8">
-      <a href="about.html" class="nav-link font-medium">Information</a>
+      <!-- Information Dropdown -->
+      <div class="relative group">
+        <a href="about.html" class="nav-link font-medium flex items-center gap-1">
+          Information
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </a>
+        <ul class="absolute left-0 mt-2 w-48 bg-white text-black rounded shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+          <li><a href="westernarssenal.html" class="block px-4 py-2 hover:bg-gray-200">Western Arsenalet</a></li>
+          <li><a href="rules.html" class="block px-4 py-2 hover:bg-gray-200">Regler og Sikkerhed</a></li>
+        </ul>
+      </div>
+
       <a href="events.html" class="nav-link font-medium">Begivenheder</a>
       <a href="gallery.html" class="nav-link font-medium">Galleri</a>
       <a href="forum.html" class="nav-link font-medium">Forum</a>
       <a href="contact.html" class="nav-link font-medium">Kontakt</a>
 
-      <!-- Desktop Login Button -->
-      <div class="relative">
-        <button id="login-btn" class="nav-link font-medium flex items-center space-x-1 cursor-pointer">
-          <span>Login</span>
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <!-- Desktop Login -->
+      <div class="relative flex items-center">
+        <button id="login-btn" class="nav-link font-medium flex items-center gap-1 cursor-pointer relative z-50">
+          Login
+          <svg class="w-4 h-4 inline-block ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
           </svg>
         </button>
 
         <!-- Login Dropdown -->
-        <div id="login-dropdown" class="absolute right-0 mt-2 w-64 bg-white text-black shadow-lg p-4 hidden z-50">
+        <div id="login-dropdown" class="absolute mt-1 w-64 bg-white text-black shadow-lg p-4 hidden z-50"
+             style="top: 100%; right: 0; transform: translateX(-20%);">
           <h3 class="font-bold mb-2">Login</h3>
-          <input type="email" id="login-email" placeholder="Email" class="w-full mb-2 px-3 py-2 border">
-          <input type="password" id="login-password" placeholder="Password" class="w-full mb-2 px-3 py-2 border">
-          <button onclick="login(document.getElementById('login-email').value, document.getElementById('login-password').value)" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 font-bold mb-2">Login</button>
+          <input type="email" id="login-email" placeholder="Email" class="w-full mb-2 px-3 py-2 border rounded">
+          <input type="password" id="login-password" placeholder="Password" class="w-full mb-2 px-3 py-2 border rounded">
+          <button onclick="login()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 font-bold mb-2 rounded">Login</button>
           <a href="signup.html" class="text-blue-600 hover:underline block text-center">Opret Konto</a>
         </div>
       </div>
@@ -42,7 +56,20 @@
 
   <!-- Mobile Menu -->
   <div id="mobile-menu" class="hidden md:hidden bg-black text-white px-8 pb-6">
-    <a href="about.html" class="block py-2 nav-link">Information</a>
+    <!-- Information collapsible -->
+    <div class="mb-2">
+      <button class="flex justify-between w-full nav-link" onclick="this.nextElementSibling.classList.toggle('hidden')">
+        Information
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <ul class="hidden flex flex-col pl-4 mt-2 gap-1">
+        <li><a href="westernarssenal.html" class="block py-1 nav-link">Western Arsenalet</a></li>
+        <li><a href="rules.html" class="block py-1 nav-link">Regler og Sikkerhed</a></li>
+      </ul>
+    </div>
+
     <a href="events.html" class="block py-2 nav-link">Begivenheder</a>
     <a href="gallery.html" class="block py-2 nav-link">Galleri</a>
     <a href="forum.html" class="block py-2 nav-link">Forum</a>
@@ -51,29 +78,12 @@
     <!-- Mobile Login -->
     <div id="mobile-login-form" class="mt-4">
       <button id="mobile-login-btn" class="nav-link font-medium w-full text-left mb-2 cursor-pointer">Login</button>
-      <div class="hidden">
-        <input type="email" id="mobile-login-email" placeholder="Email" class="w-full mb-2 px-3 py-2 border">
-        <input type="password" id="mobile-login-password" placeholder="Password" class="w-full mb-2 px-3 py-2 border">
-        <button onclick="login(document.getElementById('mobile-login-email').value, document.getElementById('mobile-login-password').value)" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 font-bold mb-2">Login</button>
+      <div class="hidden mt-2">
+        <input type="email" id="mobile-login-email" placeholder="Email" class="w-full mb-2 px-3 py-2 border rounded">
+        <input type="password" id="mobile-login-password" placeholder="Password" class="w-full mb-2 px-3 py-2 border rounded">
+        <button onclick="mobileLogin()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 font-bold mb-2 rounded">Login</button>
         <a href="signup.html" class="text-blue-600 hover:underline block text-center">Opret Konto</a>
       </div>
     </div>
   </div>
-
-  <script>
-    // Mobile menu toggle
-    const menuBtn = document.getElementById('menu-btn');
-    const mobileMenu = document.getElementById('mobile-menu');
-    if(menuBtn) menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
-
-    // Desktop login dropdown toggle
-    const loginBtn = document.getElementById('login-btn');
-    const loginDropdown = document.getElementById('login-dropdown');
-    if(loginBtn) loginBtn.addEventListener('click', () => loginDropdown.classList.toggle('hidden'));
-
-    // Mobile login toggle
-    const mobileLoginBtn = document.getElementById('mobile-login-btn');
-    const mobileLoginForm = document.querySelector('#mobile-login-form div');
-    if(mobileLoginBtn) mobileLoginBtn.addEventListener('click', () => mobileLoginForm.classList.toggle('hidden'));
-  </script>
 </nav>

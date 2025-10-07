@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Western Arsenalet - Branchcreek Bandits</title>
+
+<!-- Tailwind + Fonts + Icons -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+<link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
+
+<style>
+.nav-link { color: white; }
+.nav-link:hover { color: #d4a017; }
+.western-text { font-family: 'Western', sans-serif; }
+.section-title { font-size: 2rem; margin-top: 2rem; margin-bottom: 1rem; }
+.section-content { color: #4a5568; line-height: 1.7; }
+.subsection { margin-top: 1.5rem; }
+</style>
+</head>
+<body class="bg-gray-100 font-sans flex flex-col min-h-screen">
+
+<!-- Dynamic Navbar -->
+<div id="navbar"></div>
+
+<!-- Main Content -->
+<div class="flex-grow">
+  <section class="py-16 bg-white">
+    <div class="container mx-auto px-6 max-w-4xl">
+
+      <h2 class="western-text section-title text-center text-4xl mb-8">Western Arsenalet</h2>
+      <p class="section-content mb-6">
+        I Cowboy Action Shooting (CAS) bruger vi autentiske våben og udstyr, der afspejler den amerikanske vesten i perioden 1850–1899. 
+        Her finder du en introduktion til de vigtigste våbentyper, sikkerhedskrav og udstyr, som anvendes i Branchcreek Bandits – 
+        baseret på SASS/CAS-reglerne fra Shooter’s Handbook 2025.
+      </p>
+
+      <!-- Revolvere -->
+      <div class="subsection">
+        <h3 class="western-text text-2xl mb-2">Revolvere</h3>
+        <p class="section-content">
+          Hver skytte anvender to single action revolvere i kaliber .32 til .45. 
+          Våbnene skal være periodisk korrekte kopier eller originale modeller fremstillet før år 1900, såsom Colt Single Action Army, Ruger Vaquero eller Remington 1875.  
+          Alle revolvere bæres med hammeren ned på et <strong>tomt kammer</strong> af sikkerhedshensyn.  
+          Lades kun på kommando fra skydelederen.
+        </p>
+      </div>
+
+      <!-- Riffel -->
+      <div class="subsection">
+        <h3 class="western-text text-2xl mb-2">Rifler</h3>
+        <p class="section-content">
+          Riflen skal være en lever action model i pistolkaliber – typisk Winchester 1873, 1892 eller Henry 1860.  
+          Riflen må kun lades, når skytten står ved startpositionen, og alle patroner skal være under CAS’s maksimale ladning.  
+          Efter hver stage skal riflen tømmes og kontrolleres af en Range Officer.
+        </p>
+      </div>
+
+      <!-- Haglgevær -->
+      <div class="subsection">
+        <h3 class="western-text text-2xl mb-2">Haglgevær</h3>
+        <p class="section-content">
+          Tilladte modeller er side-by-side uden ejektor, 1887 lever action eller 1897 pump action.  
+          Haglgeværet bæres altid <strong>uladt</strong>, og må kun lades på kommando.  
+          Patroner skal være bly (ingen stålhagl), og maksladninger er påkrævet for sikkerhedens skyld.
+        </p>
+      </div>
+
+      <!-- Ammunition -->
+      <div class="subsection">
+        <h3 class="western-text text-2xl mb-2">Ammunition</h3>
+        <p class="section-content">
+          Ammunition skal være svagt ladet og egnet til cowboy action shooting.  
+          Kun <strong>blyprojektiler</strong> er tilladt, og magnumladninger er ikke tilladt.  
+          Brug altid ammunition, der matcher dit våben og kaliberkravene fra håndbogen.
+        </p>
+      </div>
+
+      <!-- Beklædning og Udstyr -->
+      <div class="subsection">
+        <h3 class="western-text text-2xl mb-2">Beklædning og Udstyr</h3>
+        <p class="section-content">
+          Western-inspireret påklædning er en del af oplevelsen!  
+          Alle deltagere opfordres til at bære tøj, der passer til perioden – cowboys, sheriffer, saloonpiger, eller andet fra det vilde vesten.  
+          Moderne elementer som sneakers, kasketter og camouflage bør undgås.  
+          Skydebriller og høreværn er <strong>påkrævet</strong> under al skydning.
+        </p>
+      </div>
+
+      <!-- Sikkerhed -->
+      <div class="subsection">
+        <h3 class="western-text text-2xl mb-2">Sikkerhed Først</h3>
+        <p class="section-content">
+          Alle våben skal behandles som om de er ladt.  
+          Peg altid løbet i en sikker retning, hold fingeren fra aftrækkeren, og lad kun på kommando.  
+          Overtrædelse af sikkerhedsregler kan føre til diskvalifikation – sikkerhed går altid forud for konkurrence.  
+          Husk: Et sikkert miljø er grundlaget for Branchcreek Bandits’ fællesskab og sjov.
+        </p>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<!-- Dynamic Footer -->
+<div id="footer"></div>
+
+<!-- Scripts -->
+<script>
+feather.replace();
+
+// Load HTML fragments
+function includeHTML(file, elementId, callback){
+  fetch(file).then(res=>res.text())
+             .then(data=>{ document.getElementById(elementId).innerHTML = data; if(callback) callback(); feather.replace(); })
+             .catch(err=>console.error(err));
+}
+
+includeHTML("nav.html","navbar",()=>{
+  if(typeof setupAuth === 'function') setupAuth();
+
+  const menuBtn=document.getElementById('menu-btn');
+  const mobileMenu=document.getElementById('mobile-menu');
+  if(menuBtn && mobileMenu) menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
+});
+
+includeHTML("footer.html","footer");
+</script>
+
+<script type="module" src="js/auth.js"></script>
+</body>
+</html>

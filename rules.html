@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regler - Branchcreek Bandits</title>
+
+<!-- Tailwind + Fonts + Icons -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+<link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
+
+<style>
+.nav-link { color: white; }
+.nav-link:hover { color: #d4a017; }
+.western-text { font-family: 'Western', sans-serif; }
+.section-title { font-size: 2rem; margin-top: 2rem; margin-bottom: 1rem; }
+.section-content { color: #4a5568; line-height: 1.7; }
+</style>
+</head>
+<body class="bg-gray-100 font-sans flex flex-col min-h-screen">
+
+<!-- Dynamic Navbar -->
+<div id="navbar"></div>
+
+<!-- Main Content -->
+<div class="flex-grow">
+
+ <section class="py-16 bg-white">
+  <div class="container mx-auto px-6 max-w-4xl">
+
+    <h2 class="western-text section-title">Regler & Sikkerhed</h2>
+    <p class="section-content mb-6">
+      Hos <strong>Branchcreek Bandits</strong> prioriterer vi sikkerhed, respekt og autentisk western-stemning. 
+      Vores regelsæt er baseret på den amerikanske SASS COWBOY ACTION SHOOTING - SHOOTERS HANDBOOK, som man kan læse mere om på deres egen hjemmeside her: 
+      <a href="https://sassnet.com/" class="text-blue-600 border-b-2 border-blue-600 hover:text-blue-800 hover:border-blue-800 transition duration-200">
+        SASS
+      </a> (Single Action Shooting Society). Eller downloade håndbogen direkte herfra med dette link: 
+      <a href="https://sassnet.com/uploads/downloads/Shooters%20Handbooks%20-%20CAS/CAS%202025%20SHB%20-%20%20Vers%2027.9%20-%20May%202025%20%20-%20FINAL.pdf" 
+         class="text-blue-600 border-b-2 border-blue-600 hover:text-blue-800 hover:border-blue-800 transition duration-200">
+        Håndbog
+      </a>.
+    </p>
+
+    <h3 class="western-text text-xl mt-10 mb-3">1. Generelle Regler</h3>
+    <ul class="list-disc pl-6 section-content mb-6">
+      <li>Alle deltagere skal altid følge instruktioner fra skydeleder (Match Director) og sikkerhedsansvarlige (Range Officers).</li>
+      <li>Der må kun skydes på anvist bane og med godkendte våben og ammunition i overensstemmelse med CAS-reglerne.</li>
+      <li>Sikkerhed går forud for alt. Hvis du ser noget usikkert, skal du straks gøre skydelederen opmærksom på det.</li>
+      <li>Vis altid hensyn og respekt over for andre deltagere, funktionærer og tilskuere.</li>
+      <li>Alkohol og rusmidler er strengt forbudt før og under al skydning.</li>
+      <li>Altid lyt og følg kommandoer fra skydelederen – især under “Make Ready” og “Unload and Show Clear”.</li>
+      <li>Deltagelse sker på eget ansvar, men alle skal bidrage til, at aktiviteten foregår sikkert og ansvarligt.</li>
+    </ul>
+
+    <h3 class="western-text text-xl mt-10 mb-3">2. Våbenhåndtering</h3>
+    <ul class="list-disc pl-6 section-content mb-6">
+      <li>Behandl altid dit våben som om det er ladt.</li>
+      <li>Peg aldrig løbet mod noget, du ikke vil ødelægge – især aldrig mod en person.</li>
+      <li>Våben må kun lades på kommando og på skydebanen.</li>
+      <li>Når du ikke skyder, skal alle våben være tømte, sikrede og pege i sikker retning.</li>
+      <li>Fingeren væk fra aftrækkeren, indtil du er klar til at skyde.</li>
+      <li>Seks-løbere (revolvere) skal bæres med hammeren ned på et tomt kammer.</li>
+      <li>Rifler må kun være ladt, når skytter står ved startpositionen og på kommando.</li>
+      <li>Haglgeværer må ikke transporteres med patroner i kammeret.</li>
+      <li>Efter endt stage skal alle våben vises sikre for Range Officer.</li>
+      <li>Overtrædelse af sikker våbenhåndtering kan medføre straffe eller diskvalifikation.</li>
+    </ul>
+
+    <h3 class="western-text text-xl mt-10 mb-3">3. Beklædning og Udstyr</h3>
+    <ul class="list-disc pl-6 section-content mb-6">
+      <li>Cowboy Action Shooting er også en tidsrejse! Vi opfordrer alle til at bære autentisk western-inspireret tøj – fra ca. 1850 til 1899.</li>
+      <li>Tøj skal være rimeligt passende for perioden, men komfort og sikkerhed kommer først.</li>
+      <li>Skydebriller og høreværn er obligatoriske under al skydning.</li>
+      <li>Udstyr (bælter, hylstre, geværer m.m.) skal være sikkert, funktionelt og inden for CAS-reglerne.</li>
+      <li>Moderne hjælpemidler (laser, optik, moderne ammunitionstyper osv.) er ikke tilladt.</li>
+      <li>Kun kalibre, der svarer til perioden, må bruges, og ingen magnumladninger er tilladt.</li>
+    </ul>
+
+    <h3 class="western-text text-xl mt-10 mb-3">4. Konkurrencer</h3>
+    <ul class="list-disc pl-6 section-content mb-6">
+      <li>Alle deltagere skal være tilmeldt og sikkerhedsgodkendt før start.</li>
+      <li>Skydelederen har det sidste ord i alle spørgsmål om regler, fortolkning og sikkerhed.</li>
+      <li>Stage-beskrivelser og kommandoer skal følges nøjagtigt – ingen improvisation.</li>
+      <li>Ved fejl i procedure eller mål skal Range Officer underrettes med det samme.</li>
+      <li>Usportslig opførsel – f.eks. råben, fornærmelser eller bevidst snyd – kan føre til advarsel eller bortvisning.</li>
+      <li>Alle skytter forventes at hjælpe til som posse-medlemmer (timer, spotter, brass picker osv.) når de ikke skyder.</li>
+    </ul>
+
+    <h3 class="western-text text-xl mt-10 mb-3">5. Sikkerhed Først</h3>
+    <p class="section-content mb-6">
+      Branchcreek Bandits bygger på fællesskab, ansvar og respekt – for både sporten, historien og hinanden.  
+      Vi skyder for sjov, fællesskab og præcision, men sikkerhed kommer altid først.  
+      Ved at følge reglerne hjælper du os med at bevare et trygt, respektfuldt og autentisk miljø for alle medlemmer.
+    </p>
+
+    <div class="mt-10 text-center">
+      <a href="index.html" class="bg-yellow-600 text-white px-6 py-2 rounded-lg shadow hover:bg-yellow-700 transition">Tilbage til forsiden</a>
+    </div>
+
+  </div>
+</section>
+
+</div>
+
+<!-- Dynamic Footer -->
+<div id="footer"></div>
+
+<!-- Scripts -->
+<script>
+feather.replace();
+
+// Load HTML fragments
+function includeHTML(file, elementId, callback){
+  fetch(file).then(res=>res.text())
+             .then(data=>{
+               document.getElementById(elementId).innerHTML = data;
+               if(callback) callback();
+               feather.replace();
+             })
+             .catch(err=>console.error(err));
+}
+
+// Load navbar first, then setup auth
+includeHTML("nav.html","navbar",()=>{
+  if(typeof setupAuth === 'function') setupAuth();
+
+  const menuBtn=document.getElementById('menu-btn');
+  const mobileMenu=document.getElementById('mobile-menu');
+  if(menuBtn && mobileMenu) menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
+
+  const loginBtn=document.getElementById('login-btn');
+  const loginDropdown=document.getElementById('login-dropdown');
+  if(loginBtn && loginDropdown) loginBtn.addEventListener('click',()=>loginDropdown.classList.toggle('hidden'));
+
+  const mobileLoginBtn=document.getElementById('mobile-login-btn');
+  const mobileLoginForm=document.getElementById('mobile-login-form');
+  if(mobileLoginBtn && mobileLoginForm) mobileLoginBtn.addEventListener('click',()=>mobileLoginForm.classList.toggle('hidden'));
+});
+
+includeHTML("footer.html","footer");
+</script>
+
+<!-- Firebase Auth -->
+<script type="module" src="js/auth.js"></script>
+
+</body>
+</html>
