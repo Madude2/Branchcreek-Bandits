@@ -22,12 +22,13 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Western', sans-serif; }
 input, button { border-radius: 0 !important; }
 </style>
 </head>
-<body class="bg-gray-100 font-sans">
+
+<body class="bg-gray-100 font-sans flex flex-col min-h-screen">
 
 <!-- Dynamic Navbar -->
 <div id="navbar"></div>
 
-<!-- Slideshow Section -->
+<!-- Slideshow -->
 <section class="relative w-full overflow-hidden">
   <div class="relative h-96 md:h-[500px]">
     <div class="absolute inset-0 transition-opacity duration-1000 opacity-100 slide">
@@ -51,7 +52,7 @@ input, button { border-radius: 0 !important; }
   </div>
 </section>
 
-<!-- Latest News / Forum Teaser -->
+<!-- Latest News -->
 <section class="py-12">
   <div class="container mx-auto px-6">
     <h2 class="text-3xl font-bold mb-6 western-text">Seneste Nyt</h2>
@@ -78,113 +79,75 @@ input, button { border-radius: 0 !important; }
 <!-- Dynamic Footer -->
 <div id="footer"></div>
 
-<!-- Firebase Auth -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+<!-- includeHTML helper -->
+<script>
+async function includeHTML(file, elementId, callback) {
+  try {
+    const res = await fetch(file);
+    const html = await res.text();
+    const mount = document.getElementById(elementId);
+    mount.innerHTML = html;
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
-  authDomain: "branchcreek-bandits.firebaseapp.com",
-  projectId: "branchcreek-bandits",
-  storageBucket: "branchcreek-bandits.firebasestorage.app",
-  messagingSenderId: "828305260971",
-  appId: "1:828305260971:web:6c3601fc97601a9621d2ee",
-  measurementId: "G-550TRD5SQ3"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-window.setupAuth = function() {
-  function updateMenu(name) {
-    const loginBtn = document.getElementById("login-btn");
-    const mobileLoginBtn = document.getElementById("mobile-login-btn");
-    if(loginBtn) loginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
-    if(mobileLoginBtn) mobileLoginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
-  }
-
-  // Desktop login
-  window.login = function() {
-    const email = document.getElementById("login-email").value;
-    const password = document.getElementById("login-password").value;
-
-    signInWithEmailAndPassword(auth,email,password)
-      .then(userCredential => {
-        const name = userCredential.user.displayName || userCredential.user.email;
-        updateMenu(name);
-        document.getElementById("login-dropdown").classList.add("hidden");
-      })
-      .catch(err => alert(err.message));
-  }
-
-  // Mobile login
-  window.mobileLogin = function() {
-    const email = document.getElementById("mobile-login-email").value;
-    const password = document.getElementById("mobile-login-password").value;
-
-    signInWithEmailAndPassword(auth,email,password)
-      .then(userCredential => {
-        const name = userCredential.user.displayName || userCredential.user.email;
-        updateMenu(name);
-        document.getElementById("mobile-login-form").classList.add("hidden");
-      })
-      .catch(err => alert(err.message));
-  }
-
-  // Persistent login
-  onAuthStateChanged(auth,user=>{
-    if(user) {
-      const name = user.displayName || user.email;
-      updateMenu(name);
+    // Re-run any inline scripts from nav/footer
+    const scripts = mount.querySelectorAll("script");
+    for (const oldScript of scripts) {
+      const s = document.createElement("script");
+      for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
+      if (!oldScript.src) s.textContent = oldScript.textContent;
+      document.body.appendChild(s);
     }
-  });
 
-  // Logout
-  window.logout = function() {
-    signOut(auth).then(()=> location.reload()).catch(err=>alert(err.message));
+    if (window.feather) feather.replace();
+    if (callback) callback();
+  } catch (err) {
+    console.error("includeHTML error:", err);
   }
 }
 </script>
 
+<!-- Load Navbar + Footer like forum -->
 <script>
-// Load navbar and footer dynamically
-function includeHTML(file, elementId, callback){
-  fetch(file).then(res=>res.text()).then(data=>{
-    document.getElementById(elementId).innerHTML = data;
-    if(callback) callback();
-    feather.replace();
-  }).catch(err=>console.error(err));
-}
+includeHTML("nav.html", "navbar", () => {
+  if (typeof setupAuth === "function") setupAuth();
 
-// Navbar
-includeHTML("nav.html","navbar",()=>{
   const menuBtn=document.getElementById('menu-btn');
   const mobileMenu=document.getElementById('mobile-menu');
-  if(menuBtn) menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
+  if(menuBtn && mobileMenu) menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
 
   const loginBtn=document.getElementById('login-btn');
   const loginDropdown=document.getElementById('login-dropdown');
-  if(loginBtn) loginBtn.addEventListener('click',()=>loginDropdown.classList.toggle('hidden'));
+  if(loginBtn && loginDropdown) loginBtn.addEventListener('click',()=>loginDropdown.classList.toggle('hidden'));
 
   const mobileLoginBtn=document.getElementById('mobile-login-btn');
   const mobileLoginForm=document.getElementById('mobile-login-form');
-  if(mobileLoginBtn) mobileLoginBtn.addEventListener('click',()=>mobileLoginForm.classList.toggle('hidden'));
+  if(mobileLoginBtn && mobileLoginForm) mobileLoginBtn.addEventListener('click',()=>mobileLoginForm.classList.toggle('hidden'));
 
-  setupAuth(); // ✅ Setup Firebase auth AFTER navbar exists
+  // 🔔 Force refresh of notifications after nav loads
+  setTimeout(() => {
+    if (typeof window.refreshNotificationsBadge === "function") {
+      window.refreshNotificationsBadge();
+    }
+  }, 1200);
 });
 
-// Footer
-includeHTML("footer.html","footer");
+includeHTML("footer.html", "footer");
+</script>
 
-// Slideshow
-const slides=document.querySelectorAll('.slide');
-let currentIndex=0;
-function showSlide(index){slides.forEach((slide,i)=>slide.style.opacity=i===index?'1':'0');}
+<!-- Slideshow -->
+<script>
+const slides = document.querySelectorAll(".slide");
+let currentIndex = 0;
+function showSlide(i){slides.forEach((s,idx)=>s.style.opacity=idx===i?"1":"0");}
 function nextSlide(){currentIndex=(currentIndex+1)%slides.length;showSlide(currentIndex);}
-showSlide(currentIndex);
+showSlide(0);
 setInterval(nextSlide,5000);
 </script>
+
+<!-- Shared Scripts -->
+<script type="module" src="js/firebase.js"></script>
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/common.js"></script>
+
 
 </body>
 </html>

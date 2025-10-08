@@ -1,231 +1,212 @@
 <!DOCTYPE html>
 <html lang="da">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Galleri - Branchcreek Bandits</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Galleri - Branchcreek Bandits</title>
 
-<!-- Tailwind + Fonts + Icons -->
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-<link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
+  <!-- Tailwind + Fonts + Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+  <link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
 
-<style>
-.nav-link { color: white; }
-.nav-link:hover { color: #d4a017; }
-.western-text { font-family: 'Western', sans-serif; }
-.cursor-pointer { cursor: pointer; }
+  <style>
+    .nav-link { color: white; }
+    .nav-link:hover { color: #d4a017; }
+    .western-text { font-family: 'Western', sans-serif; }
 
-/* Gallery Grid */
-.gallery-grid img {
-  width: 100%;
-  height: 250px;
-  object-fit: cover;
-  border-radius: 0.5rem;
-  cursor: pointer;
-}
+    /* Gallery Grid */
+    .gallery-grid img {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .gallery-grid img:hover { transform: scale(1.03); }
 
-/* Modal */
-#modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.9);
-  justify-content: center;
-  align-items: center;
-  z-index: 50;
-}
+    /* Modal */
+    #modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.9);
+      justify-content: center;
+      align-items: center;
+      z-index: 50;
+    }
+    #modal-img {
+      max-height: 90%;
+      max-width: 90%;
+      border-radius: 0.5rem;
+      transform: scale(0.9);
+      transition: transform 0.3s ease;
+    }
+    #modal.show #modal-img { transform: scale(1); }
 
-#modal-img {
-  max-height: 90%;
-  max-width: 90%;
-  border-radius: 0.5rem;
-  transform: scale(0.9);
-  transition: transform 0.3s ease;
-}
-
-#modal.show #modal-img { transform: scale(1); }
-
-/* Overlay controls */
-.modal-control {
-  position: absolute;
-  color: white;
-  font-size: 2.5rem;
-  cursor: pointer;
-  user-select: none;
-  z-index: 100;
-}
-#close-btn { top: 1rem; right: 2rem; }
-#prev-btn { left: 1rem; top: 50%; transform: translateY(-50%); }
-#next-btn { right: 1rem; top: 50%; transform: translateY(-50%); }
-</style>
+    /* Overlay controls */
+    .modal-control {
+      position: absolute;
+      color: white;
+      font-size: 2.5rem;
+      cursor: pointer;
+      user-select: none;
+      z-index: 100;
+      transition: opacity 0.2s ease;
+    }
+    .modal-control:hover { opacity: 0.7; }
+    #close-btn { top: 1rem; right: 2rem; }
+    #prev-btn { left: 1rem; top: 50%; transform: translateY(-50%); }
+    #next-btn { right: 1rem; top: 50%; transform: translateY(-50%); }
+  </style>
 </head>
+
 <body class="bg-gray-100 font-sans flex flex-col min-h-screen">
 
-<!-- Dynamic Navbar -->
-<div id="navbar"></div>
+  <!-- Dynamic Navbar -->
+  <div id="navbar"></div>
 
-<!-- Main Content -->
-<div class="flex-grow">
-  <!-- Gallery Section -->
-  <section class="py-16 bg-white">
-    <div class="container mx-auto px-6 max-w-5xl">
-      <h1 class="western-text text-5xl mb-6 text-center">Galleri</h1>
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 gallery-grid" id="gallery"></div>
-    </div>
+  <!-- Main Content -->
+  <main class="flex-grow">
+    <section class="py-16 bg-white">
+      <div class="container mx-auto px-6 max-w-5xl">
+        <h1 class="western-text text-5xl mb-8 text-center text-gray-900">Galleri</h1>
+        <p class="text-center text-gray-700 mb-8">
+          Tag et kig på vores seneste billeder fra stævner, træning og fællesskab.
+        </p>
 
-    <!-- Modal -->
-    <div id="modal" class="flex">
-      <img id="modal-img" src="">
-      <span id="close-btn" class="modal-control" onclick="closeModal()">&times;</span>
-      <span id="prev-btn" class="modal-control" onclick="prevImage()">&#10094;</span>
-      <span id="next-btn" class="modal-control" onclick="nextImage()">&#10095;</span>
-    </div>
-  </section>
-</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 gallery-grid" id="gallery"></div>
+      </div>
 
-<!-- Dynamic Footer -->
-<div id="footer"></div>
+      <!-- Modal -->
+      <div id="modal" class="flex">
+        <img id="modal-img" src="">
+        <span id="close-btn" class="modal-control" onclick="closeModal()">&times;</span>
+        <span id="prev-btn" class="modal-control" onclick="prevImage()">&#10094;</span>
+        <span id="next-btn" class="modal-control" onclick="nextImage()">&#10095;</span>
+      </div>
+    </section>
+  </main>
 
-<!-- Scripts -->
-<script>
-feather.replace();
+  <!-- Dynamic Footer -->
+  <div id="footer"></div>
 
-// Include HTML
-function includeHTML(file, elementId, callback){
-  fetch(file)
-    .then(res => res.text())
-    .then(data => {
-      document.getElementById(elementId).innerHTML = data;
-      if(callback) callback();
-      feather.replace();
-    })
-    .catch(err => console.error(err));
-}
+  <!-- -------- includeHTML helper -------- -->
+  <script>
+  async function includeHTML(file, elementId, callback){
+    try {
+      const res = await fetch(file);
+      const html = await res.text();
+      const mount = document.getElementById(elementId);
+      mount.innerHTML = html;
 
-// Load Navbar + Footer
-includeHTML("nav.html", "navbar", () => {
-  // Mobile menu toggle
-  const menuBtn = document.getElementById('menu-btn');
-  const mobileMenu = document.getElementById('mobile-menu');
-  if(menuBtn) menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+      // Re-run any <script> tags in injected HTML
+      const scripts = mount.querySelectorAll("script");
+      for (const oldScript of scripts) {
+        const s = document.createElement("script");
+        for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
+        if (!oldScript.src) s.textContent = oldScript.textContent;
+        document.body.appendChild(s);
+      }
 
-  const loginBtn = document.getElementById('login-btn');
-  const loginDropdown = document.getElementById('login-dropdown');
-  if(loginBtn) loginBtn.addEventListener('click', () => loginDropdown.classList.toggle('hidden'));
-
-  const mobileLoginBtn = document.getElementById('mobile-login-btn');
-  const mobileLoginForm = document.getElementById('mobile-login-form');
-  if(mobileLoginBtn) mobileLoginBtn.addEventListener('click', () => mobileLoginForm.classList.toggle('hidden'));
-
-  // ✅ Setup Firebase auth after navbar exists
-  setupAuth();
-});
-
-includeHTML("footer.html", "footer");
-
-// Gallery Images
-const images = [
-  "gallari/BB1.jpg",
-  "gallari/BB2.jpg",
-  "gallari/BB3.jpg"
-];
-
-let currentIndex = 0;
-const gallery = document.getElementById('gallery');
-images.forEach((src, index) => {
-  const img = document.createElement('img');
-  img.src = src;
-  img.onclick = () => openModal(index);
-  gallery.appendChild(img);
-});
-
-function openModal(index){
-  currentIndex = index;
-  const modal = document.getElementById('modal');
-  const modalImg = document.getElementById('modal-img');
-  modalImg.src = images[currentIndex];
-  modal.style.display = 'flex';
-  setTimeout(()=>modalImg.style.transform = 'scale(1)', 10);
-}
-
-function closeModal(){
-  const modal = document.getElementById('modal');
-  const modalImg = document.getElementById('modal-img');
-  modalImg.style.transform = 'scale(0.9)';
-  setTimeout(()=> modal.style.display='none', 300);
-}
-
-function nextImage(){
-  currentIndex = (currentIndex + 1) % images.length;
-  document.getElementById('modal-img').src = images[currentIndex];
-}
-
-function prevImage(){
-  currentIndex = (currentIndex - 1 + images.length) % images.length;
-  document.getElementById('modal-img').src = images[currentIndex];
-}
-</script>
-
-<!-- Firebase Auth -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
-  authDomain: "branchcreek-bandits.firebaseapp.com",
-  projectId: "branchcreek-bandits",
-  storageBucket: "branchcreek-bandits.firebasestorage.app",
-  messagingSenderId: "828305260971",
-  appId: "1:828305260971:web:6c3601fc97601a9621d2ee",
-  measurementId: "G-550TRD5SQ3"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-window.setupAuth = function() {
-  function updateMenu(name) {
-    const loginBtn = document.getElementById("login-btn");
-    const mobileLoginBtn = document.getElementById("mobile-login-btn");
-    if(loginBtn) loginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
-    if(mobileLoginBtn) mobileLoginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
+      if (window.feather) feather.replace();
+      if (callback) callback();
+    } catch (err) {
+      console.error("includeHTML error:", err);
+    }
   }
+  </script>
 
-  window.login = function() {
-    const email = document.getElementById("login-email").value;
-    const password = document.getElementById("login-password").value;
+  <!-- -------- Load Navbar + Footer (Forum Logic) -------- -->
+  <script>
+  includeHTML("nav.html", "navbar", () => {
+    if (typeof setupAuth === "function") setupAuth();
 
-    signInWithEmailAndPassword(auth,email,password)
-      .then(userCredential => {
-        updateMenu(userCredential.user.displayName || userCredential.user.email);
-        document.getElementById("login-dropdown").classList.add("hidden");
-      })
-      .catch(err=>alert(err.message));
-  }
+    // Menu toggles
+    const menuBtn=document.getElementById('menu-btn');
+    const mobileMenu=document.getElementById('mobile-menu');
+    if(menuBtn && mobileMenu) menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
 
-  window.mobileLogin = function() {
-    const email = document.getElementById("mobile-login-email").value;
-    const password = document.getElementById("mobile-login-password").value;
+    const loginBtn=document.getElementById('login-btn');
+    const loginDropdown=document.getElementById('login-dropdown');
+    if(loginBtn && loginDropdown) loginBtn.addEventListener('click',()=>loginDropdown.classList.toggle('hidden'));
 
-    signInWithEmailAndPassword(auth,email,password)
-      .then(userCredential => {
-        updateMenu(userCredential.user.displayName || userCredential.user.email);
-        document.getElementById("mobile-login-form").classList.add("hidden");
-      })
-      .catch(err=>alert(err.message));
-  }
+    const mobileLoginBtn=document.getElementById('mobile-login-btn');
+    const mobileLoginForm=document.getElementById('mobile-login-form');
+    if(mobileLoginBtn && mobileLoginForm) mobileLoginBtn.addEventListener('click',()=>mobileLoginForm.classList.toggle('hidden'));
 
-  onAuthStateChanged(auth,user=>{
-    if(user) updateMenu(user.displayName || user.email);
+    // 🔔 Refresh notifications badge after nav loads
+    setTimeout(() => {
+      if (typeof window.refreshNotificationsBadge === "function") {
+        window.refreshNotificationsBadge();
+      }
+    }, 1200);
   });
 
-  window.logout = function() {
-    signOut(auth).then(()=> location.reload()).catch(err=>alert(err.message));
-  }
-}
-</script>
+  includeHTML("footer.html", "footer");
+  </script>
+
+  <!-- -------- Gallery Logic -------- -->
+  <script>
+    feather.replace();
+
+    const images = [
+      "gallari/BB1.jpg",
+      "gallari/BB2.jpg",
+      "gallari/BB3.jpg"
+    ];
+
+    let currentIndex = 0;
+    const gallery = document.getElementById('gallery');
+    images.forEach((src, index) => {
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = `Galleri billede ${index + 1}`;
+      img.addEventListener('click', () => openModal(index));
+      gallery.appendChild(img);
+    });
+
+    function openModal(index) {
+      currentIndex = index;
+      const modal = document.getElementById('modal');
+      const modalImg = document.getElementById('modal-img');
+      modalImg.src = images[currentIndex];
+      modal.style.display = 'flex';
+      setTimeout(() => modal.classList.add('show'), 10);
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('modal');
+      modal.classList.remove('show');
+      setTimeout(() => modal.style.display = 'none', 300);
+    }
+
+    function nextImage() {
+      currentIndex = (currentIndex + 1) % images.length;
+      document.getElementById('modal-img').src = images[currentIndex];
+    }
+
+    function prevImage() {
+      currentIndex = (currentIndex - 1 + images.length) % images.length;
+      document.getElementById('modal-img').src = images[currentIndex];
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (document.getElementById('modal').style.display === 'flex') {
+        if (e.key === 'ArrowRight') nextImage();
+        if (e.key === 'ArrowLeft') prevImage();
+        if (e.key === 'Escape') closeModal();
+      }
+    });
+  </script>
+
+  <!-- Shared Scripts -->
+<script type="module" src="js/firebase.js"></script>
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/common.js"></script>
+
 
 </body>
 </html>

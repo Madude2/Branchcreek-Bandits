@@ -1,189 +1,136 @@
 <!DOCTYPE html>
 <html lang="da">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forum - Branchcreek Bandits</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forum - Branchcreek Bandits</title>
 
-<!-- Tailwind + Fonts + Icons -->
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+  <!-- Tailwind + Fonts + Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 
-<style>
-.nav-link { color: white; }
-.nav-link:hover { color: #d4a017; }
-.western-text { font-family: 'Western', sans-serif; }
-.forum-post { background:white; padding:1.5rem; border-radius:0.5rem; transition:0.3s; }
-.forum-post:hover { box-shadow:0 4px 6px rgba(0,0,0,0.1); transform:translateY(-2px); }
-#forum-content { display:none; }
-input, button { border-radius:0 !important; }
-</style>
+  <style>
+    .nav-link { color: white; }
+    .nav-link:hover { color: #d4a017; }
+    .western-text { font-family: 'Western', sans-serif; }
+    .forum-post { background:white; padding:1.5rem; border-radius:0.5rem; transition:0.3s; }
+    .forum-post:hover { box-shadow:0 4px 6px rgba(0,0,0,0.1); transform:translateY(-2px); }
+    #forum-content { display:none; }
+    input, button { border-radius:0 !important; }
+  </style>
 </head>
+
 <body class="bg-gray-100 font-sans flex flex-col min-h-screen">
 
-<!-- Dynamic Navbar -->
-<div id="navbar"></div>
+  <!-- Dynamic Navbar -->
+  <div id="navbar"></div>
 
-<!-- Main content grows to fill space -->
-<div class="flex-grow">
-  <!-- Forum Section -->
-  <section class="py-16">
-    <div class="container mx-auto px-6 max-w-5xl">
-      <h1 class="western-text text-5xl mb-6 text-center">Forum</h1>
-      <div id="login-warning" class="text-center text-red-500 mb-6">
-        Du skal være logget ind for at bruge forum. Log ind via knappen i toppen, eller opret en konto.
-      </div>
-      <div id="forum-content">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="forum-post">
-            <h3 class="text-xl font-bold mb-2">Velkommen!</h3>
-            <p>Dette er forumet, hvor alle medlemmer kan diskutere Western Shooting.</p>
-          </div>
-          <div class="forum-post">
-            <h3 class="text-xl font-bold mb-2">Nyt skydestævne</h3>
-            <p>Del dine oplevelser fra det seneste skydestævne her.</p>
+  <!-- Main content -->
+  <div class="flex-grow">
+    <section class="py-16">
+      <div class="container mx-auto px-6 max-w-5xl">
+        <h1 class="western-text text-5xl mb-6 text-center">Forum</h1>
+
+        <div id="login-warning" class="text-center text-red-500 mb-6">
+          Du skal være logget ind for at bruge forum. Log ind via knappen i toppen, eller opret en konto.
+        </div>
+
+        <div id="forum-content">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="forum-post">
+              <h3 class="text-xl font-bold mb-2">Velkommen!</h3>
+              <p>Dette er forumet, hvor alle medlemmer kan diskutere Western Shooting.</p>
+            </div>
+            <div class="forum-post">
+              <h3 class="text-xl font-bold mb-2">Nyt skydestævne</h3>
+              <p>Del dine oplevelser fra det seneste skydestævne her.</p>
+            </div>
           </div>
         </div>
+
       </div>
-    </div>
-  </section>
-</div>
+    </section>
+  </div>
 
-<!-- Dynamic Footer -->
-<div id="footer"></div>
+  <!-- Dynamic Footer -->
+  <div id="footer"></div>
 
-<!-- Firebase Auth -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+  <!-- -------- includeHTML helper -------- -->
+  <script>
+  async function includeHTML(file, elementId, callback){
+    try {
+      const res = await fetch(file);
+      const html = await res.text();
+      const mount = document.getElementById(elementId);
+      mount.innerHTML = html;
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
-  authDomain: "branchcreek-bandits.firebaseapp.com",
-  projectId: "branchcreek-bandits",
-  storageBucket: "branchcreek-bandits.firebasestorage.app",
-  messagingSenderId: "828305260971",
-  appId: "1:828305260971:web:6c3601fc97601a9621d2ee",
-  measurementId: "G-550TRD5SQ3"
-};
+      // Re-run any <script> tags from the injected HTML
+      const scripts = mount.querySelectorAll("script");
+      for (const oldScript of scripts) {
+        const s = document.createElement("script");
+        for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
+        if (!oldScript.src) s.textContent = oldScript.textContent;
+        document.body.appendChild(s);
+      }
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-// Setup auth functions
-window.setupAuth = function(){
-  function updateMenu(name){
-    const loginBtn=document.getElementById("login-btn");
-    const mobileLoginBtn=document.getElementById("mobile-login-btn");
-    if(loginBtn) loginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
-    if(mobileLoginBtn) mobileLoginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
-  }
-
-  function unlockForum(){
-    document.getElementById("forum-content").style.display="block";
-    document.getElementById("login-warning").style.display="none";
-  }
-
-  function lockForum(){
-    document.getElementById("forum-content").style.display="none";
-    document.getElementById("login-warning").style.display="block";
-  }
-
-  // Desktop login
-  window.login = function(){
-    const email = document.getElementById("login-email").value;
-    const password = document.getElementById("login-password").value;
-
-    signInWithEmailAndPassword(auth,email,password)
-      .then(userCredential=>{
-        const user = userCredential.user;
-        if(!user.emailVerified){
-          alert("Du skal bekræfte din e-mail før du kan bruge forum.");
-          signOut(auth);
-          lockForum();
-          return;
-        }
-        updateMenu(user.displayName||user.email);
-        document.getElementById("login-dropdown").classList.add("hidden");
-        unlockForum();
-      })
-      .catch(err=>alert(err.message));
-  }
-
-  // Mobile login
-  window.mobileLogin = function(){
-    const email = document.getElementById("mobile-login-email").value;
-    const password = document.getElementById("mobile-login-password").value;
-
-    signInWithEmailAndPassword(auth,email,password)
-      .then(userCredential=>{
-        const user = userCredential.user;
-        if(!user.emailVerified){
-          alert("Du skal bekræfte din e-mail før du kan bruge forum.");
-          signOut(auth);
-          lockForum();
-          return;
-        }
-        updateMenu(user.displayName||user.email);
-        document.getElementById("mobile-login-form").classList.add("hidden");
-        unlockForum();
-      })
-      .catch(err=>alert(err.message));
-  }
-
-  // Page-level persistent login + email verification
-  onAuthStateChanged(auth,user=>{
-    if(user && user.emailVerified){
-      updateMenu(user.displayName||user.email);
-      unlockForum();
-    } else if(user && !user.emailVerified){
-      alert("Du skal bekræfte din e-mail før du kan bruge forum.");
-      signOut(auth);
-      lockForum();
-    } else {
-      lockForum();
+      if (window.feather) feather.replace();
+      if (callback) callback();
+    } catch (err) {
+      console.error("includeHTML error:", err);
     }
+  }
+  </script>
+
+  <!-- -------- Forum visibility controls -------- -->
+  <script>
+  window.unlockForum = function(){
+    const f = document.getElementById("forum-content");
+    const w = document.getElementById("login-warning");
+    if (f && w) { f.style.display = "block"; w.style.display = "none"; }
+  };
+  window.lockForum = function(){
+    const f = document.getElementById("forum-content");
+    const w = document.getElementById("login-warning");
+    if (f && w) { f.style.display = "none"; w.style.display = "block"; }
+  };
+  </script>
+
+  <!-- -------- Load Navbar + Footer -------- -->
+  <script>
+  includeHTML("nav.html", "navbar", () => {
+    // Kør auth.js efter nav eksisterer
+    if (typeof setupAuth === "function") setupAuth();
+
+    // Menu toggles
+    const menuBtn=document.getElementById('menu-btn');
+    const mobileMenu=document.getElementById('mobile-menu');
+    if(menuBtn && mobileMenu) menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
+
+    const loginBtn=document.getElementById('login-btn');
+    const loginDropdown=document.getElementById('login-dropdown');
+    if(loginBtn && loginDropdown) loginBtn.addEventListener('click',()=>loginDropdown.classList.toggle('hidden'));
+
+    const mobileLoginBtn=document.getElementById('mobile-login-btn');
+    const mobileLoginForm=document.getElementById('mobile-login-form');
+    if(mobileLoginBtn && mobileLoginForm) mobileLoginBtn.addEventListener('click',()=>mobileLoginForm.classList.toggle('hidden'));
+
+    // 🔔 Force refresh of notifications after nav loads
+    setTimeout(() => {
+      if (typeof window.refreshNotificationsBadge === "function") {
+        window.refreshNotificationsBadge();
+      }
+    }, 1200); // vent lidt for auth+nav at loade
   });
 
-  window.logout = function(){
-    signOut(auth).then(()=>{
-      lockForum();
-      location.reload();
-    }).catch(err=>alert(err.message));
-  }
-}
-</script>
+  includeHTML("footer.html", "footer");
+  </script>
 
-<script>
-// Load navbar and footer dynamically
-function includeHTML(file,elementId,callback){
-  fetch(file).then(res=>res.text()).then(data=>{
-    document.getElementById(elementId).innerHTML=data;
-    if(callback) callback();
-    feather.replace();
-  }).catch(err=>console.error(err));
-}
+  <!-- Shared Scripts -->
+  <script type="module" src="js/firebase.js"></script>
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/common.js"></script>
 
-// Navbar
-includeHTML("nav.html","navbar",()=>{
-  setupAuth();
 
-  const menuBtn=document.getElementById('menu-btn');
-  const mobileMenu=document.getElementById('mobile-menu');
-  if(menuBtn && mobileMenu) menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
-
-  const loginBtn=document.getElementById('login-btn');
-  const loginDropdown=document.getElementById('login-dropdown');
-  if(loginBtn && loginDropdown) loginBtn.addEventListener('click',()=>loginDropdown.classList.toggle('hidden'));
-
-  const mobileLoginBtn=document.getElementById('mobile-login-btn');
-  const mobileLoginForm=document.getElementById('mobile-login-form');
-  if(mobileLoginBtn && mobileLoginForm) mobileLoginBtn.addEventListener('click',()=>mobileLoginForm.classList.toggle('hidden'));
-});
-
-// Footer
-includeHTML("footer.html","footer");
-</script>
 </body>
 </html>

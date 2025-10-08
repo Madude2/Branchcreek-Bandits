@@ -1,127 +1,157 @@
 <!DOCTYPE html>
 <html lang="da">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Information - Branchcreek Bandits</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Information - Branchcreek Bandits</title>
 
-<!-- Tailwind + Fonts + Icons -->
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-<link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
+  <!-- Tailwind + Fonts + Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+  <link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
 
-<style>
-.nav-link { color: white; }
-.nav-link:hover { color: #d4a017; }
-.western-text { font-family: 'Western', sans-serif; }
-</style>
+  <style>
+    .nav-link { color: white; }
+    .nav-link:hover { color: #d4a017; }
+    .western-text { font-family: 'Western', sans-serif; }
+    .btn-gold { background-color: #d4a017; transition: all 0.3s ease; }
+    .btn-gold:hover { background-color: #b78a14; transform: translateY(-2px); }
+  </style>
 </head>
-<body class="bg-gray-100 font-sans">
 
-<!-- Dynamic Navbar -->
-<div id="navbar"></div>
+<body class="bg-gray-100 font-sans flex flex-col min-h-screen">
 
-<!-- Main Info Section -->
-<section class="py-16 bg-white">
-  <div class="container mx-auto px-6 max-w-4xl">
-    <h1 class="western-text text-5xl mb-6 text-center">Information</h1>
+  <!-- Dynamic Navbar -->
+  <div id="navbar"></div>
 
+  <!-- Main Info Section -->
+  <main class="flex-grow py-16 bg-white">
+    <div class="container mx-auto px-6 max-w-4xl">
+      <h1 class="western-text text-5xl mb-8 text-center text-gray-900">Information</h1>
 
-    <h1 class="western-text text-3xl mb-6 text-center">COWBOY ACTION SHOOTING</h1>
-    <p class="text-gray-700 leading-relaxed">
-      Cowboy Action Shooting er en alsidig amatørskydesport, hvor deltagerne konkurrerer med skydevåben, der er typiske for dem, der blev brugt til at tæmme det gamle vesten: single action-revolvere, lever action-rifler og side-by-side dobbeltløbede haglgeværer med pump eller lever action fra før 1899. Skydekonkurrencen afholdes i en unik og karakteriseret stil fra det gamle vesten.
-Deltagerne skyder i flere fire skudfaser (skudbaner), hvor de angriber stålmål i et specifikt designet scenario og skydesekvens.
-Både amerikanske historieinteresserede og seriøse skytter er enige om, at brugen af ​​vintage-skydevåben, autentiske kostumer, unikke mål og hurtig action gør Cowboy Action Shooting til en af ​​de mest interessante skydesportsgrene for både tilskuer og deltager. </p>
- <br>
-
-<h1 class="western-text text-3xl mb-6 text-center">asdasdasdasdad</h1>
-
-
-
-</div>
-</section>
-
-<!-- Info Cards -->
-<section class="py-12 bg-gray-100">
-  <div class="container mx-auto px-6">
-    <h2 class="text-3xl font-bold mb-8 text-center western-text">Læs Mere Om ...</h2>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      
-      <!-- Western Arsenalet Card -->
-      <a href="westernarssenal.html" 
-         class="block bg-white shadow-lg rounded-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2">
-        <img src="https://cowboyaccountant.com/wp-content/uploads/2019/09/5b47ca5acf1341c2c17d10d4ac283835.jpg" 
-             class="w-full h-72 object-cover">
-        <div class="p-5">
-          <h3 class="text-xl font-bold mb-2">Western Arsenalet</h3>
-          <p class="text-gray-700">Lær mere om våben og udstyr i Cowboy Action Shooting.</p>
-        </div>
-      </a>
-
-      <!-- Rules Card -->
-      <a href="rules.html" 
-         class="block bg-white shadow-lg rounded-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2">
-        <img src="assets/RULES.JPG" 
-             class="w-full h-72 object-cover">
-        <div class="p-5">
-          <h3 class="text-xl font-bold mb-2">Regler og Sikkerhed</h3>
-          <p class="text-gray-700">Læs mere om sikkerhed og retningslinjer for Cowboy Action Shooting.</p>
-        </div>
-      </a>
-
-
-
-     <a href="westernarssenal.html" class="block bg-white shadow-lg rounded-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2">
-        <img src="https://assets.basspro.com/image/upload/f_auto/dpr_2.0/t_Prod_PLPThumb/c_scale,w_220/v1/ProductImages/450/master1_101637840_main?_a=DAJHqpDaZAAA" class="w-full object-cover">
-        <div class="p-6">
-          <h3 class="text-xl font-bold mb-2">Under ombygning</h3>
-          <p class="text-gray-700">text.</p>
-        </div>
-      </a>
-
+      <h2 class="western-text text-3xl mb-6 text-center text-yellow-700">Cowboy Action Shooting</h2>
+      <p class="text-gray-700 leading-relaxed mb-8">
+        Cowboy Action Shooting er en alsidig amatørskydesport, hvor deltagerne konkurrerer med skydevåben, 
+        der er typiske for det gamle vesten: single action-revolvere, lever action-rifler og side-by-side 
+        dobbeltløbede haglgeværer med pump eller lever action fra før 1899. 
+      </p>
+      <p class="text-gray-700 leading-relaxed mb-8">
+        Skydekonkurrencen afholdes i en unik og karakteriseret stil fra det gamle vesten. 
+        Deltagerne skyder i flere skudfaser, hvor de angriber stålmål i et specifikt designet scenario og skydesekvens.
+      </p>
+      <p class="text-gray-700 leading-relaxed">
+        Både historieinteresserede og seriøse skytter er enige om, at brugen af vintage-skydevåben, autentiske kostumer, 
+        unikke mål og hurtig action gør Cowboy Action Shooting til en af de mest interessante skydesportsgrene 
+        for både tilskuer og deltager.
+      </p>
     </div>
-  </div>
-</section>
+  </main>
 
-<!-- Dynamic Footer -->
-<div id="footer"></div>
+  <!-- Info Cards Section -->
+  <section class="py-16 bg-gray-100">
+    <div class="container mx-auto px-6">
+      <h2 class="text-3xl font-bold mb-10 text-center western-text">Læs Mere Om ...</h2>
 
-<!-- Scripts -->
-<script>
-feather.replace();
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- Western Arsenalet -->
+        <a href="westernarssenal.html"
+           class="block bg-white shadow-lg rounded-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2">
+          <img src="https://cowboyaccountant.com/wp-content/uploads/2019/09/5b47ca5acf1341c2c17d10d4ac283835.jpg"
+               class="w-full h-72 object-cover" alt="Western Arsenalet">
+          <div class="p-5">
+            <h3 class="text-xl font-bold mb-2">Western Arsenalet</h3>
+            <p class="text-gray-700">Lær mere om våben og udstyr i Cowboy Action Shooting.</p>
+          </div>
+        </a>
 
-// Load HTML fragments
-function includeHTML(file, elementId, callback){
-  fetch(file).then(res=>res.text())
-             .then(data=>{ document.getElementById(elementId).innerHTML = data; if(callback) callback(); feather.replace(); })
-             .catch(err=>console.error(err));
-}
+        <!-- Regler og Sikkerhed -->
+        <a href="rules.html"
+           class="block bg-white shadow-lg rounded-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2">
+          <img src="assets/RULES.JPG" class="w-full h-72 object-cover" alt="Regler og Sikkerhed">
+          <div class="p-5">
+            <h3 class="text-xl font-bold mb-2">Regler og Sikkerhed</h3>
+            <p class="text-gray-700">Læs mere om sikkerhed og retningslinjer for Cowboy Action Shooting.</p>
+          </div>
+        </a>
 
-// Load navbar first, then setup auth
-includeHTML("nav.html","navbar",()=>{
-  setupAuth(); // Initialize Firebase auth after navbar exists
+        <!-- Placeholder / Coming Soon -->
+        <div class="block bg-white shadow-lg rounded-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2">
+          <img src="https://assets.basspro.com/image/upload/f_auto/dpr_2.0/t_Prod_PLPThumb/c_scale,w_220/v1/ProductImages/450/master1_101637840_main?_a=DAJHqpDaZAAA"
+               class="w-full h-72 object-cover" alt="Under ombygning">
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-2">Under ombygning</h3>
+            <p class="text-gray-700">Flere spændende sektioner kommer snart!</p>
+          </div>
+        </div>
 
-  // Mobile menu toggle
-  const menuBtn=document.getElementById('menu-btn');
-  const mobileMenu=document.getElementById('mobile-menu');
-  if(menuBtn && mobileMenu) menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
+      </div>
+    </div>
+  </section>
 
-  // Login dropdown toggle
-  const loginBtn=document.getElementById('login-btn');
-  const loginDropdown=document.getElementById('login-dropdown');
-  if(loginBtn && loginDropdown) loginBtn.addEventListener('click',()=>loginDropdown.classList.toggle('hidden'));
+  <!-- Dynamic Footer -->
+  <div id="footer"></div>
 
-  const mobileLoginBtn=document.getElementById('mobile-login-btn');
-  const mobileLoginForm=document.getElementById('mobile-login-form');
-  if(mobileLoginBtn && mobileLoginForm) mobileLoginBtn.addEventListener('click',()=>mobileLoginForm.classList.toggle('hidden'));
-});
+  <!-- -------- includeHTML helper -------- -->
+  <script>
+  async function includeHTML(file, elementId, callback){
+    try {
+      const res = await fetch(file);
+      const html = await res.text();
+      const mount = document.getElementById(elementId);
+      mount.innerHTML = html;
 
-includeHTML("footer.html","footer");
-</script>
+      // Re-run scripts in injected HTML (like nav scripts)
+      const scripts = mount.querySelectorAll("script");
+      for (const oldScript of scripts) {
+        const s = document.createElement("script");
+        for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
+        if (!oldScript.src) s.textContent = oldScript.textContent;
+        document.body.appendChild(s);
+      }
 
-<!-- Firebase Auth -->
+      if (window.feather) feather.replace();
+      if (callback) callback();
+    } catch (err) {
+      console.error("includeHTML error:", err);
+    }
+  }
+  </script>
+
+  <!-- -------- Load Navbar + Footer like Forum -------- -->
+  <script>
+  includeHTML("nav.html", "navbar", () => {
+    // Init auth once nav is loaded
+    if (typeof setupAuth === "function") setupAuth();
+
+    // Menu toggles
+    const menuBtn=document.getElementById('menu-btn');
+    const mobileMenu=document.getElementById('mobile-menu');
+    if(menuBtn && mobileMenu) menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
+
+    const loginBtn=document.getElementById('login-btn');
+    const loginDropdown=document.getElementById('login-dropdown');
+    if(loginBtn && loginDropdown) loginBtn.addEventListener('click',()=>loginDropdown.classList.toggle('hidden'));
+
+    const mobileLoginBtn=document.getElementById('mobile-login-btn');
+    const mobileLoginForm=document.getElementById('mobile-login-form');
+    if(mobileLoginBtn && mobileLoginForm) mobileLoginBtn.addEventListener('click',()=>mobileLoginForm.classList.toggle('hidden'));
+
+    // 🔔 Force refresh of notifications after nav loads
+    setTimeout(() => {
+      if (typeof window.refreshNotificationsBadge === "function") {
+        window.refreshNotificationsBadge();
+      }
+    }, 1200);
+  });
+
+  includeHTML("footer.html", "footer");
+  </script>
+
+  <!-- Shared scripts -->
+  <script type="module" src="js/firebase.js"></script>
 <script type="module" src="js/auth.js"></script>
+<script type="module" src="js/common.js"></script>
 
 </body>
 </html>

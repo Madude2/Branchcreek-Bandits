@@ -1,80 +1,104 @@
-// js/auth.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+// js/auth.js — unified with firebase.js for stable auth state
+import { auth } from "./firebase.js";
+import {
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut,
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
-  authDomain: "branchcreek-bandits.firebaseapp.com",
-  projectId: "branchcreek-bandits",
-  storageBucket: "branchcreek-bandits.firebasestorage.app",
-  messagingSenderId: "828305260971",
-  appId: "1:828305260971:web:6c3601fc97601a9621d2ee",
-  measurementId: "G-550TRD5SQ3"
-};
+console.log("[auth.js] ✅ Loaded — using shared Firebase instance");
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+window.setupAuth = function () {
+  console.log("[auth.js] 🔐 setupAuth() initialized");
 
-window.setupAuth = function() {
+  // --- Helper: Update user display in navbar ---
   function updateMenu(name) {
     const loginBtn = document.getElementById("login-btn");
     const mobileLoginBtn = document.getElementById("mobile-login-btn");
-    if(loginBtn) loginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
-    if(mobileLoginBtn) mobileLoginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
+
+    const html = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
+    if (loginBtn) loginBtn.innerHTML = html;
+    if (mobileLoginBtn) mobileLoginBtn.innerHTML = html;
   }
 
-  // Desktop login
-  window.login = function() {
-    const email = document.getElementById("login-email").value;
-    const password = document.getElementById("login-password").value;
+  // --- Desktop login ---
+  window.login = function () {
+    const email = document.getElementById("login-email")?.value?.trim();
+    const password = document.getElementById("login-password")?.value;
 
-    signInWithEmailAndPassword(auth,email,password)
-      .then(userCredential => {
-        if(!userCredential.user.emailVerified){
-          alert("Du skal bekræfte din e-mail, før du kan logge ind.");
+    if (!email || !password) {
+      alert("Indtast e-mail og adgangskode.");
+      return;
+    }
+
+    signInWithEmailAndPassword(auth, email, password)
+      .then((cred) => {
+        const user = cred.user;
+        if (!user.emailVerified) {
+          alert("Bekræft din e-mail før login.");
           signOut(auth);
           return;
         }
-        updateMenu(userCredential.user.displayName || userCredential.user.email);
-        document.getElementById("login-dropdown").classList.add("hidden");
-        if(window.unlockForum) unlockForum(); // optional for forum page
+
+        updateMenu(user.displayName || user.email);
+        document.getElementById("login-dropdown")?.classList.add("hidden");
+
+        if (window.unlockForum) window.unlockForum();
+
+        console.log("[auth.js] 🔁 Reloading page after login...");
+        setTimeout(() => location.reload(), 500); // ⬅️ force refresh
       })
-      .catch(err => alert(err.message));
-  }
+      .catch((err) => alert(err.message));
+  };
 
-  // Mobile login
-  window.mobileLogin = function() {
-    const email = document.getElementById("mobile-login-email").value;
-    const password = document.getElementById("mobile-login-password").value;
+  // --- Mobile login ---
+  window.mobileLogin = function () {
+    const email = document.getElementById("mobile-login-email")?.value?.trim();
+    const password = document.getElementById("mobile-login-password")?.value;
 
-    signInWithEmailAndPassword(auth,email,password)
-      .then(userCredential => {
-        if(!userCredential.user.emailVerified){
-          alert("Du skal bekræfte din e-mail, før du kan logge ind.");
+    if (!email || !password) {
+      alert("Indtast e-mail og adgangskode.");
+      return;
+    }
+
+    signInWithEmailAndPassword(auth, email, password)
+      .then((cred) => {
+        const user = cred.user;
+        if (!user.emailVerified) {
+          alert("Bekræft din e-mail før login.");
           signOut(auth);
           return;
         }
-        updateMenu(userCredential.user.displayName || userCredential.user.email);
-        document.getElementById("mobile-login-form").classList.add("hidden");
-        if(window.unlockForum) unlockForum();
-      })
-      .catch(err => alert(err.message));
-  }
 
-  // Persistent login
-  onAuthStateChanged(auth,user=>{
-    if(user && user.emailVerified) {
+        updateMenu(user.displayName || user.email);
+        document.getElementById("mobile-login-form")?.classList.add("hidden");
+
+        if (window.unlockForum) window.unlockForum();
+
+        console.log("[auth.js] 🔁 Reloading page after mobile login...");
+        setTimeout(() => location.reload(), 500); // ⬅️ force refresh
+      })
+      .catch((err) => alert(err.message));
+  };
+
+  // --- Session persistence / re-login handler ---
+  onAuthStateChanged(auth, (user) => {
+    if (user && user.emailVerified) {
       updateMenu(user.displayName || user.email);
-      if(window.unlockForum) unlockForum();
+      if (window.unlockForum) window.unlockForum();
+    } else {
+      if (window.lockForum) window.lockForum();
     }
   });
 
-  // Logout
-  window.logout = function() {
-    signOut(auth).then(()=>{
-      if(window.unlockForum) document.getElementById("forum-content").style.display="none";
-      if(window.unlockForum) document.getElementById("login-warning").style.display="block";
-      location.reload();
-    }).catch(err => alert(err.message));
-  }
-}
+  // --- Logout ---
+  window.logout = function () {
+    signOut(auth)
+      .then(() => {
+        if (window.lockForum) window.lockForum();
+        console.log("[auth.js] 🚪 Logged out — refreshing page");
+        location.reload();
+      })
+      .catch((err) => alert(err.message));
+  };
+};

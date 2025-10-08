@@ -19,6 +19,7 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Western', sans-serif; }
 .btn-gold:hover { background-color: #b78a14; transform: translateY(-2px); }
 </style>
 </head>
+
 <body class="bg-gray-100 font-sans flex flex-col min-h-screen">
 
 <!-- Navbar -->
@@ -29,11 +30,15 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Western', sans-serif; }
   <section class="py-16">
     <div class="container mx-auto px-6">
       <h1 class="western-text text-5xl mb-6 text-center">Begivenheder</h1>
-      <p class="text-gray-700 mb-4 text-center">Her vil du finde kommende skydninger, turneringer og sociale arrangementer.</p>
+      <p class="text-gray-700 mb-4 text-center">
+        Her vil du finde kommende skydninger, turneringer og sociale arrangementer.
+      </p>
 
       <!-- Admin: Create Event Button -->
       <div id="admin-create-btn" class="flex justify-center mb-6 hidden">
-        <button id="open-create-popup" class="btn-gold text-white px-4 py-2 rounded-lg font-bold text-lg">+ Opret Nyt Event</button>
+        <button id="open-create-popup" class="btn-gold text-white px-4 py-2 rounded-lg font-bold text-lg">
+          + Opret Nyt Event
+        </button>
       </div>
 
       <!-- Event Cards -->
@@ -60,112 +65,78 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Western', sans-serif; }
 <!-- Footer -->
 <div id="footer"></div>
 
-<!-- Firebase Scripts -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+<!-- -------- includeHTML helper -------- -->
+<script>
+async function includeHTML(file, elementId, callback){
+  try {
+    const res = await fetch(file);
+    const html = await res.text();
+    const mount = document.getElementById(elementId);
+    mount.innerHTML = html;
 
-// ---------------------
-// Firebase Config
-// ---------------------
-const firebaseConfig = {
-  apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
-  authDomain: "branchcreek-bandits.firebaseapp.com",
-  projectId: "branchcreek-bandits",
-  storageBucket: "branchcreek-bandits.firebasestorage.app",
-  messagingSenderId: "828305260971",
-  appId: "1:828305260971:web:6c3601fc97601a9621d2ee",
-  measurementId: "G-550TRD5SQ3"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const ADMIN_EMAIL = "asbjrnahle33@gmail.com";
-
-// ---------------------
-// Navbar & Footer Loader
-// ---------------------
-function includeHTML(file, elementId, callback){
-  fetch(file).then(res => res.text()).then(data => {
-    document.getElementById(elementId).innerHTML = data;
-    if(callback) callback();
-    feather.replace();
-  }).catch(console.error);
-}
-
-// Load navbar and footer, then init login buttons
-includeHTML("nav.html","navbar", initLogin);
-includeHTML("footer.html","footer");
-
-// ---------------------
-// Login Functions
-// ---------------------
-function initLogin(){
-  const loginBtn = document.getElementById("login-btn");
-  const loginDropdown = document.getElementById("login-dropdown");
-  const mobileLoginBtn = document.getElementById("mobile-login-btn");
-  const mobileLoginForm = document.querySelector('#mobile-login-form div');
-
-  const arrowSVG = `<svg class="w-4 h-4 inline-block ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                    </svg>`;
-
-  function showLogin(user){
-    if(user){
-      const name = user.displayName || user.email;
-      if(loginBtn) loginBtn.innerHTML = `${name} ${arrowSVG} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
-      if(mobileLoginBtn) mobileLoginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
-      const adminBtn = document.getElementById("admin-create-btn");
-      if(user.email === ADMIN_EMAIL && adminBtn) adminBtn.classList.remove("hidden");
-    } else {
-      if(loginBtn) loginBtn.innerHTML = `Login ${arrowSVG}`;
-      if(mobileLoginBtn) mobileLoginBtn.innerHTML = "Login";
-      const adminBtn = document.getElementById("admin-create-btn");
-      if(adminBtn) adminBtn.classList.add("hidden");
+    // Re-run scripts in injected HTML
+    const scripts = mount.querySelectorAll("script");
+    for (const oldScript of scripts) {
+      const s = document.createElement("script");
+      for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
+      if (!oldScript.src) s.textContent = oldScript.textContent;
+      document.body.appendChild(s);
     }
+
+    if (window.feather) feather.replace();
+    if (callback) callback();
+  } catch (err) {
+    console.error("includeHTML error:", err);
   }
-
-  onAuthStateChanged(auth, user => showLogin(user));
-
-  if(loginBtn) loginBtn.addEventListener('click', () => loginDropdown.classList.toggle('hidden'));
-  if(mobileLoginBtn) mobileLoginBtn.addEventListener('click', () => mobileLoginForm.classList.toggle('hidden'));
 }
+</script>
 
-// ---------------------
-// Login / Logout Functions
-// ---------------------
-window.login = () => {
-  const email = document.getElementById("login-email").value;
-  const password = document.getElementById("login-password").value;
-  signInWithEmailAndPassword(auth,email,password)
-    .then(userCredential => {
-      document.getElementById("login-dropdown").classList.add("hidden");
-      loadEvents(); // reload events to show admin buttons
-    })
-    .catch(err => alert(err.message));
-};
+<!-- -------- Load Navbar + Footer -------- -->
+<script>
+includeHTML("nav.html", "navbar", () => {
+  if (typeof setupAuth === "function") setupAuth();
 
-window.mobileLogin = () => {
-  const email = document.getElementById("mobile-login-email").value;
-  const password = document.getElementById("mobile-login-password").value;
-  signInWithEmailAndPassword(auth,email,password)
-    .then(userCredential => {
-      document.querySelector('#mobile-login-form div').classList.add("hidden");
-      loadEvents(); // reload events to show admin buttons
-    })
-    .catch(err => alert(err.message));
-};
+  // Menu toggles
+  const menuBtn=document.getElementById('menu-btn');
+  const mobileMenu=document.getElementById('mobile-menu');
+  if(menuBtn && mobileMenu) menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
 
-window.logout = () => {
-  signOut(auth).then(()=> location.reload()).catch(err=>alert(err.message));
-};
+  const loginBtn=document.getElementById('login-btn');
+  const loginDropdown=document.getElementById('login-dropdown');
+  if(loginBtn && loginDropdown) loginBtn.addEventListener('click',()=>loginDropdown.classList.toggle('hidden'));
 
-// ---------------------
-// Event Functions
-// ---------------------
+  const mobileLoginBtn=document.getElementById('mobile-login-btn');
+  const mobileLoginForm=document.getElementById('mobile-login-form');
+  if(mobileLoginBtn && mobileLoginForm) mobileLoginBtn.addEventListener('click',()=>mobileLoginForm.classList.toggle('hidden'));
+
+  // 🔔 Refresh notifications after navbar loads
+  setTimeout(() => {
+    if (typeof window.refreshNotificationsBadge === "function") {
+      window.refreshNotificationsBadge();
+    }
+  }, 1200);
+});
+
+includeHTML("footer.html", "footer");
+</script>
+
+<!-- ✅ Shared Scripts FIRST -->
+<script type="module" src="js/firebase.js"></script>
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/common.js"></script>
+
+<!-- ✅ Page-Specific Event Logic (AFTER shared scripts) -->
+<script type="module">
+import { db, auth } from "./js/firebase.js";
+import { 
+  collection, addDoc, getDocs, deleteDoc, doc 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+const ADMIN_EMAIL = "asbjrnahle33@gmail.com";
 const eventsContainer = document.getElementById("events-container");
+
+/* ---------- Load Events ---------- */
 async function loadEvents(){
   if(!eventsContainer) return;
   eventsContainer.innerHTML = "";
@@ -186,7 +157,6 @@ async function loadEvents(){
                            <p class="text-sm text-gray-600">${formattedDate} - ${e.location}</p>
                            <p>${e.description || ""}</p>`;
 
-      // Admin delete button: vises efter login-status
       onAuthStateChanged(auth, user => {
         if(user && user.email === ADMIN_EMAIL){
           const delBtn = document.createElement("button");
@@ -210,11 +180,13 @@ async function loadEvents(){
     eventsContainer.innerHTML = `<p class="text-center text-red-500">Fejl ved indlæsning af events</p>`;
   }
 }
-window.addEventListener('DOMContentLoaded', loadEvents);
+window.addEventListener('DOMContentLoaded', () => {
+  // Vent 1 sekund for at være sikker på at Firebase + Auth er klar
+  setTimeout(() => loadEvents(), 1000);
+});
 
-// ---------------------
-// Create Event Popup
-// ---------------------
+
+/* ---------- Create Event + Notification ---------- */
 const createPopup = document.getElementById("create-popup");
 document.getElementById("open-create-popup")?.addEventListener("click", () => {
   createPopup.classList.remove("hidden");
@@ -242,24 +214,41 @@ document.getElementById("save-event")?.addEventListener("click", async () => {
     return;
   }
 
-  await addDoc(collection(db,"events"), { title, date, location, description, createdAt: new Date() });
-  createPopup.classList.add("hidden");
-  createPopup.classList.remove("flex");
-  document.getElementById("event-title").value = "";
-  document.getElementById("event-date").value = "";
-  document.getElementById("event-location").value = "";
-  document.getElementById("event-description").value = "";
-  loadEvents();
+  try {
+    // Create event
+    await addDoc(collection(db,"events"), { title, date, location, description, createdAt: new Date() });
+
+    // 🔔 Create notification
+    const formattedDate = new Date(date).toLocaleDateString('da-DK', { day: '2-digit', month: 'long', year: 'numeric' });
+    const message = `Nyt event oprettet: ${title} - ${formattedDate}`;
+    await addDoc(collection(db, "notifications"), {
+      title: "Nyt Event!",
+      message,
+      timestamp: new Date()
+    });
+
+    createPopup.classList.add("hidden");
+    createPopup.classList.remove("flex");
+    document.getElementById("event-title").value = "";
+    document.getElementById("event-date").value = "";
+    document.getElementById("event-location").value = "";
+    document.getElementById("event-description").value = "";
+    loadEvents();
+
+    alert("Event oprettet, og notifikation sendt!");
+  } catch (error) {
+    console.error("Fejl ved oprettelse:", error);
+    alert("Fejl ved oprettelse: " + error.message);
+  }
 });
 
-// ---------------------
-// Mobile Menu Toggle
-// ---------------------
-document.addEventListener('DOMContentLoaded', () => {
-  const menuBtn = document.getElementById('menu-btn');
-  const mobileMenu = document.getElementById('mobile-menu');
-  menuBtn?.addEventListener('click',()=> mobileMenu?.classList.toggle('hidden'));
+/* ---------- Admin button visibility ---------- */
+onAuthStateChanged(auth, user => {
+  const adminBtn = document.getElementById("admin-create-btn");
+  if (user && user.email === ADMIN_EMAIL) adminBtn.classList.remove("hidden");
+  else adminBtn.classList.add("hidden");
 });
 </script>
+
 </body>
 </html>

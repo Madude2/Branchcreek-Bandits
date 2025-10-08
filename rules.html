@@ -1,148 +1,175 @@
 <!DOCTYPE html>
 <html lang="da">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Regler - Branchcreek Bandits</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Regler & Sikkerhed - Branchcreek Bandits</title>
 
-<!-- Tailwind + Fonts + Icons -->
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-<link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
+  <!-- Tailwind + Fonts + Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+  <link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
 
-<style>
-.nav-link { color: white; }
-.nav-link:hover { color: #d4a017; }
-.western-text { font-family: 'Western', sans-serif; }
-.section-title { font-size: 2rem; margin-top: 2rem; margin-bottom: 1rem; }
-.section-content { color: #4a5568; line-height: 1.7; }
-</style>
+  <style>
+    .nav-link { color: white; }
+    .nav-link:hover { color: #d4a017; }
+    .western-text { font-family: 'Western', sans-serif; }
+    .section-title { font-size: 2.5rem; margin-top: 2rem; margin-bottom: 1rem; }
+    .section-content { color: #4a5568; line-height: 1.75; }
+  </style>
 </head>
+
 <body class="bg-gray-100 font-sans flex flex-col min-h-screen">
 
-<!-- Dynamic Navbar -->
-<div id="navbar"></div>
+  <!-- Dynamic Navbar -->
+  <div id="navbar"></div>
 
-<!-- Main Content -->
-<div class="flex-grow">
+  <!-- Main Content -->
+  <main class="flex-grow py-16 bg-white">
+    <div class="container mx-auto px-6 max-w-4xl">
 
- <section class="py-16 bg-white">
-  <div class="container mx-auto px-6 max-w-4xl">
+      <h1 class="western-text text-5xl mb-8 text-center text-gray-900">Regler & Sikkerhed</h1>
 
-    <h2 class="western-text section-title">Regler & Sikkerhed</h2>
-    <p class="section-content mb-6">
-      Hos <strong>Branchcreek Bandits</strong> prioriterer vi sikkerhed, respekt og autentisk western-stemning. 
-      Vores regelsæt er baseret på den amerikanske SASS COWBOY ACTION SHOOTING - SHOOTERS HANDBOOK, som man kan læse mere om på deres egen hjemmeside her: 
-      <a href="https://sassnet.com/" class="text-blue-600 border-b-2 border-blue-600 hover:text-blue-800 hover:border-blue-800 transition duration-200">
-        SASS
-      </a> (Single Action Shooting Society). Eller downloade håndbogen direkte herfra med dette link: 
-      <a href="https://sassnet.com/uploads/downloads/Shooters%20Handbooks%20-%20CAS/CAS%202025%20SHB%20-%20%20Vers%2027.9%20-%20May%202025%20%20-%20FINAL.pdf" 
-         class="text-blue-600 border-b-2 border-blue-600 hover:text-blue-800 hover:border-blue-800 transition duration-200">
-        Håndbog
-      </a>.
-    </p>
+      <p class="section-content mb-6">
+        Hos <strong>Branchcreek Bandits</strong> prioriterer vi sikkerhed, respekt og autentisk western-stemning. 
+        Vores regelsæt er baseret på den amerikanske 
+        <strong>SASS COWBOY ACTION SHOOTING - SHOOTERS HANDBOOK</strong>, 
+        som du kan læse mere om her:
+        <a href="https://sassnet.com/" 
+           class="text-blue-600 border-b-2 border-blue-600 hover:text-blue-800 hover:border-blue-800 transition duration-200">
+          SASS
+        </a>
+        (Single Action Shooting Society), eller download håndbogen direkte her:
+        <a href="https://sassnet.com/uploads/downloads/Shooters%20Handbooks%20-%20CAS/CAS%202025%20SHB%20-%20%20Vers%2027.9%20-%20May%202025%20%20-%20FINAL.pdf" 
+           class="text-blue-600 border-b-2 border-blue-600 hover:text-blue-800 hover:border-blue-800 transition duration-200">
+          Håndbog (PDF)
+        </a>.
+      </p>
 
-    <h3 class="western-text text-xl mt-10 mb-3">1. Generelle Regler</h3>
-    <ul class="list-disc pl-6 section-content mb-6">
-      <li>Alle deltagere skal altid følge instruktioner fra skydeleder (Match Director) og sikkerhedsansvarlige (Range Officers).</li>
-      <li>Der må kun skydes på anvist bane og med godkendte våben og ammunition i overensstemmelse med CAS-reglerne.</li>
-      <li>Sikkerhed går forud for alt. Hvis du ser noget usikkert, skal du straks gøre skydelederen opmærksom på det.</li>
-      <li>Vis altid hensyn og respekt over for andre deltagere, funktionærer og tilskuere.</li>
-      <li>Alkohol og rusmidler er strengt forbudt før og under al skydning.</li>
-      <li>Altid lyt og følg kommandoer fra skydelederen – især under “Make Ready” og “Unload and Show Clear”.</li>
-      <li>Deltagelse sker på eget ansvar, men alle skal bidrage til, at aktiviteten foregår sikkert og ansvarligt.</li>
-    </ul>
+      <h2 class="western-text text-2xl mt-10 mb-3 text-yellow-700">1. Generelle Regler</h2>
+      <ul class="list-disc pl-6 section-content mb-6">
+        <li>Følg altid instruktioner fra skydeleder og sikkerhedsansvarlige.</li>
+        <li>Der må kun skydes på godkendte baner og med tilladte våben i overensstemmelse med CAS-reglerne.</li>
+        <li>Sikkerhed har altid højeste prioritet — rapportér straks usikre forhold.</li>
+        <li>Vis respekt overfor alle deltagere, funktionærer og tilskuere.</li>
+        <li>Alkohol og rusmidler er strengt forbudt før og under skydning.</li>
+        <li>Følg altid kommandoer under “Make Ready” og “Unload and Show Clear”.</li>
+        <li>Deltagelse sker på eget ansvar — men vi passer på hinanden.</li>
+      </ul>
 
-    <h3 class="western-text text-xl mt-10 mb-3">2. Våbenhåndtering</h3>
-    <ul class="list-disc pl-6 section-content mb-6">
-      <li>Behandl altid dit våben som om det er ladt.</li>
-      <li>Peg aldrig løbet mod noget, du ikke vil ødelægge – især aldrig mod en person.</li>
-      <li>Våben må kun lades på kommando og på skydebanen.</li>
-      <li>Når du ikke skyder, skal alle våben være tømte, sikrede og pege i sikker retning.</li>
-      <li>Fingeren væk fra aftrækkeren, indtil du er klar til at skyde.</li>
-      <li>Seks-løbere (revolvere) skal bæres med hammeren ned på et tomt kammer.</li>
-      <li>Rifler må kun være ladt, når skytter står ved startpositionen og på kommando.</li>
-      <li>Haglgeværer må ikke transporteres med patroner i kammeret.</li>
-      <li>Efter endt stage skal alle våben vises sikre for Range Officer.</li>
-      <li>Overtrædelse af sikker våbenhåndtering kan medføre straffe eller diskvalifikation.</li>
-    </ul>
+      <h2 class="western-text text-2xl mt-10 mb-3 text-yellow-700">2. Våbenhåndtering</h2>
+      <ul class="list-disc pl-6 section-content mb-6">
+        <li>Behandl altid dit våben som om det er ladt.</li>
+        <li>Peg aldrig løbet mod noget, du ikke vil ødelægge.</li>
+        <li>Våben må kun lades på kommando.</li>
+        <li>Våben skal være tømte, sikrede og pege i sikker retning, når de ikke bruges.</li>
+        <li>Hold fingeren væk fra aftrækkeren, indtil du skal skyde.</li>
+        <li>Revolvere bæres med hammeren ned på et tomt kammer.</li>
+        <li>Rifler må kun være ladt ved startpositionen på kommando.</li>
+        <li>Haglgeværer transporteres uden patroner i kammeret.</li>
+        <li>Efter hver stage vises alle våben sikre for Range Officer.</li>
+        <li>Overtrædelse af sikker våbenhåndtering kan føre til diskvalifikation.</li>
+      </ul>
 
-    <h3 class="western-text text-xl mt-10 mb-3">3. Beklædning og Udstyr</h3>
-    <ul class="list-disc pl-6 section-content mb-6">
-      <li>Cowboy Action Shooting er også en tidsrejse! Vi opfordrer alle til at bære autentisk western-inspireret tøj – fra ca. 1850 til 1899.</li>
-      <li>Tøj skal være rimeligt passende for perioden, men komfort og sikkerhed kommer først.</li>
-      <li>Skydebriller og høreværn er obligatoriske under al skydning.</li>
-      <li>Udstyr (bælter, hylstre, geværer m.m.) skal være sikkert, funktionelt og inden for CAS-reglerne.</li>
-      <li>Moderne hjælpemidler (laser, optik, moderne ammunitionstyper osv.) er ikke tilladt.</li>
-      <li>Kun kalibre, der svarer til perioden, må bruges, og ingen magnumladninger er tilladt.</li>
-    </ul>
+      <h2 class="western-text text-2xl mt-10 mb-3 text-yellow-700">3. Beklædning og Udstyr</h2>
+      <ul class="list-disc pl-6 section-content mb-6">
+        <li>Autentisk western-tøj fra 1850-1899 opfordres.</li>
+        <li>Tøj skal passe perioden, men sikkerhed og komfort kommer først.</li>
+        <li>Skydebriller og høreværn er påkrævet.</li>
+        <li>Udstyr skal være sikkert og CAS-kompatibelt.</li>
+        <li>Ingen moderne hjælpemidler som optik eller laser.</li>
+        <li>Kun kalibre passende for perioden — ingen magnumladninger.</li>
+      </ul>
 
-    <h3 class="western-text text-xl mt-10 mb-3">4. Konkurrencer</h3>
-    <ul class="list-disc pl-6 section-content mb-6">
-      <li>Alle deltagere skal være tilmeldt og sikkerhedsgodkendt før start.</li>
-      <li>Skydelederen har det sidste ord i alle spørgsmål om regler, fortolkning og sikkerhed.</li>
-      <li>Stage-beskrivelser og kommandoer skal følges nøjagtigt – ingen improvisation.</li>
-      <li>Ved fejl i procedure eller mål skal Range Officer underrettes med det samme.</li>
-      <li>Usportslig opførsel – f.eks. råben, fornærmelser eller bevidst snyd – kan føre til advarsel eller bortvisning.</li>
-      <li>Alle skytter forventes at hjælpe til som posse-medlemmer (timer, spotter, brass picker osv.) når de ikke skyder.</li>
-    </ul>
+      <h2 class="western-text text-2xl mt-10 mb-3 text-yellow-700">4. Konkurrencer</h2>
+      <ul class="list-disc pl-6 section-content mb-6">
+        <li>Alle deltagere skal være tilmeldt og sikkerhedsgodkendt.</li>
+        <li>Skydelederen har det sidste ord i alle regelsager.</li>
+        <li>Stage-beskrivelser og kommandoer skal følges nøjagtigt.</li>
+        <li>Ved fejl skal Range Officer informeres med det samme.</li>
+        <li>Usportslig opførsel kan medføre bortvisning.</li>
+        <li>Skytter hjælper som posse-medlemmer, når de ikke skyder.</li>
+      </ul>
 
-    <h3 class="western-text text-xl mt-10 mb-3">5. Sikkerhed Først</h3>
-    <p class="section-content mb-6">
-      Branchcreek Bandits bygger på fællesskab, ansvar og respekt – for både sporten, historien og hinanden.  
-      Vi skyder for sjov, fællesskab og præcision, men sikkerhed kommer altid først.  
-      Ved at følge reglerne hjælper du os med at bevare et trygt, respektfuldt og autentisk miljø for alle medlemmer.
-    </p>
+      <h2 class="western-text text-2xl mt-10 mb-3 text-yellow-700">5. Sikkerhed Først</h2>
+      <p class="section-content mb-6">
+        Branchcreek Bandits bygger på fællesskab, ansvar og respekt – for både sporten, historien og hinanden.  
+        Vi skyder for sjov, fællesskab og præcision — men sikkerhed kommer altid først.  
+        Ved at følge reglerne hjælper du med at bevare et trygt og autentisk miljø for alle.
+      </p>
 
-    <div class="mt-10 text-center">
-      <a href="index.html" class="bg-yellow-600 text-white px-6 py-2 rounded-lg shadow hover:bg-yellow-700 transition">Tilbage til forsiden</a>
+      <div class="mt-10 text-center">
+        <a href="about.html" class="bg-yellow-600 text-white px-6 py-2 rounded-lg shadow hover:bg-yellow-700 transition">
+          Tilbage til Information
+        </a>
+      </div>
+
     </div>
+  </main>
 
-  </div>
-</section>
+  <!-- Dynamic Footer -->
+  <div id="footer"></div>
 
-</div>
+  <!-- -------- includeHTML helper -------- -->
+  <script>
+  async function includeHTML(file, elementId, callback){
+    try {
+      const res = await fetch(file);
+      const html = await res.text();
+      const mount = document.getElementById(elementId);
+      mount.innerHTML = html;
 
-<!-- Dynamic Footer -->
-<div id="footer"></div>
+      // Re-run scripts inside injected HTML
+      const scripts = mount.querySelectorAll("script");
+      for (const oldScript of scripts) {
+        const s = document.createElement("script");
+        for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
+        if (!oldScript.src) s.textContent = oldScript.textContent;
+        document.body.appendChild(s);
+      }
 
-<!-- Scripts -->
-<script>
-feather.replace();
+      if (window.feather) feather.replace();
+      if (callback) callback();
+    } catch (err) {
+      console.error("includeHTML error:", err);
+    }
+  }
+  </script>
 
-// Load HTML fragments
-function includeHTML(file, elementId, callback){
-  fetch(file).then(res=>res.text())
-             .then(data=>{
-               document.getElementById(elementId).innerHTML = data;
-               if(callback) callback();
-               feather.replace();
-             })
-             .catch(err=>console.error(err));
-}
+  <!-- -------- Load Navbar + Footer (forum logic) -------- -->
+  <script>
+  includeHTML("nav.html", "navbar", () => {
+    if (typeof setupAuth === "function") setupAuth();
 
-// Load navbar first, then setup auth
-includeHTML("nav.html","navbar",()=>{
-  if(typeof setupAuth === 'function') setupAuth();
+    // Menu toggles
+    const menuBtn=document.getElementById('menu-btn');
+    const mobileMenu=document.getElementById('mobile-menu');
+    if(menuBtn && mobileMenu) menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
 
-  const menuBtn=document.getElementById('menu-btn');
-  const mobileMenu=document.getElementById('mobile-menu');
-  if(menuBtn && mobileMenu) menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
+    const loginBtn=document.getElementById('login-btn');
+    const loginDropdown=document.getElementById('login-dropdown');
+    if(loginBtn && loginDropdown) loginBtn.addEventListener('click',()=>loginDropdown.classList.toggle('hidden'));
 
-  const loginBtn=document.getElementById('login-btn');
-  const loginDropdown=document.getElementById('login-dropdown');
-  if(loginBtn && loginDropdown) loginBtn.addEventListener('click',()=>loginDropdown.classList.toggle('hidden'));
+    const mobileLoginBtn=document.getElementById('mobile-login-btn');
+    const mobileLoginForm=document.getElementById('mobile-login-form');
+    if(mobileLoginBtn && mobileLoginForm) mobileLoginBtn.addEventListener('click',()=>mobileLoginForm.classList.toggle('hidden'));
 
-  const mobileLoginBtn=document.getElementById('mobile-login-btn');
-  const mobileLoginForm=document.getElementById('mobile-login-form');
-  if(mobileLoginBtn && mobileLoginForm) mobileLoginBtn.addEventListener('click',()=>mobileLoginForm.classList.toggle('hidden'));
-});
+    // 🔔 Refresh notifications after navbar loads
+    setTimeout(() => {
+      if (typeof window.refreshNotificationsBadge === "function") {
+        window.refreshNotificationsBadge();
+      }
+    }, 1200);
+  });
 
-includeHTML("footer.html","footer");
-</script>
+  includeHTML("footer.html", "footer");
+  </script>
 
-<!-- Firebase Auth -->
+  <!-- Shared Scripts -->
+  <script type="module" src="js/firebase.js"></script>
 <script type="module" src="js/auth.js"></script>
+<script type="module" src="js/common.js"></script>
+
 
 </body>
 </html>
