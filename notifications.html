@@ -18,23 +18,19 @@
     .btn-gold { background-color: #d4a017; transition: all 0.3s ease; }
     .btn-gold:hover { background-color: #b78a14; transform: translateY(-2px); }
 
-    /* 🧹 Prevent flicker: keep notification badge hidden until JS decides otherwise */
-    #notif-count {
-      display: none !important;
-    }
-    #notif-count.active {
-      display: inline-flex !important;
-    }
+    /* 🧹 Prevent flicker of badge */
+    #notif-count { display: none !important; }
   </style>
 </head>
 
 <body class="bg-gray-100 font-sans flex flex-col min-h-screen">
 
-  <!-- Hide badge immediately (prevents flicker before JS loads) -->
+  <!-- Hide badge immediately to prevent flicker -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const cnt = document.getElementById("notif-count");
       if (cnt) cnt.style.display = "none";
+      window._pauseNotifUpdates = true;
     });
   </script>
 
@@ -58,7 +54,7 @@
   <!-- Footer -->
   <div id="footer"></div>
 
-  <!-- Shared Firebase + Navbar logic -->
+  <!-- Shared Scripts -->
   <script type="module" src="main.js"></script>
   <script type="module" src="js/auth.js"></script>
   <script type="module" src="js/common.js"></script>
@@ -67,10 +63,11 @@
   <script type="module">
     import { getApps, initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { 
-      getFirestore, collection, getDocs, query, orderBy, limit, updateDoc, doc 
+      getFirestore, collection, getDocs, query, orderBy, limit, updateDoc, doc, arrayUnion
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
+    // --- Firebase Config ---
     const firebaseConfig = {
       apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
       authDomain: "branchcreek-bandits.firebaseapp.com",
@@ -86,14 +83,7 @@
     const auth = getAuth(app);
     const container = document.getElementById("notifications-container");
 
-    /* --- 🧹 Hide bell + pause updates early --- */
-    const cntEl = document.getElementById("notif-count");
-    if (cntEl) {
-      cntEl.textContent = "0";
-      cntEl.classList.remove("active"); // keep hidden (no flicker)
-      window._pauseNotifUpdates = true;
-    }
-
+    /* ---------- Load Notifications ---------- */
     async function loadNotifications() {
       try {
         const qy = query(collection(db, "notifications"), orderBy("timestamp", "desc"), limit(20));
@@ -125,39 +115,44 @@
       }
     }
 
+    /* ---------- Mark All as Read (online Firestore) ---------- */
     async function markAllAsRead(user) {
       if (!user) return;
       try {
         const qy = query(collection(db, "notifications"), orderBy("timestamp", "desc"));
         const snap = await getDocs(qy);
+
         const updates = snap.docs.map(async (docSnap) => {
           const data = docSnap.data();
           const readBy = Array.isArray(data.readBy) ? data.readBy : [];
           if (!readBy.includes(user.uid)) {
             await updateDoc(doc(db, "notifications", docSnap.id), {
-              readBy: [...readBy, user.uid]
+              readBy: arrayUnion(user.uid)
             });
           }
         });
+
         await Promise.all(updates);
-        console.log("✅ Alle notifikationer markeret som læst.");
+        console.log("✅ Alle notifikationer markeret som læst i Firestore.");
       } catch (err) {
         console.error("❌ Fejl ved markering som læst:", err);
       }
     }
 
+    /* ---------- Page Init ---------- */
     window.addEventListener("DOMContentLoaded", async () => {
       await loadNotifications();
 
-      // Wait for user to be logged in before marking as read
       onAuthStateChanged(auth, async (user) => {
         if (user && user.emailVerified) {
           await markAllAsRead(user);
 
-          // Unpause after updates done (ensure no flicker)
+          // Unpause live updates after a short delay
           setTimeout(() => {
             window._pauseNotifUpdates = false;
-          }, 2000);
+            const cnt = document.getElementById("notif-count");
+            if (cnt) cnt.style.display = "none";
+          }, 1500);
         }
       });
     });

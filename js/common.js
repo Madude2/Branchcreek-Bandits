@@ -1,5 +1,5 @@
-// js/common.js — stable bell logic using shared Firebase instance
-import { db, auth } from "./firebase.js";  // ✅ shared instance
+// js/common.js — stable bell logic using shared Firebase instance + readBy tracking
+import { db, auth } from "./firebase.js";
 import {
   collection,
   getDocs,
@@ -8,7 +8,7 @@ import {
   limit,
   onSnapshot,
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 console.log("[common.js] ✅ Loaded (shared Firebase instance)");
 
@@ -46,32 +46,35 @@ window.loadNotificationsDropdown = async function ({ messagesEl, countEl } = {})
   }
 };
 
-// --- 🔴 Live badge listener with pause + readBy awareness ---
+// --- 🔴 Live badge listener with pause + Firestore readBy awareness ---
 function setupLiveBadge() {
   onAuthStateChanged(auth, (user) => {
     const cnt = document.getElementById("notif-count");
     if (!user || !user.emailVerified || !cnt) return;
 
-    const col = collection(db, "notifications");
-    onSnapshot(col, (snap) => {
-      if (window._pauseNotifUpdates) return;
+    // Listen live for changes in the notifications collection
+    onSnapshot(collection(db, "notifications"), (snap) => {
+      if (window._pauseNotifUpdates) return; // skip if paused (e.g., on notifications.html)
 
       let unread = 0;
       snap.docs.forEach((d) => {
-        const n = d.data();
-        const readBy = Array.isArray(n.readBy) ? n.readBy : [];
+        const data = d.data();
+        const readBy = Array.isArray(data.readBy) ? data.readBy : [];
         if (!readBy.includes(user.uid)) unread++;
       });
 
-      if (unread > 0) {
-        cnt.textContent = unread;
-        cnt.classList.remove("hidden");
-      } else {
-        cnt.textContent = "0";
-        cnt.classList.add("hidden");
+      // Update UI badge
+      if (cnt) {
+        if (unread > 0) {
+          cnt.textContent = unread;
+          cnt.classList.remove("hidden");
+        } else {
+          cnt.textContent = "0";
+          cnt.classList.add("hidden");
+        }
       }
 
-      console.log(`[common.js] 🔔 Live badge update: ${unread} ulæste`);
+      console.log(`[common.js] 🔔 ${unread} ulæste notifikationer`);
     });
   });
 }
@@ -116,10 +119,10 @@ window.setupBellButton = function (attempt = 1) {
     if (!drop.contains(e.target) && !btn.contains(e.target)) drop.classList.add("hidden");
   });
 
-  // Initial load
+  // Initial load + start live listener
   window.loadNotificationsDropdown({ messagesEl: msgs, countEl: cnt });
   setupLiveBadge();
-  console.log("[common.js] 🔔 Bell wired successfully (shared Firebase)");
+  console.log("[common.js] 🔔 Bell wired successfully (live Firestore updates)");
 };
 
 // --- Init after nav loads ---
