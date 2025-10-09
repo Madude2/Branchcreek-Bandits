@@ -17,6 +17,14 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Western', sans-serif; }
 .western-text { font-family: 'Western', sans-serif; }
 .btn-gold { background-color: #d4a017; transition: all 0.3s ease; }
 .btn-gold:hover { background-color: #b78a14; transform: translateY(-2px); }
+
+.tooltip {
+  animation: fadeIn 0.2s ease-in-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 </style>
 </head>
 
@@ -47,10 +55,10 @@ h1,h2,h3,h4,h5,h6 { font-family: 'Western', sans-serif; }
   </section>
 </div>
 
-<!-- Create Event Popup -->
+<!-- Create/Edit Event Popup -->
 <div id="create-popup" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
   <div class="bg-white p-6 rounded-lg w-80 relative">
-    <h2 class="western-text text-2xl mb-4">Opret Nyt Event</h2>
+    <h2 id="popup-title" class="western-text text-2xl mb-4">Opret Nyt Event</h2>
     <input type="text" id="event-title" placeholder="Titel" class="w-full mb-2 px-3 py-2 border rounded">
     <input type="date" id="event-date" class="w-full mb-2 px-3 py-2 border rounded">
     <input type="text" id="event-location" placeholder="Sted" class="w-full mb-2 px-3 py-2 border rounded">
@@ -73,8 +81,6 @@ async function includeHTML(file, elementId, callback){
     const html = await res.text();
     const mount = document.getElementById(elementId);
     mount.innerHTML = html;
-
-    // Re-run scripts in injected HTML
     const scripts = mount.querySelectorAll("script");
     for (const oldScript of scripts) {
       const s = document.createElement("script");
@@ -82,67 +88,60 @@ async function includeHTML(file, elementId, callback){
       if (!oldScript.src) s.textContent = oldScript.textContent;
       document.body.appendChild(s);
     }
-
     if (window.feather) feather.replace();
     if (callback) callback();
-  } catch (err) {
-    console.error("includeHTML error:", err);
-  }
+  } catch (err) { console.error("includeHTML error:", err); }
 }
 </script>
 
-<!-- -------- Load Navbar + Footer -------- -->
+<!-- Load Navbar + Footer -->
 <script>
 includeHTML("nav.html", "navbar", () => {
   if (typeof setupAuth === "function") setupAuth();
-
-  // Menu toggles
   const menuBtn=document.getElementById('menu-btn');
   const mobileMenu=document.getElementById('mobile-menu');
   if(menuBtn && mobileMenu) menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
-
   const loginBtn=document.getElementById('login-btn');
   const loginDropdown=document.getElementById('login-dropdown');
   if(loginBtn && loginDropdown) loginBtn.addEventListener('click',()=>loginDropdown.classList.toggle('hidden'));
-
   const mobileLoginBtn=document.getElementById('mobile-login-btn');
   const mobileLoginForm=document.getElementById('mobile-login-form');
   if(mobileLoginBtn && mobileLoginForm) mobileLoginBtn.addEventListener('click',()=>mobileLoginForm.classList.toggle('hidden'));
-
-  // 🔔 Refresh notifications after navbar loads
   setTimeout(() => {
-    if (typeof window.refreshNotificationsBadge === "function") {
-      window.refreshNotificationsBadge();
-    }
+    if (typeof window.refreshNotificationsBadge === "function") window.refreshNotificationsBadge();
   }, 1200);
 });
-
 includeHTML("footer.html", "footer");
 </script>
 
-<!-- ✅ Shared Scripts FIRST -->
+<!-- ✅ Shared Scripts -->
 <script type="module" src="js/firebase.js"></script>
 <script type="module" src="js/auth.js"></script>
 <script type="module" src="js/common.js"></script>
 
-<!-- ✅ Page-Specific Event Logic (AFTER shared scripts) -->
+<!-- ✅ Event Logic -->
 <script type="module">
 import { db, auth } from "./js/firebase.js";
-import { 
-  collection, addDoc, getDocs, deleteDoc, doc 
-} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc, arrayUnion } 
+from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 const ADMIN_EMAIL = "asbjrnahle33@gmail.com";
 const eventsContainer = document.getElementById("events-container");
+const createPopup = document.getElementById("create-popup");
+const popupTitle = document.getElementById("popup-title");
+const saveBtn = document.getElementById("save-event");
+
+let editMode = false;
+let currentEditId = null;
 
 /* ---------- Load Events ---------- */
-async function loadEvents(){
-  if(!eventsContainer) return;
+async function loadEvents() {
+  if (!eventsContainer) return;
   eventsContainer.innerHTML = "";
   try {
-    const snapshot = await getDocs(collection(db,"events"));
-    if(snapshot.empty){
+    const snapshot = await getDocs(collection(db, "events"));
+    if (snapshot.empty) {
       eventsContainer.innerHTML = `<p class="text-center text-gray-500">Ingen events tilgængelige.</p>`;
       return;
     }
@@ -150,13 +149,108 @@ async function loadEvents(){
     snapshot.forEach(docSnap => {
       const e = docSnap.data();
       const eventEl = document.createElement("div");
-      eventEl.className = "p-4 bg-white rounded shadow relative";
+      eventEl.className = "p-4 bg-white rounded shadow relative flex flex-col justify-between";
 
       const formattedDate = e.date ? new Date(e.date).toLocaleDateString("da-DK",{day:'numeric', month:'long', year:'numeric'}) : "";
-      eventEl.innerHTML = `<h3 class="font-bold text-lg">${e.title}</h3>
-                           <p class="text-sm text-gray-600">${formattedDate} - ${e.location}</p>
-                           <p>${e.description || ""}</p>`;
+      const participants = Array.isArray(e.participants) ? e.participants : [];
 
+      // --- Limit visible participants ---
+      const visible = participants.slice(0, 2).map(p => p.name || p.email);
+      const remaining = participants.length - visible.length;
+
+      eventEl.innerHTML = `
+        <div>
+          <h3 class="font-bold text-lg">${e.title}</h3>
+          <p class="text-sm text-gray-600">${formattedDate} - ${e.location}</p>
+          <p>${e.description || ""}</p>
+        </div>
+        <div class="flex justify-between items-end mt-4">
+          <button class="join-btn text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded transition">Deltag</button>
+          <div class="text-sm text-gray-700 deltagere relative">
+            <span class="font-semibold">Deltagere:</span>
+            ${
+              participants.length === 0
+              ? " Ingen endnu"
+              : remaining > 0
+                ? `${visible.join(", ")} <button class="show-more text-blue-600 hover:underline ml-1" data-full="${participants.map(p => p.name || p.email).join(", ")}">+${remaining}</button>`
+                : visible.join(", ")
+            }
+          </div>
+        </div>
+      `;
+
+      // --- Tooltip logic for "+X" ---
+      eventEl.addEventListener("click", (e) => {
+        const btn = e.target.closest(".show-more");
+        if (!btn) return;
+        const fullList = btn.getAttribute("data-full");
+        const tooltip = document.createElement("div");
+        tooltip.className = "tooltip absolute bottom-full mb-2 left-0 bg-white border border-gray-300 shadow-lg rounded p-2 text-sm w-64 z-50";
+        tooltip.textContent = fullList;
+        const existing = eventEl.querySelector(".tooltip");
+        if (existing) existing.remove();
+        eventEl.querySelector(".deltagere").appendChild(tooltip);
+        document.addEventListener("click", function handler(ev) {
+          if (!eventEl.contains(ev.target)) {
+            tooltip.remove();
+            document.removeEventListener("click", handler);
+          }
+        });
+      });
+
+      const joinBtn = eventEl.querySelector(".join-btn");
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          joinBtn.onclick = () => alert("Du skal være logget ind for at deltage.");
+          return;
+        }
+        const userEmail = user.email;
+        const userName = user.displayName || userEmail;
+        const currentParticipants = Array.isArray(e.participants) ? e.participants : [];
+        let isJoined = currentParticipants.some(p => p.email === userEmail);
+
+        function updateButton() {
+          if (isJoined) {
+            joinBtn.textContent = "Afmeld Tilmelding";
+            joinBtn.classList.remove("bg-green-600", "hover:bg-green-700");
+            joinBtn.classList.add("bg-red-600", "hover:bg-red-700");
+          } else {
+            joinBtn.textContent = "Deltag";
+            joinBtn.classList.add("bg-green-600", "hover:bg-green-700");
+            joinBtn.classList.remove("bg-red-600", "hover:bg-red-700");
+          }
+        }
+        updateButton();
+
+        joinBtn.onclick = async () => {
+          const eventRef = doc(db, "events", docSnap.id);
+          joinBtn.disabled = true;
+          joinBtn.textContent = "⏳ ...";
+          try {
+            if (isJoined) {
+              if (!confirm("Er du sikker på du vil afmelde dig fra dette event?")) {
+                joinBtn.disabled = false;
+                updateButton();
+                return;
+              }
+              const newParticipants = currentParticipants.filter(p => p.email !== userEmail);
+              await updateDoc(eventRef, { participants: newParticipants });
+            } else {
+              await updateDoc(eventRef, {
+                participants: arrayUnion({ email: userEmail, name: userName })
+              });
+              alert("Du deltager nu i dette event!");
+            }
+            await loadEvents();
+          } catch (err) {
+            console.error("❌ Fejl ved til-/afmelding:", err);
+            alert("Der opstod en fejl. Prøv igen.");
+            joinBtn.disabled = false;
+          }
+        };
+      });
+
+      // --- Admin controls ---
       onAuthStateChanged(auth, user => {
         if(user && user.email === ADMIN_EMAIL){
           const delBtn = document.createElement("button");
@@ -168,11 +262,15 @@ async function loadEvents(){
               loadEvents();
             }
           };
+          const editBtn = document.createElement("button");
+          editBtn.innerHTML = `<i data-feather="edit" class="text-green-500"></i>`;
+          editBtn.className = "absolute top-2 right-10";
+          editBtn.onclick = () => openEditPopup(docSnap.id, e);
+          eventEl.appendChild(editBtn);
           eventEl.appendChild(delBtn);
           feather.replace();
         }
       });
-
       eventsContainer.appendChild(eventEl);
     });
   } catch(err){
@@ -180,75 +278,83 @@ async function loadEvents(){
     eventsContainer.innerHTML = `<p class="text-center text-red-500">Fejl ved indlæsning af events</p>`;
   }
 }
-window.addEventListener('DOMContentLoaded', () => {
-  // Vent 1 sekund for at være sikker på at Firebase + Auth er klar
-  setTimeout(() => loadEvents(), 1000);
-});
+window.addEventListener('DOMContentLoaded', () => setTimeout(loadEvents, 1000));
 
+/* ---------- Popup Controls ---------- */
+document.getElementById("open-create-popup")?.addEventListener("click", () => openCreatePopup());
+document.getElementById("close-popup")?.addEventListener("click", () => closePopup());
 
-/* ---------- Create Event + Notification ---------- */
-const createPopup = document.getElementById("create-popup");
-document.getElementById("open-create-popup")?.addEventListener("click", () => {
-  createPopup.classList.remove("hidden");
-  createPopup.classList.add("flex");
-});
-document.getElementById("close-popup")?.addEventListener("click", () => {
-  createPopup.classList.add("hidden");
-  createPopup.classList.remove("flex");
-});
+function openCreatePopup(){
+  editMode = false;
+  currentEditId = null;
+  popupTitle.textContent = "Opret Nyt Event";
+  saveBtn.textContent = "Gem Event";
+  clearPopupFields();
+  showPopup();
+}
+function openEditPopup(id, data){
+  editMode = true;
+  currentEditId = id;
+  popupTitle.textContent = "Rediger Event";
+  saveBtn.textContent = "Opdater Event";
+  document.getElementById("event-title").value = data.title || "";
+  document.getElementById("event-date").value = data.date || "";
+  document.getElementById("event-location").value = data.location || "";
+  document.getElementById("event-description").value = data.description || "";
+  showPopup();
+}
+function showPopup(){ createPopup.classList.remove("hidden"); createPopup.classList.add("flex"); }
+function closePopup(){ createPopup.classList.add("hidden"); createPopup.classList.remove("flex"); }
+function clearPopupFields(){
+  document.getElementById("event-title").value = "";
+  document.getElementById("event-date").value = "";
+  document.getElementById("event-location").value = "";
+  document.getElementById("event-description").value = "";
+}
 
-document.getElementById("save-event")?.addEventListener("click", async () => {
+/* ---------- Save / Update ---------- */
+saveBtn?.addEventListener("click", async () => {
   const title = document.getElementById("event-title").value.trim();
   const date = document.getElementById("event-date").value;
   const location = document.getElementById("event-location").value.trim();
   const description = document.getElementById("event-description").value.trim();
   const user = auth.currentUser;
-
   if(!user || user.email !== ADMIN_EMAIL){
-    alert("Kun admin kan oprette events");
+    alert("Kun admin kan oprette eller redigere events");
     return;
   }
-
   if(!title || !date || !location){
     alert("Udfyld alle felter!");
     return;
   }
-
   try {
-    // Create event
-    await addDoc(collection(db,"events"), { title, date, location, description, createdAt: new Date() });
-
-    // 🔔 Create notification
-    const formattedDate = new Date(date).toLocaleDateString('da-DK', { day: '2-digit', month: 'long', year: 'numeric' });
-    const message = `Nyt event oprettet: ${title} - ${formattedDate}`;
-    await addDoc(collection(db, "notifications"), {
-      title: "Nyt Event!",
-      message,
-      timestamp: new Date()
-    });
-
-    createPopup.classList.add("hidden");
-    createPopup.classList.remove("flex");
-    document.getElementById("event-title").value = "";
-    document.getElementById("event-date").value = "";
-    document.getElementById("event-location").value = "";
-    document.getElementById("event-description").value = "";
+    if(editMode && currentEditId){
+      await updateDoc(doc(db,"events",currentEditId), { title, date, location, description });
+      alert("Event opdateret!");
+    } else {
+      await addDoc(collection(db,"events"), { title, date, location, description, participants: [], createdAt: new Date() });
+      const formattedDate = new Date(date).toLocaleDateString('da-DK', { day: '2-digit', month: 'long', year: 'numeric' });
+      const message = `Nyt event oprettet: ${title} - ${formattedDate}`;
+      await addDoc(collection(db, "notifications"), { title: "Nyt Event!", message, timestamp: new Date() });
+      alert("Event oprettet, og notifikation sendt!");
+    }
+    closePopup();
+    clearPopupFields();
     loadEvents();
-
-    alert("Event oprettet, og notifikation sendt!");
-  } catch (error) {
-    console.error("Fejl ved oprettelse:", error);
-    alert("Fejl ved oprettelse: " + error.message);
+  } catch(err){
+    console.error("Fejl:", err);
+    alert("Fejl ved handling: " + err.message);
   }
 });
 
 /* ---------- Admin button visibility ---------- */
-onAuthStateChanged(auth, user => {
-  const adminBtn = document.getElementById("admin-create-btn");
-  if (user && user.email === ADMIN_EMAIL) adminBtn.classList.remove("hidden");
-  else adminBtn.classList.add("hidden");
+document.addEventListener("DOMContentLoaded", () => {
+  onAuthStateChanged(auth, user => {
+    const adminBtn = document.getElementById("admin-create-btn");
+    if (!adminBtn) return;
+    if (user && user.email === ADMIN_EMAIL) adminBtn.classList.remove("hidden");
+    else adminBtn.classList.add("hidden");
+  });
 });
 </script>
-
-</body>
 </html>

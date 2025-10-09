@@ -18,19 +18,18 @@
     .btn-gold { background-color: #d4a017; transition: all 0.3s ease; }
     .btn-gold:hover { background-color: #b78a14; transform: translateY(-2px); }
 
-    /* 🧹 Prevent flicker of badge */
+    /* 🧹 Prevent flicker of the red badge */
     #notif-count { display: none !important; }
   </style>
 </head>
 
 <body class="bg-gray-100 font-sans flex flex-col min-h-screen">
 
-  <!-- Hide badge immediately to prevent flicker -->
+  <!-- Hide badge immediately to avoid flicker -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const cnt = document.getElementById("notif-count");
       if (cnt) cnt.style.display = "none";
-      window._pauseNotifUpdates = true;
     });
   </script>
 
@@ -59,7 +58,7 @@
   <script type="module" src="js/auth.js"></script>
   <script type="module" src="js/common.js"></script>
 
-  <!-- Page-specific Notification Logic -->
+  <!-- Page-specific Firestore Logic -->
   <script type="module">
     import { getApps, initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { 
@@ -95,7 +94,7 @@
         }
 
         container.innerHTML = "";
-        snap.forEach(docSnap => {
+        snap.forEach((docSnap) => {
           const data = docSnap.data();
           const time = data.timestamp
             ? new Date(data.timestamp.seconds * 1000).toLocaleString("da-DK")
@@ -115,7 +114,7 @@
       }
     }
 
-    /* ---------- Mark All as Read (online Firestore) ---------- */
+    /* ---------- Mark All as Read (Cloud-based) ---------- */
     async function markAllAsRead(user) {
       if (!user) return;
       try {
@@ -133,26 +132,20 @@
         });
 
         await Promise.all(updates);
-        console.log("✅ Alle notifikationer markeret som læst i Firestore.");
+        console.log("✅ Alle notifikationer markeret som læst (Firestore only).");
       } catch (err) {
         console.error("❌ Fejl ved markering som læst:", err);
       }
     }
 
-    /* ---------- Page Init ---------- */
+    /* ---------- Initialize Page ---------- */
     window.addEventListener("DOMContentLoaded", async () => {
       await loadNotifications();
 
       onAuthStateChanged(auth, async (user) => {
         if (user && user.emailVerified) {
           await markAllAsRead(user);
-
-          // Unpause live updates after a short delay
-          setTimeout(() => {
-            window._pauseNotifUpdates = false;
-            const cnt = document.getElementById("notif-count");
-            if (cnt) cnt.style.display = "none";
-          }, 1500);
+          console.log("🔄 Firestore-synkronisering af læst status færdig.");
         }
       });
     });
