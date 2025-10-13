@@ -1,4 +1,4 @@
-// js/common.js — stable bell logic using shared Firebase instance + readBy tracking
+// js/common.js — unified live bell + admin badge logic
 import { db, auth } from "./firebase.js";
 import {
   collection,
@@ -12,7 +12,11 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/fi
 
 console.log("[common.js] ✅ Loaded (shared Firebase instance)");
 
-// --- Dropdown loader (for content) ---
+const ADMIN_EMAIL = "asbjrnahle33@gmail.com";
+
+/* -------------------------------
+   📨 Dropdown (5 latest notifications)
+--------------------------------*/
 window.loadNotificationsDropdown = async function ({ messagesEl, countEl } = {}) {
   const m = messagesEl || document.getElementById("notif-messages");
   const c = countEl || document.getElementById("notif-count");
@@ -46,40 +50,112 @@ window.loadNotificationsDropdown = async function ({ messagesEl, countEl } = {})
   }
 };
 
-// --- 🔴 Live badge listener with pause + Firestore readBy awareness ---
+/* -------------------------------
+   🔔 Live badge updater (with admin awareness)
+--------------------------------*/
 function setupLiveBadge() {
   onAuthStateChanged(auth, (user) => {
     const cnt = document.getElementById("notif-count");
-    if (!user || !user.emailVerified || !cnt) return;
+    if (!cnt) return;
+    if (!user || !user.emailVerified) {
+      cnt.classList.add("hidden");
+      return;
+    }
 
-    // Listen live for changes in the notifications collection
     onSnapshot(collection(db, "notifications"), (snap) => {
-      if (window._pauseNotifUpdates) return; // skip if paused (e.g., on notifications.html)
+      if (window._pauseNotifUpdates) return;
 
       let unread = 0;
+      let pendingApprovals = 0;
+
       snap.docs.forEach((d) => {
         const data = d.data();
         const readBy = Array.isArray(data.readBy) ? data.readBy : [];
+
+        // Count unread
         if (!readBy.includes(user.uid)) unread++;
+
+        // Count approval requests (admin only)
+        if (user.email === ADMIN_EMAIL && data.type === "approval_request") {
+          pendingApprovals++;
+        }
       });
 
-      // Update UI badge
+      // ✅ Update UI badge
       if (cnt) {
-        if (unread > 0) {
-          cnt.textContent = unread;
+        let showCount = unread;
+        if (user.email === ADMIN_EMAIL && pendingApprovals > 0) {
+          showCount = pendingApprovals;
+        }
+
+        if (showCount > 0) {
+          cnt.textContent = showCount > 9 ? "9+" : showCount;
           cnt.classList.remove("hidden");
+          cnt.classList.add(
+            "absolute",
+            "-top-1",
+            "-right-1",
+            "bg-red-600",
+            "text-white",
+            "rounded-full",
+            "text-xs",
+            "px-2",
+            "py-0.5",
+            "font-bold"
+          );
         } else {
-          cnt.textContent = "0";
           cnt.classList.add("hidden");
         }
       }
 
-      console.log(`[common.js] 🔔 ${unread} ulæste notifikationer`);
+      console.log(`[common.js] 🔔 ${unread} ulæste, ${pendingApprovals} afventende godkendelser`);
     });
   });
 }
 
-// --- Bell dropdown handler ---
+/* -------------------------------
+   🧩 Global badge refresh function
+--------------------------------*/
+window.refreshNotificationsBadge = async function () {
+  const user = auth.currentUser;
+  const cnt = document.getElementById("notif-count");
+  if (!cnt || !user) return;
+
+  try {
+    const qy = query(collection(db, "notifications"), orderBy("timestamp", "desc"), limit(50));
+    const snap = await getDocs(qy);
+
+    let unread = 0;
+    let pendingApprovals = 0;
+
+    snap.forEach((d) => {
+      const data = d.data();
+      const readBy = Array.isArray(data.readBy) ? data.readBy : [];
+      if (!readBy.includes(user.uid)) unread++;
+      if (user.email === ADMIN_EMAIL && data.type === "approval_request") {
+        pendingApprovals++;
+      }
+    });
+
+    let showCount = unread;
+    if (user.email === ADMIN_EMAIL && pendingApprovals > 0) showCount = pendingApprovals;
+
+    if (showCount > 0) {
+      cnt.textContent = showCount > 9 ? "9+" : showCount;
+      cnt.classList.remove("hidden");
+    } else {
+      cnt.classList.add("hidden");
+    }
+
+    console.log(`[common.js] 🔁 refreshNotificationsBadge(): ${showCount}`);
+  } catch (err) {
+    console.error("[common.js] ❌ Fejl ved refreshNotificationsBadge:", err);
+  }
+};
+
+/* -------------------------------
+   🔔 Bell dropdown handler
+--------------------------------*/
 window.setupBellButton = function (attempt = 1) {
   const btn = document.getElementById("notif-btn");
   const drop = document.getElementById("notif-dropdown");
@@ -103,10 +179,19 @@ window.setupBellButton = function (attempt = 1) {
   drop.style.position = "absolute";
   drop.style.zIndex = "99999";
 
+  // Smart dynamic positioning
   function positionDrop() {
     const r = btn.getBoundingClientRect();
-    drop.style.top = `${r.bottom + 8}px`;
-    drop.style.left = `${r.right - drop.offsetWidth}px`;
+    const dropWidth = drop.offsetWidth;
+    const screenWidth = window.innerWidth;
+    const margin = 8;
+
+    let left = r.right - dropWidth;
+    if (left + dropWidth + margin > screenWidth) left = screenWidth - dropWidth - margin;
+    if (left < margin) left = margin;
+
+    drop.style.top = `${r.bottom + margin}px`;
+    drop.style.left = `${left}px`;
   }
 
   btn.addEventListener("click", (e) => {
@@ -119,19 +204,19 @@ window.setupBellButton = function (attempt = 1) {
     if (!drop.contains(e.target) && !btn.contains(e.target)) drop.classList.add("hidden");
   });
 
-  // Initial load + start live listener
   window.loadNotificationsDropdown({ messagesEl: msgs, countEl: cnt });
   setupLiveBadge();
-  console.log("[common.js] 🔔 Bell wired successfully (live Firestore updates)");
+  console.log("[common.js] 🔔 Bell wired successfully (live updates)");
 };
 
-// --- Init after nav loads ---
+/* -------------------------------
+   🕓 Auto-init + focus refresh
+--------------------------------*/
 setTimeout(() => {
   window.setupBellButton();
 }, 1500);
 
-// --- Reload on focus ---
 window.addEventListener("focus", () => {
-  console.log("[common.js] 🪟 Refocused → Reloading notifications");
-  window.loadNotificationsDropdown();
+  console.log("[common.js] 🪟 Refocused → refreshing notifications badge");
+  window.refreshNotificationsBadge();
 });

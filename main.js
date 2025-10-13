@@ -1,19 +1,28 @@
-/* main.js — shared across all pages */
+/* main.js — shared across all pages (stable with Notification page fix) */
 
 // ✅ Firebase Imports
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  limit,
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // ✅ Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
   authDomain: "branchcreek-bandits.firebaseapp.com",
   projectId: "branchcreek-bandits",
-  storageBucket: "branchcreek-bandits.firebasestorage.app",
+  storageBucket: "branchcreek-bandits.appspot.com",
   messagingSenderId: "828305260971",
   appId: "1:828305260971:web:6c3601fc97601a9621d2ee",
-  measurementId: "G-550TRD5SQ3"
+  measurementId: "G-550TRD5SQ3",
 };
 
 // ✅ Initialize Firebase once
@@ -21,7 +30,9 @@ const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* ========== INCLUDE NAV & FOOTER ========== */
+/* =========================================================
+   INCLUDE NAV & FOOTER
+========================================================= */
 async function includeHTML(file, elementId, callback) {
   const res = await fetch(file);
   const html = await res.text();
@@ -30,82 +41,84 @@ async function includeHTML(file, elementId, callback) {
   if (callback) callback();
 }
 
-/* ========== LOAD NAVBAR ========== */
+/* =========================================================
+   LOAD NAVBAR FIRST (THEN AUTH + NOTIFICATIONS)
+========================================================= */
 includeHTML("nav.html", "navbar", async () => {
   attachNavbarEvents();
-  setupAuth();
-  await loadNotificationsDropdown();
-});
 
-/* ========== LOAD FOOTER ========== */
-includeHTML("footer.html", "footer");
-
-/* ========== AUTH ========== */
-function setupAuth() {
-  const loginBtn = document.getElementById("login-btn");
-  const loginDropdown = document.getElementById("login-dropdown");
-  const mobileLoginBtn = document.getElementById("mobile-login-btn");
-  const mobileLoginForm = document.getElementById("mobile-login-form");
-
-  if (loginBtn && loginDropdown) {
-    loginBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      loginDropdown.classList.toggle("hidden");
+  // 🧩 Safety net for Notification page reloads (fixes login button click)
+  if (window.location.pathname.includes("notifications.html")) {
+    document.addEventListener("click", (e) => {
+      const loginBtn = document.getElementById("login-btn");
+      const loginDropdown = document.getElementById("login-dropdown");
+      if (loginBtn && loginDropdown && loginBtn.contains(e.target)) {
+        e.stopPropagation();
+        loginDropdown.classList.toggle("hidden");
+        loginDropdown.classList.remove("opacity-0");
+      }
     });
   }
-  if (mobileLoginBtn && mobileLoginForm) {
-    mobileLoginBtn.addEventListener("click", () => mobileLoginForm.classList.toggle("hidden"));
+
+  // 🕓 Wait until auth.js and navbar button exist
+  const waitForAuth = setInterval(() => {
+    const loginBtn = document.getElementById("login-btn");
+
+    if (typeof window.setupAuth === "function" && loginBtn) {
+      clearInterval(waitForAuth);
+      console.log("[main.js] ✅ setupAuth and navbar detected — initializing auth...");
+      window.setupAuth();
+
+      // Wait for Firebase session to restore properly
+      setTimeout(() => {
+        console.log("[main.js] 🔄 Checking Firebase currentUser...");
+        renderLoggedInUserWithRole();
+        loadNotificationsDropdown();
+      }, 1000);
+    }
+  }, 150);
+});
+
+/* =========================================================
+   FOOTER
+========================================================= */
+includeHTML("footer.html", "footer");
+
+/* =========================================================
+   RENDER USER ROLE TEXT IN NAVBAR
+========================================================= */
+async function renderLoggedInUserWithRole() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  try {
+    const userRef = doc(db, "users", user.uid);
+    const snap = await getDoc(userRef);
+    const data = snap.exists() ? snap.data() : {};
+    const isAdmin = user.email === "asbjrnahle33@gmail.com";
+    const role = data.role || (isAdmin ? "admin" : "registered");
+
+    const loginBtn = document.getElementById("login-btn");
+    const mobileLoginBtn = document.getElementById("mobile-login-btn");
+
+    let roleLabel = "";
+    if (role === "admin") roleLabel = " (Admin)";
+    else if (role === "verified") roleLabel = "";
+    else if (role === "registered") roleLabel = " (venter på godkendelse)";
+
+    const html = `${user.displayName || user.email}${roleLabel} 
+      <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
+
+    if (loginBtn) loginBtn.innerHTML = html;
+    if (mobileLoginBtn) mobileLoginBtn.innerHTML = html;
+  } catch (err) {
+    console.error("[main.js] ⚠️ Error rendering user role:", err);
   }
-
-  document.addEventListener("click", (e) => {
-    if (loginDropdown && !loginDropdown.contains(e.target) && !loginBtn.contains(e.target)) {
-      loginDropdown.classList.add("hidden");
-    }
-  });
-
-  window.login = async () => {
-    const email = document.getElementById("login-email").value;
-    const password = document.getElementById("login-password").value;
-    try {
-      const user = await signInWithEmailAndPassword(auth, email, password);
-      updateLoginUI(user.user);
-      loginDropdown.classList.add("hidden");
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
-  window.mobileLogin = async () => {
-    const email = document.getElementById("mobile-login-email").value;
-    const password = document.getElementById("mobile-login-password").value;
-    try {
-      const user = await signInWithEmailAndPassword(auth, email, password);
-      updateLoginUI(user.user);
-      mobileLoginForm.classList.add("hidden");
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
-  window.logout = async () => {
-    await signOut(auth);
-    location.reload();
-  };
-
-  onAuthStateChanged(auth, (user) => {
-    if (user) updateLoginUI(user);
-  });
 }
 
-function updateLoginUI(user) {
-  const name = user.displayName || user.email;
-  const loginBtn = document.getElementById("login-btn");
-  const mobileLoginBtn = document.getElementById("mobile-login-btn");
-  if (loginBtn) loginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
-  if (mobileLoginBtn) mobileLoginBtn.innerHTML = `${name} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
-}
-
-/* ========== NOTIFICATIONS ========== */
+/* =========================================================
+   NOTIFICATION DROPDOWN
+========================================================= */
 async function loadNotificationsDropdown() {
   const notifBtn = document.getElementById("notif-btn");
   const notifDropdown = document.getElementById("notif-dropdown");
@@ -114,6 +127,7 @@ async function loadNotificationsDropdown() {
 
   if (!notifBtn || !notifDropdown) return;
 
+  // Move dropdown to body to prevent overflow issues
   document.body.appendChild(notifDropdown);
   notifDropdown.style.position = "absolute";
   notifDropdown.style.zIndex = "99999";
@@ -139,14 +153,16 @@ async function loadNotificationsDropdown() {
   try {
     const qy = query(collection(db, "notifications"), orderBy("timestamp", "desc"), limit(5));
     const snap = await getDocs(qy);
+
     notifMessages.innerHTML = "";
     if (snap.empty) {
       notifMessages.innerHTML = `<p class="text-gray-500 text-sm text-center">Ingen notifikationer endnu.</p>`;
       notifCount.classList.add("hidden");
       return;
     }
+
     let count = 0;
-    snap.forEach(doc => {
+    snap.forEach((doc) => {
       const data = doc.data();
       count++;
       notifMessages.innerHTML += `
@@ -162,7 +178,9 @@ async function loadNotificationsDropdown() {
   }
 }
 
-/* ========== NAV MENU ========== */
+/* =========================================================
+   NAVBAR MENU (MOBILE)
+========================================================= */
 function attachNavbarEvents() {
   const menuBtn = document.getElementById("menu-btn");
   const mobileMenu = document.getElementById("mobile-menu");
@@ -170,3 +188,19 @@ function attachNavbarEvents() {
     menuBtn.addEventListener("click", () => mobileMenu.classList.toggle("hidden"));
   }
 }
+
+/* =========================================================
+   LOGOUT (GLOBAL OVERRIDE SAFETY)
+========================================================= */
+window.logout = async function () {
+  try {
+    console.log("[main.js] 🚪 Logging out (global override)");
+    localStorage.clear();
+    sessionStorage.clear();
+    await signOut(auth);
+    window.location.href = window.location.pathname + "?reload=" + new Date().getTime();
+  } catch (err) {
+    console.error("❌ Logout error:", err);
+    alert("Fejl ved log ud: " + err.message);
+  }
+};

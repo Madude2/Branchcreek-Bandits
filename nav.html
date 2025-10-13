@@ -13,7 +13,7 @@
         <a href="about.html" class="nav-link font-medium flex items-center gap-1">
           Information
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
         </a>
         <ul class="absolute left-0 mt-2 w-48 bg-white text-black rounded shadow-lg opacity-0 invisible 
@@ -33,15 +33,15 @@
         <button id="notif-btn" class="nav-link font-medium flex items-center gap-1 cursor-pointer relative z-50">
           <i data-feather="bell"></i>
           <span id="notif-count"
-                class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-1.5 rounded-full hidden">
+            class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-1.5 rounded-full hidden">
             0
           </span>
         </button>
 
         <!-- Dropdown (moved to body at runtime) -->
         <div id="notif-dropdown"
-             class="absolute mt-1 w-80 bg-white text-black shadow-lg p-4 hidden rounded-lg border border-gray-300 z-[9999]"
-             style="top: 100%; right: 0;">
+          class="absolute mt-1 w-80 bg-white text-black shadow-lg p-4 hidden rounded-lg border border-gray-300 z-[9999]"
+          style="top: 100%; right: 0;">
           <h3 class="font-bold mb-2 text-gray-800">Notifikationer</h3>
           <div id="notif-messages" class="max-h-64 overflow-y-auto text-sm">
             <p class="text-gray-500 text-center">Indlæser notifikationer...</p>
@@ -57,21 +57,27 @@
       <!-- Login -->
       <div class="relative flex items-center">
         <button id="login-btn"
-                class="nav-link font-medium flex items-center gap-1 cursor-pointer relative z-50">
+          class="nav-link font-medium flex items-center gap-1 cursor-pointer relative z-50">
           Login
           <svg class="w-4 h-4 inline-block ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
           </svg>
         </button>
 
         <!-- Dropdown -->
         <div id="login-dropdown"
-             class="absolute mt-1 w-64 bg-white text-black shadow-lg p-4 hidden rounded-lg border border-gray-200"
-             style="top: 100%; right: 0;">
+          class="absolute mt-1 w-64 bg-white text-black shadow-lg p-4 hidden rounded-lg border border-gray-200"
+          style="top: 100%; right: 0;">
           <h3 class="font-bold mb-2">Login</h3>
-          <input type="email" id="login-email" placeholder="Email" class="w-full mb-2 px-3 py-2 border rounded">
-          <input type="password" id="login-password" placeholder="Password" class="w-full mb-2 px-3 py-2 border rounded">
-          <button onclick="login()" class="w-full bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-2 rounded mb-2">Login</button>
+          <input type="email" id="login-email" placeholder="Email"
+            class="w-full mb-2 px-3 py-2 border rounded">
+          <input type="password" id="login-password" placeholder="Password"
+            class="w-full mb-2 px-3 py-2 border rounded">
+          <!-- ✅ Spinner-ready button -->
+          <button id="login-submit" onclick="login()"
+            class="w-full bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-2 rounded mb-2 transition-all duration-200">
+            Log ind
+          </button>
           <a href="signup.html" class="text-blue-600 hover:underline block text-center">Opret Konto</a>
         </div>
       </div>
@@ -86,10 +92,11 @@
   <!-- Mobile Menu -->
   <div id="mobile-menu" class="hidden md:hidden bg-black text-white px-8 pb-6">
     <div class="mb-2">
-      <button class="flex justify-between w-full nav-link" onclick="this.nextElementSibling.classList.toggle('hidden')">
+      <button class="flex justify-between w-full nav-link"
+        onclick="this.nextElementSibling.classList.toggle('hidden')">
         Information
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
         </svg>
       </button>
       <ul class="hidden flex flex-col pl-4 mt-2 gap-1">
@@ -110,11 +117,20 @@
 
     <!-- Mobile Login -->
     <div id="mobile-login-form" class="mt-4">
-      <button id="mobile-login-btn" class="nav-link font-medium w-full text-left mb-2 cursor-pointer">Login</button>
+      <button id="mobile-login-btn"
+        class="nav-link font-medium w-full text-left mb-2 cursor-pointer">
+        Login
+      </button>
       <div class="hidden mt-2">
-        <input type="email" id="mobile-login-email" placeholder="Email" class="w-full mb-2 px-3 py-2 border rounded">
-        <input type="password" id="mobile-login-password" placeholder="Password" class="w-full mb-2 px-3 py-2 border rounded">
-        <button onclick="mobileLogin()" class="w-full bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-2 mb-2 rounded">Login</button>
+        <input type="email" id="mobile-login-email" placeholder="Email"
+          class="w-full mb-2 px-3 py-2 border rounded">
+        <input type="password" id="mobile-login-password" placeholder="Password"
+          class="w-full mb-2 px-3 py-2 border rounded">
+        <!-- ✅ Spinner-ready button -->
+        <button id="mobile-login-submit" onclick="mobileLogin()"
+          class="w-full bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-2 mb-2 rounded transition-all duration-200">
+          Log ind
+        </button>
         <a href="signup.html" class="text-blue-600 hover:underline block text-center">Opret Konto</a>
       </div>
     </div>
@@ -123,12 +139,12 @@
 
 <!-- Ensure bell and feather icons refresh after injection -->
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  if (window.feather) feather.replace();
+  document.addEventListener("DOMContentLoaded", () => {
+    if (window.feather) feather.replace();
 
-  // Sikrer at common.js får fat i klokke-elementerne efter load
-  if (typeof window.refreshNotificationsBadge === "function") {
-    setTimeout(() => window.refreshNotificationsBadge(), 800);
-  }
-});
+    // Sikrer at common.js får fat i klokke-elementerne efter load
+    if (typeof window.refreshNotificationsBadge === "function") {
+      setTimeout(() => window.refreshNotificationsBadge(), 800);
+    }
+  });
 </script>

@@ -33,9 +33,11 @@
         <h1 class="western-text text-5xl mb-6 text-center">Forum</h1>
 
         <div id="login-warning" class="text-center text-red-500 mb-6">
-          Du skal være logget ind for at bruge forum. Log ind via knappen i toppen, eller opret en konto.
+          Du skal være logget ind og være verificeret af en administrator for at bruge forummet.
+        
         </div>
 
+        
         <div id="forum-content">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="forum-post">
@@ -82,19 +84,63 @@
   }
   </script>
 
-  <!-- -------- Forum visibility controls -------- -->
-  <script>
-  window.unlockForum = function(){
-    const f = document.getElementById("forum-content");
-    const w = document.getElementById("login-warning");
-    if (f && w) { f.style.display = "block"; w.style.display = "none"; }
-  };
-  window.lockForum = function(){
-    const f = document.getElementById("forum-content");
-    const w = document.getElementById("login-warning");
-    if (f && w) { f.style.display = "none"; w.style.display = "block"; }
-  };
-  </script>
+  <!-- -------- Forum visibility controls (updated) -------- -->
+<script type="module">
+import { auth, db } from "./js/firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+const ADMIN_EMAIL = "asbjrnahle33@gmail.com";
+
+// ✅ Utility: show/hide forum sections
+function unlockForum() {
+  const f = document.getElementById("forum-content");
+  const w = document.getElementById("login-warning");
+  if (f && w) {
+    f.style.display = "block";
+    w.style.display = "none";
+  }
+}
+
+function lockForum() {
+  const f = document.getElementById("forum-content");
+  const w = document.getElementById("login-warning");
+  if (f && w) {
+    f.style.display = "none";
+    w.style.display = "block";
+  }
+}
+
+// ✅ Main listener: checks if user is verified or admin
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    lockForum();
+    return;
+  }
+
+  try {
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    const data = userSnap.exists() ? userSnap.data() : {};
+    const isAdmin = user.email === ADMIN_EMAIL;
+    const isVerified = isAdmin || data.verifiedByAdmin || data.role === "verified";
+
+    if (isVerified) {
+      unlockForum();
+    } else {
+      lockForum();
+    }
+  } catch (err) {
+    console.error("❌ Fejl ved kontrol af brugerstatus:", err);
+    lockForum();
+  }
+});
+
+// ✅ Make them globally available in case auth.js calls them
+window.lockForum = lockForum;
+window.unlockForum = unlockForum;
+</script>
+
 
   <!-- -------- Load Navbar + Footer -------- -->
   <script>

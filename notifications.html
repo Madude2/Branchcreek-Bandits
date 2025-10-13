@@ -15,23 +15,16 @@
     .nav-link:hover { color: #d4a017; }
     h1,h2,h3,h4,h5,h6 { font-family: 'Western', sans-serif; }
     .western-text { font-family: 'Western', sans-serif; }
-    .btn-gold { background-color: #d4a017; transition: all 0.3s ease; }
-    .btn-gold:hover { background-color: #b78a14; transform: translateY(-2px); }
-
-    /* 🧹 Prevent flicker of the red badge */
-    #notif-count { display: none !important; }
+    .btn { padding: 6px 12px; border-radius: 6px; font-weight: bold; transition: all 0.2s; }
+    .btn-approve { background-color: #16a34a; color: white; }
+    .btn-approve:hover { background-color: #15803d; }
+    .btn-deny { background-color: #dc2626; color: white; }
+    .btn-deny:hover { background-color: #b91c1c; }
+    #notif-count { display: none !important; } /* prevent flicker */
   </style>
 </head>
 
 <body class="bg-gray-100 font-sans flex flex-col min-h-screen">
-
-  <!-- Hide badge immediately to avoid flicker -->
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const cnt = document.getElementById("notif-count");
-      if (cnt) cnt.style.display = "none";
-    });
-  </script>
 
   <!-- Dynamic Navbar -->
   <div id="navbar"></div>
@@ -54,19 +47,19 @@
   <div id="footer"></div>
 
   <!-- Shared Scripts -->
-  <script type="module" src="main.js"></script>
   <script type="module" src="js/auth.js"></script>
+  <script type="module" src="main.js"></script>
   <script type="module" src="js/common.js"></script>
 
-  <!-- Page-specific Firestore Logic -->
+  <!-- Page Logic -->
   <script type="module">
     import { getApps, initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { 
-      getFirestore, collection, getDocs, query, orderBy, limit, updateDoc, doc, arrayUnion
+      getFirestore, collection, getDocs, query, orderBy, limit,
+      updateDoc, doc, arrayUnion, addDoc, deleteDoc, getDoc
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-    // --- Firebase Config ---
     const firebaseConfig = {
       apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
       authDomain: "branchcreek-bandits.firebaseapp.com",
@@ -81,11 +74,41 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
     const container = document.getElementById("notifications-container");
+    const ADMIN_EMAIL = "asbjrnahle33@gmail.com";
 
     /* ---------- Load Notifications ---------- */
-    async function loadNotifications() {
-      try {
-        const qy = query(collection(db, "notifications"), orderBy("timestamp", "desc"), limit(20));
+   async function loadNotifications(user) {
+  try {
+    const userRef = doc(db, "users", user.uid);
+    const userSnap = await getDoc(userRef);
+    const userData = userSnap.exists() ? userSnap.data() : {};
+    const isAdmin = user.email === ADMIN_EMAIL;
+
+    // ✅ Improved verification detection
+    const isVerified =
+      isAdmin ||
+      userData?.verifiedByAdmin === true ||
+      userData?.status === "verified" ||
+      userData?.role === "verified" ||
+      user?.role === "verified";
+
+    console.log("[notifications] UserData:", userData);
+    console.log("[notifications] verifiedByAdmin:", userData?.verifiedByAdmin);
+    console.log("[notifications] role:", userData?.role);
+    console.log("[notifications] isVerified computed:", isVerified);
+
+    // 🚫 Prevent unverified access
+    if (!isVerified) {
+      container.innerHTML = `<p class="text-red-500 text-center py-8">
+        Du skal være godkendt af en administrator for at se notifikationer.
+      </p>`;
+      return;
+    }
+
+    // --- rest of your code below unchanged ---
+
+
+        const qy = query(collection(db, "notifications"), orderBy("timestamp", "desc"), limit(50));
         const snap = await getDocs(qy);
 
         if (snap.empty) {
@@ -94,34 +117,116 @@
         }
 
         container.innerHTML = "";
-        snap.forEach((docSnap) => {
+        let pendingApprovals = 0;
+
+        for (const docSnap of snap.docs) {
           const data = docSnap.data();
+          const id = docSnap.id;
+
+          const isApproval = data.type === "approval_request";
+          const isOwner = data.userId && data.userId === user.uid;
+
+          // 🔒 Visibility rules:
+          // - Admin: sees everything
+          // - Verified users: all except other users’ approval requests
+          // - Regular users: only their own
+          if (!isAdmin) {
+            if (isApproval && !isOwner) continue;
+          }
+
           const time = data.timestamp
-            ? new Date(data.timestamp.seconds * 1000).toLocaleString("da-DK")
+            ? new Date((data.timestamp.seconds || 0) * 1000).toLocaleString("da-DK")
             : "";
+
           const notif = document.createElement("div");
           notif.className = "border-b border-gray-200 py-3 last:border-none";
-          notif.innerHTML = `
+
+          let html = `
             <div class="font-bold text-yellow-700 text-lg mb-1">${data.title || "Ny Notifikation"}</div>
             <div class="text-gray-700 mb-1">${data.message || ""}</div>
             <div class="text-gray-500 text-sm">${time}</div>
           `;
+
+          if (isAdmin && isApproval) {
+            pendingApprovals++;
+            html += `
+              <div class="flex gap-3 mt-3">
+                <button class="btn btn-approve" id="approve-${id}">Godkend</button>
+                <button class="btn btn-deny" id="deny-${id}">Afvis</button>
+              </div>
+            `;
+          }
+
+          notif.innerHTML = html;
           container.appendChild(notif);
-        });
+
+          if (isAdmin && isApproval) {
+            document.getElementById(`approve-${id}`)?.addEventListener("click", () => handleApproval(data.userId, id, true));
+            document.getElementById(`deny-${id}`)?.addEventListener("click", () => handleApproval(data.userId, id, false));
+          }
+        }
+
+        console.log(`[notifications] ✅ Indlæst (${pendingApprovals} godkendelser afventer).`);
       } catch (err) {
         console.error("❌ Fejl ved indlæsning af notifikationer:", err);
-        container.innerHTML = `<p class="text-red-500 text-center py-8">Fejl ved indlæsning af notifikationer</p>`;
+        if (err.code?.includes("permission-denied")) {
+          container.innerHTML = `<p class="text-red-500 text-center py-8">
+            Du har ikke adgang til disse notifikationer.
+          </p>`;
+        } else {
+          container.innerHTML = `<p class="text-red-500 text-center py-8">
+            Fejl ved indlæsning af notifikationer
+          </p>`;
+        }
       }
     }
 
-    /* ---------- Mark All as Read (Cloud-based) ---------- */
+    /* ---------- Handle Admin Approval ---------- */
+    async function handleApproval(userId, notifId, approve) {
+      try {
+        const userRef = doc(db, "users", userId);
+        const notifRef = doc(db, "notifications", notifId);
+
+        if (approve) {
+          await updateDoc(userRef, { verifiedByAdmin: true, status: "verified", role: "verified" });
+          
+          
+          await addDoc(collection(db, "notifications"), {
+            title: "Konto godkendt",
+            message: "✅ Din konto er nu godkendt af en administrator.",
+            type: "user_update",
+            userId,
+            timestamp: new Date(),
+            readBy: [],
+          });
+        } else {
+          await updateDoc(userRef, { verifiedByAdmin: false, status: "denied" });
+          await new Promise(r => setTimeout(r, 1000)); // wait a second for Firestore to propagate
+          await addDoc(collection(db, "notifications"), {
+            title: "Konto afvist",
+            message: "❌ Din anmodning om godkendelse blev afvist.",
+            type: "user_update",
+            userId,
+            timestamp: new Date(),
+            readBy: [],
+          });
+        }
+
+        await deleteDoc(notifRef);
+        alert(approve ? "✅ Bruger godkendt!" : "❌ Bruger afvist!");
+        await loadNotifications(auth.currentUser);
+      } catch (err) {
+        console.error("❌ Fejl ved godkendelse:", err);
+        alert("Der opstod en fejl. Prøv igen.");
+      }
+    }
+
+    /* ---------- Mark All as Read ---------- */
     async function markAllAsRead(user) {
-      if (!user) return;
       try {
         const qy = query(collection(db, "notifications"), orderBy("timestamp", "desc"));
         const snap = await getDocs(qy);
-
-        const updates = snap.docs.map(async (docSnap) => {
+        for (const docSnap of snap.docs) {
           const data = docSnap.data();
           const readBy = Array.isArray(data.readBy) ? data.readBy : [];
           if (!readBy.includes(user.uid)) {
@@ -129,25 +234,22 @@
               readBy: arrayUnion(user.uid)
             });
           }
-        });
-
-        await Promise.all(updates);
-        console.log("✅ Alle notifikationer markeret som læst (Firestore only).");
+        }
       } catch (err) {
-        console.error("❌ Fejl ved markering som læst:", err);
+        console.error("⚠️ Fejl ved markering som læst:", err);
       }
     }
 
-    /* ---------- Initialize Page ---------- */
-    window.addEventListener("DOMContentLoaded", async () => {
-      await loadNotifications();
-
-      onAuthStateChanged(auth, async (user) => {
-        if (user && user.emailVerified) {
-          await markAllAsRead(user);
-          console.log("🔄 Firestore-synkronisering af læst status færdig.");
-        }
-      });
+    /* ---------- Init ---------- */
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        container.innerHTML = `<p class="text-gray-500 text-center py-8">
+          Log ind for at se notifikationer.
+        </p>`;
+        return;
+      }
+      await loadNotifications(user);
+      if (user.emailVerified) await markAllAsRead(user);
     });
   </script>
 </body>
