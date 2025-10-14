@@ -43,6 +43,10 @@
     </div>
   </main>
 
+
+
+
+  
   <!-- Footer -->
   <div id="footer"></div>
 
@@ -64,7 +68,7 @@
       apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
       authDomain: "branchcreek-bandits.firebaseapp.com",
       projectId: "branchcreek-bandits",
-      storageBucket: "branchcreek-bandits.firebasestorage.app",
+      storageBucket: "branchcreek-bandits.appspot.com",
       messagingSenderId: "828305260971",
       appId: "1:828305260971:web:6c3601fc97601a9621d2ee",
       measurementId: "G-550TRD5SQ3"
@@ -77,37 +81,35 @@
     const ADMIN_EMAIL = "asbjrnahle33@gmail.com";
 
     /* ---------- Load Notifications ---------- */
-   async function loadNotifications(user) {
-  try {
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
-    const userData = userSnap.exists() ? userSnap.data() : {};
-    const isAdmin = user.email === ADMIN_EMAIL;
+    async function loadNotifications(user) {
+      try {
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+        const userData = userSnap.exists() ? userSnap.data() : {};
+        const isAdmin = user.email === ADMIN_EMAIL;
 
-    // ✅ Improved verification detection
-    const isVerified =
-      isAdmin ||
-      userData?.verifiedByAdmin === true ||
-      userData?.status === "verified" ||
-      userData?.role === "verified" ||
-      user?.role === "verified";
+        const isVerified =
+          isAdmin ||
+          userData?.verifiedByAdmin === true ||
+          userData?.status === "verified" ||
+          userData?.role === "verified" ||
+          user?.role === "verified";
 
-    console.log("[notifications] UserData:", userData);
-    console.log("[notifications] verifiedByAdmin:", userData?.verifiedByAdmin);
-    console.log("[notifications] role:", userData?.role);
-    console.log("[notifications] isVerified computed:", isVerified);
+        console.log("[notifications] userData:", userData);
+        console.log("[notifications] isAdmin:", isAdmin);
+        console.log("[notifications] isVerified:", isVerified);
 
-    // 🚫 Prevent unverified access
-    if (!isVerified) {
-      container.innerHTML = `<p class="text-red-500 text-center py-8">
-        Du skal være godkendt af en administrator for at se notifikationer.
-      </p>`;
-      return;
-    }
-
-    // --- rest of your code below unchanged ---
+        // 🚫 Block unverified users
+        if (!isVerified) {
+          container.innerHTML = `<p class="text-red-500 text-center py-8">
+            Du skal være godkendt af en administrator for at se notifikationer.
+          </p>`;
+          return;
+        }
 
 
+        
+        // 🔽 Query notifications
         const qy = query(collection(db, "notifications"), orderBy("timestamp", "desc"), limit(50));
         const snap = await getDocs(qy);
 
@@ -126,13 +128,8 @@
           const isApproval = data.type === "approval_request";
           const isOwner = data.userId && data.userId === user.uid;
 
-          // 🔒 Visibility rules:
-          // - Admin: sees everything
-          // - Verified users: all except other users’ approval requests
-          // - Regular users: only their own
-          if (!isAdmin) {
-            if (isApproval && !isOwner) continue;
-          }
+          // 🔒 Visibility logic
+          if (!isAdmin && isApproval && !isOwner) continue;
 
           const time = data.timestamp
             ? new Date((data.timestamp.seconds || 0) * 1000).toLocaleString("da-DK")
@@ -167,6 +164,7 @@
         }
 
         console.log(`[notifications] ✅ Indlæst (${pendingApprovals} godkendelser afventer).`);
+
       } catch (err) {
         console.error("❌ Fejl ved indlæsning af notifikationer:", err);
         if (err.code?.includes("permission-denied")) {
@@ -175,7 +173,7 @@
           </p>`;
         } else {
           container.innerHTML = `<p class="text-red-500 text-center py-8">
-            Fejl ved indlæsning af notifikationer
+            Fejl ved indlæsning af notifikationer.
           </p>`;
         }
       }
@@ -189,8 +187,6 @@
 
         if (approve) {
           await updateDoc(userRef, { verifiedByAdmin: true, status: "verified", role: "verified" });
-          
-          
           await addDoc(collection(db, "notifications"), {
             title: "Konto godkendt",
             message: "✅ Din konto er nu godkendt af en administrator.",
@@ -201,7 +197,7 @@
           });
         } else {
           await updateDoc(userRef, { verifiedByAdmin: false, status: "denied" });
-          await new Promise(r => setTimeout(r, 1000)); // wait a second for Firestore to propagate
+          await new Promise(r => setTimeout(r, 1000));
           await addDoc(collection(db, "notifications"), {
             title: "Konto afvist",
             message: "❌ Din anmodning om godkendelse blev afvist.",

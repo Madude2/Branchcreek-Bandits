@@ -1,4 +1,4 @@
-// js/auth.js — with throbber & admin role verification system
+// js/auth.js — stable + admin approval notifications + flicker fix
 import { auth, db } from "./firebase.js";
 import {
   signInWithEmailAndPassword,
@@ -10,56 +10,98 @@ import {
 import {
   doc,
   setDoc,
-  updateDoc,
+  getDoc,
   addDoc,
   collection,
   query,
   where,
-  getDoc,
   getDocs,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-console.log("[auth.js] ✅ Loaded — roles + spinner + admin notifications");
+console.log("[auth.js] ✅ Loaded — roles + spinner + admin notifications + flicker fix");
 
 window.setupAuth = function () {
   const ADMIN_EMAIL = "asbjrnahle33@gmail.com";
 
   /* -------------------------------
-     Navbar user display
+     🔒 Reliable logout handler
+  --------------------------------*/
+  function attachLogoutHandler(attempt = 1) {
+    const btns = document.querySelectorAll("#logout-btn");
+    if (!btns.length) {
+      if (attempt <= 10) {
+        console.log(`[auth.js] ⏳ Waiting for logout button (try ${attempt})...`);
+        setTimeout(() => attachLogoutHandler(attempt + 1), 300);
+      }
+      return;
+    }
+
+    btns.forEach((btn) => {
+      if (btn._logoutBound) return;
+      btn._logoutBound = true;
+
+      btn.addEventListener("click", async () => {
+        console.log("[auth.js] 🚪 Logout clicked");
+        try {
+          window._pauseNotifUpdates = true;
+          await signOut(auth);
+          localStorage.clear();
+          sessionStorage.clear();
+
+          const dropdown = document.getElementById("login-dropdown");
+          if (dropdown) dropdown.classList.add("hidden");
+          const mobileForm = document.querySelector("#mobile-login-form > div");
+          if (mobileForm) mobileForm.classList.add("hidden");
+
+          console.log("[auth.js] ✅ Signed out successfully");
+          window.location.reload();
+        } catch (err) {
+          console.error("❌ Logout error:", err);
+          alert("Fejl ved log ud: " + err.message);
+        }
+      });
+    });
+  }
+
+  /* -------------------------------
+     🧭 Navbar user display
   --------------------------------*/
   function updateMenu(name, role) {
     const loginBtn = document.getElementById("login-btn");
     const mobileLoginBtn = document.getElementById("mobile-login-btn");
-    let roleLabel = "";
+    if (!loginBtn) return;
 
+    let roleLabel = "";
     if (role === "admin") roleLabel = " (Admin)";
     else if (role === "verified") roleLabel = "";
     else if (role === "registered") roleLabel = " (venter på godkendelse)";
 
-    const html = `${name}${roleLabel} <button onclick="logout()" class="ml-2 text-red-500 font-bold">Log ud</button>`;
-    if (loginBtn) loginBtn.innerHTML = html;
+    const html = `
+      <span>${name}${roleLabel}</span>
+      <button id="logout-btn" class="ml-2 text-red-500 font-bold hover:underline">Log ud</button>
+    `;
+    loginBtn.innerHTML = html;
     if (mobileLoginBtn) mobileLoginBtn.innerHTML = html;
+    attachLogoutHandler();
   }
 
   /* -------------------------------
-     Spinner helper
+     🔄 Spinner helpers
   --------------------------------*/
   function showThrobber(buttonEl, text = "Logger ind...") {
-  if (!buttonEl) return;
-  buttonEl.dataset.originalText = buttonEl.innerHTML;
-  buttonEl.innerHTML = `
-    <span class="flex justify-center items-center gap-2 w-full">
-      <svg class="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-      </svg>
-      <span>${text}</span>
-    </span>`;
-  buttonEl.disabled = true;
-}
-
-
+    if (!buttonEl) return;
+    buttonEl.dataset.originalText = buttonEl.innerHTML;
+    buttonEl.innerHTML = `
+      <span class="flex justify-center items-center gap-2 w-full">
+        <svg class="animate-spin h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        <span>${text}</span>
+      </span>`;
+    buttonEl.disabled = true;
+  }
   function hideThrobber(buttonEl) {
     if (!buttonEl) return;
     buttonEl.innerHTML = buttonEl.dataset.originalText || "Log ind";
@@ -67,7 +109,7 @@ window.setupAuth = function () {
   }
 
   /* -------------------------------
-     USER SIGNUP
+     🧑‍💻 USER SIGNUP — notify admin
   --------------------------------*/
   window.signup = async function () {
     const email = document.getElementById("signup-email")?.value?.trim();
@@ -76,6 +118,7 @@ window.setupAuth = function () {
       alert("Indtast e-mail og adgangskode.");
       return;
     }
+
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       const user = cred.user;
@@ -84,14 +127,36 @@ window.setupAuth = function () {
       await setDoc(doc(db, "users", user.uid), {
         email: user.email,
         displayName: user.displayName || user.email,
-        status: isAdmin ? "verified" : "new",
+        status: isAdmin ? "verified" : "registered",
         verifiedByAdmin: isAdmin,
-        role: isAdmin ? "admin" : "new",
+        role: isAdmin ? "admin" : "registered",
         createdAt: serverTimestamp(),
+        emailVerified: false,
       });
 
+      // Wait until Firebase fully registers session
+      await user.getIdToken(true);
+
+      // Notify admin that a new user signed up
+      if (!isAdmin) {
+        try {
+          console.log("[auth.js] 🧠 Attempting to create approval_request...");
+          const notifRef = await addDoc(collection(db, "notifications"), {
+            title: "Ny bruger venter på godkendelse",
+            message: `Bruger ${user.email} har oprettet en konto og venter på godkendelse.`,
+            type: "approval_request",
+            userId: user.uid,
+            timestamp: serverTimestamp(),
+            readBy: [],
+          });
+          console.log("[auth.js] ✅ Notification created:", notifRef.id);
+        } catch (err) {
+          console.error("🔥 Firestore write failed:", err.code, err.message);
+        }
+      }
+
       await sendEmailVerification(user);
-      alert("En bekræftelsesmail er sendt til din e-mail. Tjek din indbakke.");
+      alert("En bekræftelsesmail er sendt. Tjek din indbakke.");
       await signOut(auth);
     } catch (err) {
       console.error("❌ Signup error:", err);
@@ -100,7 +165,7 @@ window.setupAuth = function () {
   };
 
   /* -------------------------------
-     LOGIN (with spinner)
+     🔑 LOGIN
   --------------------------------*/
   async function handleLogin(email, password, isMobile = false) {
     const loginBtn = isMobile
@@ -109,7 +174,6 @@ window.setupAuth = function () {
 
     try {
       showThrobber(loginBtn);
-
       const cred = await signInWithEmailAndPassword(auth, email, password);
       const user = cred.user;
       const userRef = doc(db, "users", user.uid);
@@ -122,69 +186,31 @@ window.setupAuth = function () {
         return;
       }
 
-      let snap = await getDoc(userRef);
-      let userData = snap.exists() ? snap.data() : null;
-      if (!userData) {
-        const newData = {
-          email: user.email,
-          displayName: user.displayName || user.email,
-          status: isAdmin ? "verified" : "registered",
-          verifiedByAdmin: isAdmin,
-          role: isAdmin ? "admin" : "registered",
-          createdAt: serverTimestamp(),
-        };
-        await setDoc(userRef, newData);
-        userData = newData;
-      }
-
-      // Refetch to ensure most accurate data
-      snap = await getDoc(userRef);
-      userData = snap.exists() ? snap.data() : userData;
-
-      let role = userData.role || (isAdmin ? "admin" : "registered");
-      if (userData.verifiedByAdmin) role = "verified";
+      const snap = await getDoc(userRef);
+      const data = snap.exists() ? snap.data() : {};
+      let role = "registered";
       if (isAdmin) role = "admin";
+      else if (data.verifiedByAdmin) role = "verified";
 
-      // Notify admin if verified but not approved
-      if (user.emailVerified && !isAdmin && !userData.verifiedByAdmin) {
-        const notifQuery = query(
-          collection(db, "notifications"),
-          where("userId", "==", user.uid),
-          where("type", "==", "approval_request")
-        );
-        const notifSnap = await getDocs(notifQuery);
+      // ✅ Always prefer Firestore displayName if available
+const displayName = data.displayName || user.displayName || user.email;
+updateMenu(displayName, role);
 
-        if (notifSnap.empty) {
-          await updateDoc(userRef, { status: "registered", role: "registered" });
-          await addDoc(collection(db, "notifications"), {
-            title: "Ny bruger venter på godkendelse",
-            message: `${user.email} har bekræftet sin e-mail og venter på at blive godkendt af en administrator.`,
-            type: "approval_request",
-            userId: user.uid,
-            timestamp: serverTimestamp(),
-            readBy: [],
-          });
-        }
-      }
-
-      updateMenu(user.displayName || user.email, role);
-console.log(`[auth.js] ✅ Login success — role: ${role}`);
-
-// 🧹 Automatically close login popups after successful login
-const desktopDropdown = document.getElementById("login-dropdown");
-const mobileFormWrapper = document.querySelector("#mobile-login-form > div");
-
-if (desktopDropdown) {
-  desktopDropdown.classList.add("hidden");
+// 🧠 Optional: sync Firebase Auth profile for consistency
+if (!user.displayName && data.displayName) {
+  try {
+    const { updateProfile } = await import("https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js");
+    await updateProfile(user, { displayName: data.displayName });
+    console.log("[auth.js] 🔄 Synced Auth displayName from Firestore:", data.displayName);
+  } catch (err) {
+    console.warn("[auth.js] ⚠️ Couldn't update Auth profile:", err.message);
+  }
 }
 
-if (mobileFormWrapper) {
-  mobileFormWrapper.classList.add("hidden");
-}
 
-// Optional: add a small success animation or message
-// Example: alert("✅ Du er nu logget ind!");
-
+      // Close dropdowns
+      document.getElementById("login-dropdown")?.classList.add("hidden");
+      document.querySelector("#mobile-login-form > div")?.classList.add("hidden");
     } catch (err) {
       console.error("❌ Login error:", err);
       alert(err.message);
@@ -196,89 +222,89 @@ if (mobileFormWrapper) {
   window.login = () => {
     const email = document.getElementById("login-email")?.value?.trim();
     const password = document.getElementById("login-password")?.value;
-    const btn = document.getElementById("login-submit");
     if (!email || !password) return alert("Indtast e-mail og adgangskode.");
     handleLogin(email, password, false);
   };
-
   window.mobileLogin = () => {
     const email = document.getElementById("mobile-login-email")?.value?.trim();
     const password = document.getElementById("mobile-login-password")?.value;
-    const btn = document.getElementById("mobile-login-submit");
     if (!email || !password) return alert("Indtast e-mail og adgangskode.");
     handleLogin(email, password, true);
   };
 
   /* -------------------------------
-     AUTH STATE LISTENER (unchanged)
+     🔔 AUTH STATE — auto notification safety net
   --------------------------------*/
   onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      if (window.lockForum) window.lockForum();
-      return;
+    const body = document.querySelector("body");
+    try {
+      if (!user) {
+        if (body) body.style.visibility = "visible";
+        return;
+      }
+
+      const isAdmin = user.email === ADMIN_EMAIL;
+      const userRef = doc(db, "users", user.uid);
+      let snap = await getDoc(userRef);
+
+      if (!snap.exists()) {
+        await setDoc(userRef, {
+          email: user.email,
+          displayName: user.displayName || user.email,
+          status: isAdmin ? "verified" : "registered",
+          verifiedByAdmin: isAdmin,
+          role: isAdmin ? "admin" : "registered",
+          createdAt: serverTimestamp(),
+        });
+        snap = await getDoc(userRef);
+      }
+
+      const data = snap.data() || {};
+      let role = "registered";
+      if (isAdmin) role = "admin";
+      else if (data.verifiedByAdmin) role = "verified";
+
+      updateMenu(user.displayName || user.email, role);
+
+      // ✅ Auto-create approval request if user somehow skipped earlier
+      if (!isAdmin && role === "registered" && !data.verifiedByAdmin) {
+        const existing = await getDocs(
+          query(collection(db, "notifications"), where("userId", "==", user.uid))
+        );
+        if (existing.empty) {
+          await addDoc(collection(db, "notifications"), {
+            title: "Ny bruger venter på godkendelse",
+            message: `Bruger ${user.email} har oprettet en konto og venter på godkendelse.`,
+            type: "approval_request",
+            userId: user.uid,
+            timestamp: serverTimestamp(),
+            readBy: [],
+          });
+          console.log("[auth.js] 📨 Auto-created missing approval_request notification");
+        }
+      }
+    } catch (err) {
+      console.error("[auth.js] ⚠️ Auth state error:", err);
+    } finally {
+      setTimeout(() => {
+        if (body) body.style.visibility = "visible";
+      }, 100);
     }
-
-    const userRef = doc(db, "users", user.uid);
-    let snap = await getDoc(userRef);
-    const isAdmin = user.email === ADMIN_EMAIL;
-
-    if (!snap.exists()) {
-      await setDoc(userRef, {
-        email: user.email,
-        displayName: user.displayName || user.email,
-        status: isAdmin ? "verified" : "new",
-        verifiedByAdmin: isAdmin,
-        role: isAdmin ? "admin" : "new",
-        createdAt: serverTimestamp(),
-      });
-      snap = await getDoc(userRef);
-    }
-
-    const data = snap.data() || {};
-    const role = data.role || (isAdmin ? "admin" : "registered");
-
-    // 🩵 Ensure verified users always have correct role/status synced
-if (data.verifiedByAdmin && (data.status !== "verified" || data.role !== "verified")) {
-  await updateDoc(userRef, { status: "verified", role: "verified" });
-  data.status = "verified";
-  data.role = "verified";
-  console.log("🔁 Synced verified user state to Firestore:", user.email);
-}
-
-
-
-    updateMenu(user.displayName || user.email, data.verifiedByAdmin ? "verified" : role);
   });
 
   /* -------------------------------
-     LOGOUT (clears cache)
+     🚪 Manual logout
   --------------------------------*/
   window.logout = async function () {
-  try {
-    console.log("[auth.js] 🚪 Logging out...");
-    
-    // 🧹 Hide login dropdowns
-    const loginDropdown = document.getElementById("login-dropdown");
-    const mobileLoginForm = document.querySelector("#mobile-login-form > div");
-    if (loginDropdown) loginDropdown.classList.add("hidden");
-    if (mobileLoginForm) mobileLoginForm.classList.add("hidden");
-
-    // 🧼 Clear caches
-    localStorage.clear();
-    sessionStorage.clear();
-
-    // 🧱 Sign out of Firebase
-    await signOut(auth);
-
-    console.log("[auth.js] ✅ Signed out successfully");
-
-    // 🚀 Force a full hard reload (flush all contexts & service workers)
-    window.location.href = window.location.pathname + "?reload=" + new Date().getTime();
-  } catch (err) {
-    console.error("❌ Logout error:", err);
-    alert("Fejl ved log ud: " + err.message);
-  }
-};
-
-
+    try {
+      console.log("[auth.js] 🚪 Manual logout triggered...");
+      await signOut(auth);
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.reload();
+    } catch (err) {
+      console.error("❌ Logout error:", err);
+      alert("Fejl ved log ud: " + err.message);
+    }
+  };
 };

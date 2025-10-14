@@ -11,8 +11,20 @@
 <style>
 h1,h2,h3,h4,h5,h6 { font-family: 'Western', sans-serif; }
 input, button { border-radius: 0 !important; }
-.btn-gold { background-color: #d4a017; transition: all 0.3s ease; }
-.btn-gold:hover { background-color: #b78a14; transform: translateY(-2px); }
+.btn-gold {
+  background-color: #d4a017;
+  transition: all 0.3s ease;
+  color: white;
+}
+.btn-gold:hover {
+  background-color: #b78a14;
+  transform: translateY(-2px);
+}
+.btn-disabled {
+  background-color: #9ca3af !important; /* Tailwind gray-400 */
+  cursor: not-allowed !important;
+  transform: none !important;
+}
 a.back-home { display: inline-block; margin-top: 15px; color: #4285F4; text-decoration: underline; }
 </style>
 </head>
@@ -31,7 +43,9 @@ a.back-home { display: inline-block; margin-top: 15px; color: #4285F4; text-deco
       <input type="password" id="signup-password" placeholder="Password" class="w-full mb-3 px-3 py-2 border">
       <button onclick="signup()" class="w-full btn-gold py-2 font-bold mb-3">Opret Konto</button>
       
-      <p class="text-center text-sm">Har du allerede en konto? <a href="index.html" class="text-blue-600 hover:underline">Login her</a></p>
+      <p class="text-center text-sm">Har du allerede en konto? 
+        <a href="index.html" class="text-blue-600 hover:underline">Login her</a>
+      </p>
     </div>
 
     <div id="signup-success" class="hidden text-center">
@@ -68,14 +82,19 @@ includeHTML("footer.html", "footer");
 
 <!-- Firebase Auth -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { 
+  getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signOut 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { 
+  getFirestore, doc, setDoc, addDoc, collection, serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
   authDomain: "branchcreek-bandits.firebaseapp.com",
   projectId: "branchcreek-bandits",
-  storageBucket: "branchcreek-bandits.firebasestorage.app",
+  storageBucket: "branchcreek-bandits.appspot.com",
   messagingSenderId: "828305260971",
   appId: "1:828305260971:web:6c3601fc97601a9621d2ee",
   measurementId: "G-550TRD5SQ3"
@@ -83,40 +102,88 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
+const ADMIN_EMAIL = "asbjrnahle33@gmail.com";
 
-window.signup = function() {
+window.signup = async function() {
   const name = document.getElementById("signup-name").value.trim();
   const email = document.getElementById("signup-email").value.trim();
   const password = document.getElementById("signup-password").value;
+  const btn = document.querySelector(".btn-gold");
 
-  if(!name || !email || !password){
+  if (!name || !email || !password) {
     alert("Udfyld alle felter");
     return;
   }
 
-  createUserWithEmailAndPassword(auth, email, password)
-    .then(userCredential => {
-      const user = userCredential.user;
+  // 🌀 Show throbber and disable button
+  const originalHTML = btn.innerHTML;
+  btn.disabled = true;
+  btn.classList.add("btn-disabled");
+  btn.innerHTML = `
+    <span class="flex justify-center items-center gap-2">
+      <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor"
+          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+      <span>Opretter konto...</span>
+    </span>
+  `;
 
-      // Set displayName
-      return updateProfile(user, { displayName: name })
-        .then(() => {
-          // Send verification email
-          return sendEmailVerification(user)
-            .then(() => {
-              // Show success message
-              document.getElementById("signup-form").classList.add("hidden");
-              document.getElementById("signup-success").classList.remove("hidden");
-            });
-        });
-    })
-    .catch(err => alert(err.message));
-}
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    const user = cred.user;
+    const isAdmin = user.email === ADMIN_EMAIL;
+
+    // 🧾 Save user to Firestore
+    await setDoc(doc(db, "users", user.uid), {
+      email: user.email,
+      displayName: name,
+      status: isAdmin ? "verified" : "registered",
+      verifiedByAdmin: isAdmin,
+      role: isAdmin ? "admin" : "registered",
+      createdAt: serverTimestamp(),
+      emailVerified: false,
+    });
+
+    // 📨 Notify admin if not admin
+    if (!isAdmin) {
+      await addDoc(collection(db, "notifications"), {
+        title: "Ny bruger venter på godkendelse",
+        message: `Bruger ${user.email} har oprettet en konto og venter på godkendelse.`,
+        type: "approval_request",
+        userId: user.uid,
+        timestamp: serverTimestamp(),
+        readBy: [],
+      });
+    }
+
+    // ✉️ Send verification email
+    await sendEmailVerification(user);
+
+    // ✅ Show success message
+    document.getElementById("signup-form").classList.add("hidden");
+    document.getElementById("signup-success").classList.remove("hidden");
+
+    // 🚪 Sign out until verified
+    await signOut(auth);
+
+  } catch (err) {
+    console.error("[signup.html] ❌ Signup error:", err);
+    alert("Fejl ved oprettelse: " + err.message);
+  } finally {
+    // 🔄 Restore button
+    btn.disabled = false;
+    btn.classList.remove("btn-disabled");
+    btn.innerHTML = originalHTML;
+  }
+};
 </script>
+
 <script type="module" src="js/firebase.js"></script>
 <script type="module" src="js/auth.js"></script>
 <script type="module" src="js/common.js"></script>
-
 
 </body>
 </html>

@@ -44,10 +44,19 @@ async function includeHTML(file, elementId, callback) {
 /* =========================================================
    LOAD NAVBAR FIRST (THEN AUTH + NOTIFICATIONS)
 ========================================================= */
+/* =========================================================
+   LOAD NAVBAR FIRST (THEN AUTH + NOTIFICATIONS)
+========================================================= */
 includeHTML("nav.html", "navbar", async () => {
   attachNavbarEvents();
 
-  // 🧩 Safety net for Notification page reloads (fixes login button click)
+  // ✅ Reapply the correct user/admin menu right after nav is injected
+  if (window.reapplyUserMenu) {
+    console.log("[main.js] 🔄 Reapplying user menu after nav load");
+    window.reapplyUserMenu();
+  }
+
+  // 🧩 Notification page safety for login dropdown
   if (window.location.pathname.includes("notifications.html")) {
     document.addEventListener("click", (e) => {
       const loginBtn = document.getElementById("login-btn");
@@ -60,24 +69,25 @@ includeHTML("nav.html", "navbar", async () => {
     });
   }
 
-  // 🕓 Wait until auth.js and navbar button exist
+  // 🕓 Wait until auth.js and navbar button exist, then init
   const waitForAuth = setInterval(() => {
     const loginBtn = document.getElementById("login-btn");
-
     if (typeof window.setupAuth === "function" && loginBtn) {
       clearInterval(waitForAuth);
       console.log("[main.js] ✅ setupAuth and navbar detected — initializing auth...");
       window.setupAuth();
 
-      // Wait for Firebase session to restore properly
+      // Give Firebase a moment to restore the session, then wire dropdown
       setTimeout(() => {
-        console.log("[main.js] 🔄 Checking Firebase currentUser...");
-        renderLoggedInUserWithRole();
+        console.log("[main.js] 🔔 Initializing notifications dropdown…");
         loadNotificationsDropdown();
-      }, 1000);
+        // Ensure user menu is still correct after any late DOM work
+        if (window.reapplyUserMenu) window.reapplyUserMenu();
+      }, 600);
     }
   }, 150);
 });
+
 
 /* =========================================================
    FOOTER

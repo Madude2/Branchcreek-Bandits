@@ -6,7 +6,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
   authDomain: "branchcreek-bandits.firebaseapp.com",
   projectId: "branchcreek-bandits",
-  storageBucket: "branchcreek-bandits.firebasestorage.app",
+  storageBucket: "branchcreek-bandits.appspot.app",
   messagingSenderId: "828305260971",
   appId: "1:828305260971:web:6c3601fc97601a9621d2ee",
   measurementId: "G-550TRD5SQ3"

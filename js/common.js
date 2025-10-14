@@ -1,4 +1,4 @@
-// js/common.js — unified live bell + admin badge logic
+// js/common.js — unified live bell + admin badge logic (fixed reinit loop)
 import { db, auth } from "./firebase.js";
 import {
   collection,
@@ -54,6 +54,9 @@ window.loadNotificationsDropdown = async function ({ messagesEl, countEl } = {})
    🔔 Live badge updater (with admin awareness)
 --------------------------------*/
 function setupLiveBadge() {
+  if (window._liveBadgeActive) return;
+  window._liveBadgeActive = true;
+
   onAuthStateChanged(auth, (user) => {
     const cnt = document.getElementById("notif-count");
     if (!cnt) return;
@@ -82,30 +85,28 @@ function setupLiveBadge() {
       });
 
       // ✅ Update UI badge
-      if (cnt) {
-        let showCount = unread;
-        if (user.email === ADMIN_EMAIL && pendingApprovals > 0) {
-          showCount = pendingApprovals;
-        }
+      let showCount = unread;
+      if (user.email === ADMIN_EMAIL && pendingApprovals > 0) {
+        showCount = pendingApprovals;
+      }
 
-        if (showCount > 0) {
-          cnt.textContent = showCount > 9 ? "9+" : showCount;
-          cnt.classList.remove("hidden");
-          cnt.classList.add(
-            "absolute",
-            "-top-1",
-            "-right-1",
-            "bg-red-600",
-            "text-white",
-            "rounded-full",
-            "text-xs",
-            "px-2",
-            "py-0.5",
-            "font-bold"
-          );
-        } else {
-          cnt.classList.add("hidden");
-        }
+      if (showCount > 0) {
+        cnt.textContent = showCount > 9 ? "9+" : showCount;
+        cnt.classList.remove("hidden");
+        cnt.classList.add(
+          "absolute",
+          "-top-1",
+          "-right-1",
+          "bg-red-600",
+          "text-white",
+          "rounded-full",
+          "text-xs",
+          "px-2",
+          "py-0.5",
+          "font-bold"
+        );
+      } else {
+        cnt.classList.add("hidden");
       }
 
       console.log(`[common.js] 🔔 ${unread} ulæste, ${pendingApprovals} afventende godkendelser`);
@@ -157,6 +158,9 @@ window.refreshNotificationsBadge = async function () {
    🔔 Bell dropdown handler
 --------------------------------*/
 window.setupBellButton = function (attempt = 1) {
+  if (window._bellSetupActive) return; // ✅ Prevent duplicate setup
+  window._bellSetupActive = true;
+
   const btn = document.getElementById("notif-btn");
   const drop = document.getElementById("notif-dropdown");
   const msgs = document.getElementById("notif-messages");
@@ -165,6 +169,7 @@ window.setupBellButton = function (attempt = 1) {
   if (!btn || !drop) {
     if (attempt <= 10) {
       console.log(`[common.js] ⏳ Bell not ready (try ${attempt})...`);
+      window._bellSetupActive = false;
       setTimeout(() => window.setupBellButton(attempt + 1), 500);
     } else {
       console.warn("[common.js] ❌ Bell setup failed after 10 tries.");
@@ -179,7 +184,6 @@ window.setupBellButton = function (attempt = 1) {
   drop.style.position = "absolute";
   drop.style.zIndex = "99999";
 
-  // Smart dynamic positioning
   function positionDrop() {
     const r = btn.getBoundingClientRect();
     const dropWidth = drop.offsetWidth;
@@ -212,11 +216,38 @@ window.setupBellButton = function (attempt = 1) {
 /* -------------------------------
    🕓 Auto-init + focus refresh
 --------------------------------*/
-setTimeout(() => {
-  window.setupBellButton();
-}, 1500);
+if (!window._notifInitDone) {
+  window._notifInitDone = true;
+  setTimeout(() => {
+    console.log("[common.js] 🧩 Initializing notifications once...");
+    window.setupBellButton();
+  }, 1500);
+} else {
+  console.log("[common.js] ⏭️ Notifications already initialized, skipping duplicate setup.");
+}
 
 window.addEventListener("focus", () => {
   console.log("[common.js] 🪟 Refocused → refreshing notifications badge");
   window.refreshNotificationsBadge();
 });
+
+/* -------------------------------
+   🔄 Reinitialize after dynamic navbar reload (safe version)
+--------------------------------*/
+if (!window._navbarObserverSetup) {
+  window._navbarObserverSetup = true;
+
+  const observer = new MutationObserver(() => {
+    const navReady = document.getElementById("login-btn");
+    if (navReady && !window._navbarInitialized) {
+      window._navbarInitialized = true;
+      console.log("[common.js] 🧭 Navbar detected — initializing UI elements once...");
+      if (typeof window.reapplyUserMenu === "function") window.reapplyUserMenu();
+      if (typeof window.refreshNotificationsBadge === "function") window.refreshNotificationsBadge();
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    observer.observe(document.body, { childList: true, subtree: true });
+  });
+}
