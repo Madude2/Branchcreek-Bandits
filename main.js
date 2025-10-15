@@ -1,8 +1,8 @@
-/* main.js — shared across all pages (stable with Notification page fix) */
+/* main.js — shared across all pages (stable + dropdowns auto-close on outside click) */
 
 // ✅ Firebase Imports
 import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import {
   getFirestore,
   doc,
@@ -44,50 +44,30 @@ async function includeHTML(file, elementId, callback) {
 /* =========================================================
    LOAD NAVBAR FIRST (THEN AUTH + NOTIFICATIONS)
 ========================================================= */
-/* =========================================================
-   LOAD NAVBAR FIRST (THEN AUTH + NOTIFICATIONS)
-========================================================= */
 includeHTML("nav.html", "navbar", async () => {
   attachNavbarEvents();
 
-  // ✅ Reapply the correct user/admin menu right after nav is injected
   if (window.reapplyUserMenu) {
-    console.log("[main.js] 🔄 Reapplying user menu after nav load");
     window.reapplyUserMenu();
   }
 
-  // 🧩 Notification page safety for login dropdown
-  if (window.location.pathname.includes("notifications.html")) {
-    document.addEventListener("click", (e) => {
-      const loginBtn = document.getElementById("login-btn");
-      const loginDropdown = document.getElementById("login-dropdown");
-      if (loginBtn && loginDropdown && loginBtn.contains(e.target)) {
-        e.stopPropagation();
-        loginDropdown.classList.toggle("hidden");
-        loginDropdown.classList.remove("opacity-0");
-      }
-    });
-  }
-
-  // 🕓 Wait until auth.js and navbar button exist, then init
   const waitForAuth = setInterval(() => {
     const loginBtn = document.getElementById("login-btn");
     if (typeof window.setupAuth === "function" && loginBtn) {
       clearInterval(waitForAuth);
-      console.log("[main.js] ✅ setupAuth and navbar detected — initializing auth...");
       window.setupAuth();
 
-      // Give Firebase a moment to restore the session, then wire dropdown
       setTimeout(() => {
-        console.log("[main.js] 🔔 Initializing notifications dropdown…");
         loadNotificationsDropdown();
-        // Ensure user menu is still correct after any late DOM work
+        installGlobalNavCloser(); // ✅ install closer once dropdown exists
         if (window.reapplyUserMenu) window.reapplyUserMenu();
       }, 600);
     }
   }, 150);
-});
 
+  // ✅ Install global click closer even before notifications exist
+  installGlobalNavCloser();
+});
 
 /* =========================================================
    FOOTER
@@ -137,7 +117,7 @@ async function loadNotificationsDropdown() {
 
   if (!notifBtn || !notifDropdown) return;
 
-  // Move dropdown to body to prevent overflow issues
+  // Move dropdown to body
   document.body.appendChild(notifDropdown);
   notifDropdown.style.position = "absolute";
   notifDropdown.style.zIndex = "99999";
@@ -152,12 +132,6 @@ async function loadNotificationsDropdown() {
     e.stopPropagation();
     positionDropdown();
     notifDropdown.classList.toggle("hidden");
-  });
-
-  document.addEventListener("click", (e) => {
-    if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
-      notifDropdown.classList.add("hidden");
-    }
   });
 
   try {
@@ -189,22 +163,96 @@ async function loadNotificationsDropdown() {
 }
 
 /* =========================================================
-   NAVBAR MENU (MOBILE)
+   NAVBAR DROPDOWN TOGGLES
 ========================================================= */
 function attachNavbarEvents() {
   const menuBtn = document.getElementById("menu-btn");
   const mobileMenu = document.getElementById("mobile-menu");
-  if (menuBtn && mobileMenu) {
-    menuBtn.addEventListener("click", () => mobileMenu.classList.toggle("hidden"));
-  }
+  const loginBtn = document.getElementById("login-btn");
+  const loginDropdown = document.getElementById("login-dropdown");
+  const mobileLoginBtn = document.getElementById("mobile-login-btn");
+  const mobileLoginWrapper = document.querySelector("#mobile-login-form > div");
+  const notifBtn = document.getElementById("notif-btn");
+  const notifDropdown = document.getElementById("notif-dropdown");
+
+  if (menuBtn && mobileMenu)
+    menuBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      mobileMenu.classList.toggle("hidden");
+    });
+  if (loginBtn && loginDropdown)
+    loginBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      loginDropdown.classList.toggle("hidden");
+    });
+  if (mobileLoginBtn && mobileLoginWrapper)
+    mobileLoginBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      mobileLoginWrapper.classList.toggle("hidden");
+    });
+  if (notifBtn && notifDropdown)
+    notifBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      notifDropdown.classList.toggle("hidden");
+    });
 }
 
 /* =========================================================
-   LOGOUT (GLOBAL OVERRIDE SAFETY)
+   GLOBAL OUTSIDE-CLICK HANDLER (bulletproof)
+========================================================= */
+function isOpen(el) {
+  return el && !el.classList.contains("hidden");
+}
+function closeAllNavOverlays() {
+  document.getElementById("login-dropdown")?.classList.add("hidden");
+  document.querySelector("#mobile-login-form > div")?.classList.add("hidden");
+  document.getElementById("mobile-menu")?.classList.add("hidden");
+  document.getElementById("notif-dropdown")?.classList.add("hidden");
+}
+
+function installGlobalNavCloser() {
+  if (window.__navCloserInstalled) return;
+  window.__navCloserInstalled = true;
+
+  document.addEventListener(
+    "pointerdown",
+    (e) => {
+      const loginBtn = document.getElementById("login-btn");
+      const loginDropdown = document.getElementById("login-dropdown");
+      const mobileLoginBtn = document.getElementById("mobile-login-btn");
+      const mobileLoginWrapper = document.querySelector("#mobile-login-form > div");
+      const menuBtn = document.getElementById("menu-btn");
+      const mobileMenu = document.getElementById("mobile-menu");
+      const notifBtn = document.getElementById("notif-btn");
+      const notifDropdown = document.getElementById("notif-dropdown");
+
+      const inside = (el) => el && (el === e.target || el.contains(e.target));
+
+      const clickedInsideLogin = inside(loginBtn) || inside(loginDropdown);
+      const clickedInsideMobileLogin = inside(mobileLoginBtn) || inside(mobileLoginWrapper);
+      const clickedInsideMenu = inside(menuBtn) || inside(mobileMenu);
+      const clickedInsideNotif = inside(notifBtn) || inside(notifDropdown);
+
+      if (!(clickedInsideLogin || clickedInsideMobileLogin || clickedInsideMenu || clickedInsideNotif)) {
+        if (isOpen(loginDropdown)) loginDropdown.classList.add("hidden");
+        if (isOpen(mobileLoginWrapper)) mobileLoginWrapper.classList.add("hidden");
+        if (isOpen(mobileMenu)) mobileMenu.classList.add("hidden");
+        if (isOpen(notifDropdown)) notifDropdown.classList.add("hidden");
+      }
+    },
+    true
+  );
+
+  window.addEventListener("keydown", (e) => e.key === "Escape" && closeAllNavOverlays());
+  window.addEventListener("scroll", closeAllNavOverlays, { passive: true });
+}
+
+/* =========================================================
+   LOGOUT
 ========================================================= */
 window.logout = async function () {
   try {
-    console.log("[main.js] 🚪 Logging out (global override)");
+    console.log("[main.js] 🚪 Logging out");
     localStorage.clear();
     sessionStorage.clear();
     await signOut(auth);

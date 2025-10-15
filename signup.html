@@ -9,30 +9,40 @@
 <link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
 
 <style>
+/* ===== Base styling ===== */
 h1,h2,h3,h4,h5,h6 { font-family: 'Western', sans-serif; }
 input, button { border-radius: 0 !important; }
 .btn-gold {
   background-color: #d4a017;
   transition: all 0.3s ease;
-  color: white;
+  color: rgb(0, 0, 0);
 }
 .btn-gold:hover {
   background-color: #b78a14;
   transform: translateY(-2px);
 }
 .btn-disabled {
-  background-color: #9ca3af !important; /* Tailwind gray-400 */
+  background-color: #9ca3af !important;
   cursor: not-allowed !important;
   transform: none !important;
 }
 a.back-home { display: inline-block; margin-top: 15px; color: #4285F4; text-decoration: underline; }
+
+/* ===== ✅ Local font fix for logo and title ===== */
+nav a span,
+h1.western-text {
+  font-family: 'Western', serif !important;
+  letter-spacing: 0.05em;
+}
 </style>
 </head>
+
 <body class="bg-gray-100 font-sans">
 
 <!-- Dynamic Navbar -->
 <div id="navbar"></div>
 
+<!-- Signup Section -->
 <section class="py-20">
   <div class="container mx-auto px-6 max-w-lg bg-white shadow-lg p-8">
     <h1 class="text-3xl font-bold mb-6 text-center western-text">Opret Konto</h1>
@@ -60,11 +70,9 @@ a.back-home { display: inline-block; margin-top: 15px; color: #4285F4; text-deco
 <!-- Dynamic Footer -->
 <div id="footer"></div>
 
-<!-- Scripts -->
+<!-- Feather icons + Nav/Footer Loader -->
 <script>
 feather.replace();
-
-// Include navbar and footer
 function includeHTML(file, elementId, callback){
   fetch(file)
     .then(res => res.text())
@@ -75,12 +83,11 @@ function includeHTML(file, elementId, callback){
     })
     .catch(err => console.error(err));
 }
-
 includeHTML("nav.html", "navbar");
 includeHTML("footer.html", "footer");
 </script>
 
-<!-- Firebase Auth -->
+<!-- Firebase Signup Logic -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { 
@@ -116,7 +123,7 @@ window.signup = async function() {
     return;
   }
 
-  // 🌀 Show throbber and disable button
+  // 🌀 Disable button and show throbber
   const originalHTML = btn.innerHTML;
   btn.disabled = true;
   btn.classList.add("btn-disabled");
@@ -136,7 +143,6 @@ window.signup = async function() {
     const user = cred.user;
     const isAdmin = user.email === ADMIN_EMAIL;
 
-    // 🧾 Save user to Firestore
     await setDoc(doc(db, "users", user.uid), {
       email: user.email,
       displayName: name,
@@ -147,7 +153,6 @@ window.signup = async function() {
       emailVerified: false,
     });
 
-    // 📨 Notify admin if not admin
     if (!isAdmin) {
       await addDoc(collection(db, "notifications"), {
         title: "Ny bruger venter på godkendelse",
@@ -159,28 +164,32 @@ window.signup = async function() {
       });
     }
 
-    // ✉️ Send verification email
     await sendEmailVerification(user);
 
-    // ✅ Show success message
     document.getElementById("signup-form").classList.add("hidden");
     document.getElementById("signup-success").classList.remove("hidden");
 
-    // 🚪 Sign out until verified
     await signOut(auth);
-
   } catch (err) {
     console.error("[signup.html] ❌ Signup error:", err);
     alert("Fejl ved oprettelse: " + err.message);
   } finally {
-    // 🔄 Restore button
     btn.disabled = false;
     btn.classList.remove("btn-disabled");
     btn.innerHTML = originalHTML;
   }
 };
+
+/* ✅ Allow Enter key to submit form */
+document.addEventListener("keypress", (e) => {
+  if (e.key === "Enter" && document.activeElement.closest("#signup-form")) {
+    e.preventDefault();
+    signup();
+  }
+});
 </script>
 
+<!-- Shared scripts -->
 <script type="module" src="js/firebase.js"></script>
 <script type="module" src="js/auth.js"></script>
 <script type="module" src="js/common.js"></script>

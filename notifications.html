@@ -43,10 +43,6 @@
     </div>
   </main>
 
-
-
-
-  
   <!-- Footer -->
   <div id="footer"></div>
 
@@ -63,6 +59,7 @@
       updateDoc, doc, arrayUnion, addDoc, deleteDoc, getDoc
     } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { sendUserNotification, sendAdminNotification } from "./js/common.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
@@ -80,7 +77,101 @@
     const container = document.getElementById("notifications-container");
     const ADMIN_EMAIL = "asbjrnahle33@gmail.com";
 
-    /* ---------- Load Notifications ---------- */
+    /* ---------- 🟢 APPROVE USER ---------- */
+    async function approveUser(userId) {
+      const admin = auth.currentUser;
+      const adminUid = admin.uid;
+
+      // Fetch user info for display
+      const userSnap = await getDoc(doc(db, "users", userId));
+      const userData = userSnap.exists() ? userSnap.data() : {};
+      const userName = userData.displayName || userData.name || userData.email || "ukendt bruger";
+
+      await updateDoc(doc(db, "users", userId), {
+        verifiedByAdmin: true,
+        status: "verified",
+        role: "verified"
+      });
+
+      await sendUserNotification(
+        userId,
+        "Konto godkendt",
+        "✅ Din konto er nu godkendt af en administrator.",
+        "approval_approved"
+      );
+
+      await sendAdminNotification(
+        adminUid,
+        "Bruger godkendt",
+        `har godkendt brugeren ${userName}.`,
+        "admin_action"
+      );
+    }
+
+    /* ---------- 🔴 DENY USER ---------- */
+    async function denyUser(userId) {
+      const admin = auth.currentUser;
+      const adminUid = admin.uid;
+
+      const userSnap = await getDoc(doc(db, "users", userId));
+      const userData = userSnap.exists() ? userSnap.data() : {};
+      const userName = userData.displayName || userData.name || userData.email || "ukendt bruger";
+
+      await updateDoc(doc(db, "users", userId), {
+        verifiedByAdmin: false,
+        status: "denied"
+      });
+
+      await sendUserNotification(
+        userId,
+        "Konto afvist",
+        "❌ Din anmodning om godkendelse blev afvist.",
+        "approval_denied"
+      );
+
+      await sendAdminNotification(
+        adminUid,
+        "Bruger afvist",
+        `har afvist brugeren ${userName}.`,
+        "admin_action"
+      );
+    }
+
+    /* ---------- 🟢 MARK VISIBLE NOTIFICATIONS AS READ ---------- */
+    async function markVisibleAsRead(user, notifications) {
+      try {
+        const isAdmin = user.email === ADMIN_EMAIL;
+
+        for (const n of notifications) {
+          const readBy = Array.isArray(n.readBy) ? n.readBy : [];
+          if (!readBy.includes(user.uid)) {
+            if (isAdmin) {
+              if (n.type === "admin_action" || n.type === "approval_request" || !("userId" in n)) {
+                await updateDoc(doc(db, "notifications", n.id), {
+                  readBy: arrayUnion(user.uid),
+                });
+              }
+            } else {
+              if (!n.userId || n.userId === user.uid) {
+                await updateDoc(doc(db, "notifications", n.id), {
+                  readBy: arrayUnion(user.uid),
+                });
+              }
+            }
+          }
+        }
+
+        console.log("[notifications] ✅ Synlige notifikationer markeret som læst.");
+        const cnt = document.getElementById("notif-count");
+        const cntMobile = document.getElementById("notif-count-mobile");
+        cnt?.classList.add("hidden");
+        cntMobile?.classList.add("hidden");
+      } catch (err) {
+        console.error("⚠️ Fejl ved markering som læst:", err);
+      }
+    }
+
+    /* ---------- LOAD NOTIFICATIONS ---------- */
     async function loadNotifications(user) {
       try {
         const userRef = doc(db, "users", user.uid);
@@ -92,14 +183,8 @@
           isAdmin ||
           userData?.verifiedByAdmin === true ||
           userData?.status === "verified" ||
-          userData?.role === "verified" ||
-          user?.role === "verified";
+          userData?.role === "verified";
 
-        console.log("[notifications] userData:", userData);
-        console.log("[notifications] isAdmin:", isAdmin);
-        console.log("[notifications] isVerified:", isVerified);
-
-        // 🚫 Block unverified users
         if (!isVerified) {
           container.innerHTML = `<p class="text-red-500 text-center py-8">
             Du skal være godkendt af en administrator for at se notifikationer.
@@ -107,9 +192,6 @@
           return;
         }
 
-
-        
-        // 🔽 Query notifications
         const qy = query(collection(db, "notifications"), orderBy("timestamp", "desc"), limit(50));
         const snap = await getDocs(qy);
 
@@ -128,8 +210,16 @@
           const isApproval = data.type === "approval_request";
           const isOwner = data.userId && data.userId === user.uid;
 
-          // 🔒 Visibility logic
-          if (!isAdmin && isApproval && !isOwner) continue;
+          // 🔒 Visibility logic (admins see global, approvals, and their own admin_action)
+          if (isAdmin) {
+            if (
+              data.type !== "admin_action" &&
+              data.type !== "approval_request" &&
+              "userId" in data
+            ) continue;
+          } else {
+            if (data.userId && data.userId !== user.uid) continue;
+          }
 
           const time = data.timestamp
             ? new Date((data.timestamp.seconds || 0) * 1000).toLocaleString("da-DK")
@@ -158,85 +248,36 @@
           container.appendChild(notif);
 
           if (isAdmin && isApproval) {
-            document.getElementById(`approve-${id}`)?.addEventListener("click", () => handleApproval(data.userId, id, true));
-            document.getElementById(`deny-${id}`)?.addEventListener("click", () => handleApproval(data.userId, id, false));
+            document.getElementById(`approve-${id}`)?.addEventListener("click", async () => {
+              await approveUser(data.userId);
+              await deleteDoc(doc(db, "notifications", id));
+              alert("✅ Bruger godkendt!");
+              await loadNotifications(user);
+            });
+
+            document.getElementById(`deny-${id}`)?.addEventListener("click", async () => {
+              await denyUser(data.userId);
+              await deleteDoc(doc(db, "notifications", id));
+              alert("❌ Bruger afvist!");
+              await loadNotifications(user);
+            });
           }
         }
 
         console.log(`[notifications] ✅ Indlæst (${pendingApprovals} godkendelser afventer).`);
 
+        // ✅ Mark visible as read
+        await markVisibleAsRead(user, snap.docs.map(d => ({ id: d.id, ...d.data() })));
+
       } catch (err) {
         console.error("❌ Fejl ved indlæsning af notifikationer:", err);
-        if (err.code?.includes("permission-denied")) {
-          container.innerHTML = `<p class="text-red-500 text-center py-8">
-            Du har ikke adgang til disse notifikationer.
-          </p>`;
-        } else {
-          container.innerHTML = `<p class="text-red-500 text-center py-8">
-            Fejl ved indlæsning af notifikationer.
-          </p>`;
-        }
+        container.innerHTML = `<p class="text-red-500 text-center py-8">
+          Fejl ved indlæsning af notifikationer.
+        </p>`;
       }
     }
 
-    /* ---------- Handle Admin Approval ---------- */
-    async function handleApproval(userId, notifId, approve) {
-      try {
-        const userRef = doc(db, "users", userId);
-        const notifRef = doc(db, "notifications", notifId);
-
-        if (approve) {
-          await updateDoc(userRef, { verifiedByAdmin: true, status: "verified", role: "verified" });
-          await addDoc(collection(db, "notifications"), {
-            title: "Konto godkendt",
-            message: "✅ Din konto er nu godkendt af en administrator.",
-            type: "user_update",
-            userId,
-            timestamp: new Date(),
-            readBy: [],
-          });
-        } else {
-          await updateDoc(userRef, { verifiedByAdmin: false, status: "denied" });
-          await new Promise(r => setTimeout(r, 1000));
-          await addDoc(collection(db, "notifications"), {
-            title: "Konto afvist",
-            message: "❌ Din anmodning om godkendelse blev afvist.",
-            type: "user_update",
-            userId,
-            timestamp: new Date(),
-            readBy: [],
-          });
-        }
-
-        await deleteDoc(notifRef);
-        alert(approve ? "✅ Bruger godkendt!" : "❌ Bruger afvist!");
-        await loadNotifications(auth.currentUser);
-      } catch (err) {
-        console.error("❌ Fejl ved godkendelse:", err);
-        alert("Der opstod en fejl. Prøv igen.");
-      }
-    }
-
-    /* ---------- Mark All as Read ---------- */
-    async function markAllAsRead(user) {
-      try {
-        const qy = query(collection(db, "notifications"), orderBy("timestamp", "desc"));
-        const snap = await getDocs(qy);
-        for (const docSnap of snap.docs) {
-          const data = docSnap.data();
-          const readBy = Array.isArray(data.readBy) ? data.readBy : [];
-          if (!readBy.includes(user.uid)) {
-            await updateDoc(doc(db, "notifications", docSnap.id), {
-              readBy: arrayUnion(user.uid)
-            });
-          }
-        }
-      } catch (err) {
-        console.error("⚠️ Fejl ved markering som læst:", err);
-      }
-    }
-
-    /* ---------- Init ---------- */
+    /* ---------- INIT ---------- */
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         container.innerHTML = `<p class="text-gray-500 text-center py-8">
@@ -245,7 +286,6 @@
         return;
       }
       await loadNotifications(user);
-      if (user.emailVerified) await markAllAsRead(user);
     });
   </script>
 </body>

@@ -1,4 +1,20 @@
 <nav class="bg-black text-white shadow-lg relative z-50">
+  <style>
+    /* 🔔 Only show one notification badge depending on screen size */
+    #notif-count-mobile {
+      display: none; /* hidden by default */
+    }
+
+    @media (max-width: 767px) {
+      #notif-count {
+        display: none !important; /* hide desktop badge on mobile */
+      }
+      #notif-count-mobile {
+        display: inline-block !important; /* show mobile badge */
+      }
+    }
+  </style>
+
   <div class="container mx-auto px-8 py-6 flex justify-between items-center">
     <!-- Logo + Site Name -->
     <a href="index.html" class="flex items-center space-x-4">
@@ -28,12 +44,12 @@
       <a href="forum.html" class="nav-link font-medium">Forum</a>
       <a href="contact.html" class="nav-link font-medium">Kontakt</a>
 
-      <!-- 🔔 Notification Bell -->
+      <!-- 🔔 Notification Bell (Desktop) -->
       <div class="relative flex items-center">
         <button id="notif-btn" class="nav-link font-medium flex items-center gap-1 cursor-pointer relative z-50">
           <i data-feather="bell"></i>
           <span id="notif-count"
-            class="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold px-1.5 rounded-full hidden">
+            class="absolute -top-2.5 -right-2 bg-red-600 text-white text-xs font-bold px-0 rounded-full hidden">
             0
           </span>
         </button>
@@ -110,9 +126,14 @@
     <a href="forum.html" class="block py-2 nav-link">Forum</a>
     <a href="contact.html" class="block py-2 nav-link">Kontakt</a>
 
-    <!-- Mobile Notifications -->
-    <a href="notifications.html" class="block py-2 nav-link flex items-center gap-1">
-      <i data-feather="bell"></i> Notifikationer
+    <!-- 🔔 Mobile Notifications (Separate Badge) -->
+    <a href="notifications.html" class="block py-2 nav-link flex items-center gap-1 relative">
+      <i data-feather="bell"></i>
+      <span id="notif-count-mobile"
+        class="absolute -top-1 -right-3 bg-red-600 text-white text-xs font-bold px-1.5 rounded-full hidden">
+        0
+      </span>
+      Notifikationer
     </a>
 
     <!-- Mobile Login -->
@@ -147,4 +168,6 @@
       setTimeout(() => window.refreshNotificationsBadge(), 800);
     }
   });
+
+  
 </script>

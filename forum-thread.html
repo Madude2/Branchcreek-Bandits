@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forum Tråd - Branchcreek Bandits</title>
+
+  <!-- Tailwind + Fonts + Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+
+  <style>
+    body {
+      background-color: #f9f7f2;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .western-text {
+      font-family: "Western", sans-serif;
+    }
+
+    .thread-card {
+      background: white;
+      border: 1px solid #e5e5e5;
+      border-left: 5px solid #c4a962;
+      padding: 1.75rem;
+      border-radius: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .reply-card {
+      background: #fff;
+      border: 1px solid #eee;
+      padding: 1.25rem;
+      border-radius: 0.5rem;
+      transition: 0.2s;
+    }
+
+    .reply-card:hover {
+      background-color: #fdfbf6;
+      transform: translateY(-2px);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+    }
+
+    .reply-avatar {
+      width: 50px;
+      height: 50px;
+      background: #b38b2d;
+      color: white;
+      font-weight: bold;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+      flex-shrink: 0;
+    }
+
+    .new-reply-btn {
+      background: #b38b2d;
+      color: white;
+      font-weight: bold;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      transition: 0.2s;
+    }
+
+    .new-reply-btn:hover {
+      background: #8d6f22;
+    }
+
+    .thread-meta {
+      font-size: 0.875rem;
+      color: #666;
+    }
+  </style>
+</head>
+
+<body class="flex flex-col min-h-screen">
+
+  <!-- Navbar -->
+  <div id="navbar"></div>
+
+  <!-- Main -->
+  <main class="flex-grow container mx-auto px-6 py-16 max-w-4xl">
+
+    <!-- 🔙 Back button -->
+    <div class="mb-8">
+      <button 
+        onclick="window.location.href='forum.html'" 
+        class="bg-yellow-700 hover:bg-yellow-800 text-white font-bold px-5 py-2 rounded flex items-center gap-2 transition"
+      >
+        <i data-feather="arrow-left" class="w-4 h-4"></i>
+        Tilbage til forum
+      </button>
+    </div>
+
+    <!-- 🧵 Thread -->
+    <div id="thread-container" class="thread-card hidden">
+      <h1 id="thread-title" class="text-4xl font-bold mb-2 text-yellow-800 western-text"></h1>
+      <p id="thread-meta" class="thread-meta mb-6"></p>
+      <p id="thread-content" class="text-gray-800 leading-relaxed whitespace-pre-line mb-10"></p>
+
+      <hr class="my-6 border-gray-300" />
+
+      <!-- 💬 Replies -->
+      <div id="replies-section">
+        <h2 class="text-3xl font-bold western-text mb-6">Svar</h2>
+        <div id="replies-list" class="space-y-6"></div>
+
+        <!-- Reply form -->
+        <div id="reply-form" class="mt-10 hidden">
+          <textarea id="reply-content" rows="4" placeholder="Skriv et svar..." class="w-full border px-3 py-2 rounded mb-3"></textarea>
+          <button id="reply-btn" class="new-reply-btn">
+            <i data-feather="send" class="inline-block w-4 h-4 mr-2"></i> Send svar
+          </button>
+        </div>
+        <p id="reply-login-warning" class="text-red-500 hidden mt-4">Du skal være logget ind og verificeret for at svare.</p>
+      </div>
+    </div>
+
+    <!-- Loaders and errors -->
+    <div id="thread-loading" class="text-center py-20 text-gray-500">
+      <svg class="animate-spin h-10 w-10 mx-auto mb-3 text-yellow-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+      </svg>
+      Indlæser tråd...
+    </div>
+
+    <div id="thread-error" class="hidden text-center py-20 text-red-600 font-medium">
+      Kunne ikke indlæse tråden.
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <div id="footer"></div>
+
+  <!-- 🔥 Forum Thread Logic -->
+  <script type="module">
+  import { auth, db } from "./js/firebase.js";
+  import {
+    doc, getDoc, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const threadId = urlParams.get("id");
+
+  const threadContainer = document.getElementById("thread-container");
+  const loading = document.getElementById("thread-loading");
+  const errorBox = document.getElementById("thread-error");
+  const repliesList = document.getElementById("replies-list");
+  const replyForm = document.getElementById("reply-form");
+  const replyWarning = document.getElementById("reply-login-warning");
+
+  async function loadThread() {
+    try {
+      const postRef = doc(db, "forum", threadId);
+      const snap = await getDoc(postRef);
+      if (!snap.exists()) throw new Error("Tråden findes ikke.");
+
+      const data = snap.data();
+      document.getElementById("thread-title").textContent = data.title || "Uden titel";
+      document.getElementById("thread-meta").textContent = `${data.author || "Ukendt"} • ${new Date((data.timestamp?.seconds || 0) * 1000).toLocaleString("da-DK")}`;
+      document.getElementById("thread-content").textContent = data.content || "";
+
+      threadContainer.classList.remove("hidden");
+      loading.classList.add("hidden");
+
+      loadRepliesRealtime();
+    } catch (err) {
+      console.error("❌ Fejl ved indlæsning af tråd:", err);
+      showError("Kunne ikke indlæse tråden.");
+    }
+  }
+
+  function showError(msg) {
+    loading.classList.add("hidden");
+    errorBox.textContent = msg;
+    errorBox.classList.remove("hidden");
+  }
+
+  // Load replies in real-time
+  function loadRepliesRealtime() {
+    const q = query(
+      collection(db, "replies"),
+      where("threadId", "==", threadId),
+      orderBy("timestamp", "asc")
+    );
+
+    onSnapshot(q, (snapshot) => {
+      repliesList.innerHTML = "";
+      if (snapshot.empty) {
+        repliesList.innerHTML = `<p class="text-gray-500 text-center">Ingen svar endnu. Vær den første til at skrive et!</p>`;
+        return;
+      }
+
+      snapshot.forEach((docSnap) => {
+        const r = docSnap.data();
+        const reply = document.createElement("div");
+        reply.className = "reply-card flex items-start gap-4";
+
+        reply.innerHTML = `
+          <div class="reply-avatar">${r.author?.charAt(0)?.toUpperCase() || "?"}</div>
+          <div>
+            <p class="text-gray-800 whitespace-pre-line mb-2">${r.content || ""}</p>
+            <div class="thread-meta">${r.author || "Ukendt"} • ${new Date((r.timestamp?.seconds || 0) * 1000).toLocaleString("da-DK")}</div>
+          </div>
+        `;
+
+        repliesList.appendChild(reply);
+      });
+    });
+  }
+
+  // Create new reply
+  async function createReply(user) {
+    const content = document.getElementById("reply-content").value.trim();
+    const btn = document.getElementById("reply-btn");
+
+    if (!content) return alert("Skriv noget først!");
+    btn.disabled = true;
+    btn.innerHTML = "Sender...";
+
+    try {
+      await addDoc(collection(db, "replies"), {
+        threadId,
+        content,
+        author: user.displayName || user.email,
+        userId: user.uid,
+        timestamp: serverTimestamp(),
+      });
+      document.getElementById("reply-content").value = "";
+    } catch (err) {
+      console.error("❌ Fejl ved oprettelse af svar:", err);
+      alert("Fejl ved oprettelse af svar.");
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<i data-feather="send" class="inline-block w-4 h-4 mr-2"></i> Send svar`;
+      feather.replace();
+    }
+  }
+
+  // Auth
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+      replyWarning.classList.remove("hidden");
+      return loadThread();
+    }
+
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const data = userDoc.exists() ? userDoc.data() : {};
+    const isVerified = data.verifiedByAdmin || ["verified", "admin"].includes(data.role);
+
+    if (isVerified) {
+      replyForm.classList.remove("hidden");
+      document.getElementById("reply-btn").addEventListener("click", () => createReply(user));
+    } else {
+      replyWarning.classList.remove("hidden");
+    }
+
+    loadThread();
+  });
+  </script>
+
+  <!-- Navbar + Footer -->
+  <script>
+  async function includeHTML(file, elementId, callback) {
+    const res = await fetch(file);
+    const html = await res.text();
+    const mount = document.getElementById(elementId);
+    mount.innerHTML = html;
+    const scripts = mount.querySelectorAll("script");
+    for (const oldScript of scripts) {
+      const s = document.createElement("script");
+      for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
+      if (!oldScript.src) s.textContent = oldScript.textContent;
+      document.body.appendChild(s);
+    }
+    if (window.feather) feather.replace();
+    if (callback) callback();
+  }
+
+  includeHTML("nav.html", "navbar", () => {
+    if (typeof setupAuth === "function") setupAuth();
+    if (window.feather) feather.replace();
+  });
+  includeHTML("footer.html", "footer");
+  </script>
+
+<script>
+async function includeHTML(file, elementId, callback) {
+  try {
+    const res = await fetch(file);
+    const html = await res.text();
+    const mount = document.getElementById(elementId);
+    mount.innerHTML = html;
+
+    const scripts = mount.querySelectorAll("script");
+    for (const oldScript of scripts) {
+      const s = document.createElement("script");
+      for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
+      if (!oldScript.src) s.textContent = oldScript.textContent;
+      document.body.appendChild(s);
+    }
+
+    // ⏳ Wait a tick to ensure imports are loaded
+    setTimeout(() => {
+      if (typeof setupAuth === "function") setupAuth();
+      if (window.feather) feather.replace();
+
+      // Re-enable menu toggles (like other pages)
+      const menuBtn = document.getElementById("menu-btn");
+      const mobileMenu = document.getElementById("mobile-menu");
+      if (menuBtn && mobileMenu)
+        menuBtn.addEventListener("click", () => mobileMenu.classList.toggle("hidden"));
+
+      const loginBtn = document.getElementById("login-btn");
+      const loginDropdown = document.getElementById("login-dropdown");
+      if (loginBtn && loginDropdown)
+        loginBtn.addEventListener("click", () => loginDropdown.classList.toggle("hidden"));
+
+    }, 500);
+
+    if (callback) callback();
+  } catch (err) {
+    console.error("includeHTML error:", err);
+  }
+}
+
+includeHTML("nav.html", "navbar");
+includeHTML("footer.html", "footer");
+</script>
+
+
+</body>
+</html>

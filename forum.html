@@ -1,182 +1,300 @@
 <!DOCTYPE html>
 <html lang="da">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Forum - Branchcreek Bandits</title>
 
   <!-- Tailwind + Fonts + Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
+  <link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 
   <style>
-    .nav-link { color: white; }
-    .nav-link:hover { color: #d4a017; }
-    .western-text { font-family: 'Western', sans-serif; }
-    .forum-post { background:white; padding:1.5rem; border-radius:0.5rem; transition:0.3s; }
-    .forum-post:hover { box-shadow:0 4px 6px rgba(0,0,0,0.1); transform:translateY(-2px); }
-    #forum-content { display:none; }
-    input, button { border-radius:0 !important; }
+    body {
+      background-color: #f9f7f2;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .western-text {
+      font-family: 'Western', sans-serif;
+    }
+
+    .thread-card {
+      display: flex;
+      flex-direction: row;
+      background: white;
+      border: 1px solid #e5e5e5;
+      border-left: 5px solid #c4a962;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .thread-card:hover {
+      background-color: #fdfbf6;
+      transform: translateY(-2px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .thread-avatar {
+      width: 60px;
+      height: 60px;
+      background: #b38b2d;
+      color: white;
+      font-size: 1.5rem;
+      font-weight: bold;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .thread-meta {
+      font-size: 0.875rem;
+      color: #666;
+    }
+
+    .new-post-btn {
+      background: #b38b2d;
+      color: white;
+      font-weight: bold;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      transition: 0.2s;
+    }
+
+    .new-post-btn:hover {
+      background: #8d6f22;
+    }
   </style>
 </head>
 
-<body class="bg-gray-100 font-sans flex flex-col min-h-screen">
+<body class="flex flex-col min-h-screen">
 
-  <!-- Dynamic Navbar -->
+  <!-- Navbar -->
   <div id="navbar"></div>
 
   <!-- Main content -->
-  <div class="flex-grow">
+  <main class="flex-grow">
     <section class="py-16">
       <div class="container mx-auto px-6 max-w-5xl">
         <h1 class="western-text text-5xl mb-6 text-center">Forum</h1>
 
-        <div id="login-warning" class="text-center text-red-500 mb-6">
+        <!-- Login warning -->
+        <div id="login-warning" class="text-center text-red-500 mb-6 hidden">
           Du skal være logget ind og være verificeret af en administrator for at bruge forummet.
-        
         </div>
 
-        
-        <div id="forum-content">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="forum-post">
-              <h3 class="text-xl font-bold mb-2">Velkommen!</h3>
-              <p>Dette er forumet, hvor alle medlemmer kan diskutere Western Shooting.</p>
-            </div>
-            <div class="forum-post">
-              <h3 class="text-xl font-bold mb-2">Nyt skydestævne</h3>
-              <p>Del dine oplevelser fra det seneste skydestævne her.</p>
-            </div>
+        <!-- Loader -->
+        <div id="forum-loading" class="flex flex-col items-center justify-center py-16 text-gray-600 hidden">
+          <svg class="animate-spin h-10 w-10 text-yellow-700 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+          </svg>
+          <p class="text-lg font-medium">Indlæser opslag...</p>
+        </div>
+
+        <!-- Forum content -->
+        <div id="forum-content" class="hidden">
+
+          <!-- New post -->
+          <div id="new-post-section" class="mb-10 hidden text-right">
+            <button id="post-btn" class="new-post-btn">+ Nyt opslag</button>
           </div>
-        </div>
 
+          <!-- Posts list -->
+          <div id="forum-posts" class="flex flex-col gap-4"></div>
+        </div>
       </div>
     </section>
-  </div>
+  </main>
 
-  <!-- Dynamic Footer -->
+  <!-- Footer -->
   <div id="footer"></div>
 
-  <!-- -------- includeHTML helper -------- -->
+  <!-- includeHTML helper -->
   <script>
-  async function includeHTML(file, elementId, callback){
-    try {
-      const res = await fetch(file);
-      const html = await res.text();
-      const mount = document.getElementById(elementId);
-      mount.innerHTML = html;
+    async function includeHTML(file, elementId, callback) {
+      try {
+        const res = await fetch(file);
+        const html = await res.text();
+        const mount = document.getElementById(elementId);
+        mount.innerHTML = html;
 
-      // Re-run any <script> tags from the injected HTML
-      const scripts = mount.querySelectorAll("script");
-      for (const oldScript of scripts) {
-        const s = document.createElement("script");
-        for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
-        if (!oldScript.src) s.textContent = oldScript.textContent;
-        document.body.appendChild(s);
+        const scripts = mount.querySelectorAll("script");
+        for (const oldScript of scripts) {
+          const s = document.createElement("script");
+          for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
+          if (!oldScript.src) s.textContent = oldScript.textContent;
+          document.body.appendChild(s);
+        }
+
+        if (window.feather) feather.replace();
+        if (callback) callback();
+      } catch (err) {
+        console.error("includeHTML error:", err);
       }
-
-      if (window.feather) feather.replace();
-      if (callback) callback();
-    } catch (err) {
-      console.error("includeHTML error:", err);
     }
-  }
   </script>
 
-  <!-- -------- Forum visibility controls (updated) -------- -->
-<script type="module">
-import { auth, db } from "./js/firebase.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  <!-- Forum Logic -->
+  <script type="module">
+    import { auth, db } from "./js/firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { collection, getDocs, orderBy, query, doc, getDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-const ADMIN_EMAIL = "asbjrnahle33@gmail.com";
+    const ADMIN_EMAIL = "asbjrnahle33@gmail.com";
 
-// ✅ Utility: show/hide forum sections
-function unlockForum() {
-  const f = document.getElementById("forum-content");
-  const w = document.getElementById("login-warning");
-  if (f && w) {
-    f.style.display = "block";
-    w.style.display = "none";
-  }
-}
+    const loginWarning = document.getElementById("login-warning");
+    const forumContent = document.getElementById("forum-content");
+    const loader = document.getElementById("forum-loading");
 
-function lockForum() {
-  const f = document.getElementById("forum-content");
-  const w = document.getElementById("login-warning");
-  if (f && w) {
-    f.style.display = "none";
-    w.style.display = "block";
-  }
-}
-
-// ✅ Main listener: checks if user is verified or admin
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    lockForum();
-    return;
-  }
-
-  try {
-    const userRef = doc(db, "users", user.uid);
-    const userSnap = await getDoc(userRef);
-    const data = userSnap.exists() ? userSnap.data() : {};
-    const isAdmin = user.email === ADMIN_EMAIL;
-    const isVerified = isAdmin || data.verifiedByAdmin || data.role === "verified";
-
-    if (isVerified) {
-      unlockForum();
-    } else {
-      lockForum();
+    function showLoginWarning() {
+      loginWarning.classList.remove("hidden");
+      forumContent.classList.add("hidden");
     }
-  } catch (err) {
-    console.error("❌ Fejl ved kontrol af brugerstatus:", err);
-    lockForum();
-  }
-});
 
-// ✅ Make them globally available in case auth.js calls them
-window.lockForum = lockForum;
-window.unlockForum = unlockForum;
+    function showForum() {
+      loginWarning.classList.add("hidden");
+      forumContent.classList.remove("hidden");
+    }
+
+    function showLoader() {
+      loader.classList.remove("hidden");
+      forumContent.classList.add("hidden");
+    }
+
+    function hideLoader() {
+      loader.classList.add("hidden");
+    }
+
+    async function loadForumPosts() {
+      const postsContainer = document.getElementById("forum-posts");
+      showLoader();
+
+      try {
+        const q = query(collection(db, "forum"), orderBy("timestamp", "desc"));
+        const snap = await getDocs(q);
+
+        hideLoader();
+        postsContainer.innerHTML = "";
+
+        if (snap.empty) {
+          postsContainer.innerHTML = `<p class="text-gray-500 text-center col-span-2 py-8">Ingen opslag endnu.</p>`;
+          return;
+        }
+
+        snap.forEach((docSnap) => {
+          const data = docSnap.data();
+          const date = new Date((data.timestamp?.seconds || 0) * 1000).toLocaleDateString("da-DK", {
+            year: "numeric", month: "short", day: "numeric"
+          });
+
+          const post = document.createElement("div");
+          post.className = "thread-card cursor-pointer";
+          post.onclick = () => window.location.href = `forum-thread.html?id=${docSnap.id}`;
+
+          post.innerHTML = `
+            <div class="thread-avatar">
+              ${data.author?.charAt(0)?.toUpperCase() || "?"}
+            </div>
+            <div class="flex-1">
+              <h3 class="text-xl font-bold text-yellow-800 mb-1">${data.title || "Uden titel"}</h3>
+              <p class="text-gray-700 mb-2">${data.content?.slice(0, 150) || ""}${data.content?.length > 150 ? "..." : ""}</p>
+              <div class="thread-meta">Af ${data.author || "Ukendt"} • ${date}</div>
+            </div>
+          `;
+
+          postsContainer.appendChild(post);
+        });
+
+        showForum();
+      } catch (err) {
+        hideLoader();
+        console.error("[forum.html] ❌ Fejl ved indlæsning af opslag:", err);
+      }
+    }
+
+    // Auth check
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return showLoginWarning();
+
+      const userRef = doc(db, "users", user.uid);
+      const snap = await getDoc(userRef);
+      const data = snap.exists() ? snap.data() : {};
+
+      const isAdmin = user.email === ADMIN_EMAIL;
+      const isVerified = isAdmin || data.verifiedByAdmin || ["verified", "admin"].includes(data.role);
+
+      if (isVerified) {
+        showForum();
+        document.getElementById("new-post-section").classList.remove("hidden");
+        loadForumPosts();
+      } else {
+        showLoginWarning();
+      }
+    });
+  </script>
+
+  <!-- Navbar + Footer -->
+  <script>
+    includeHTML("nav.html", "navbar", () => {
+      if (typeof setupAuth === "function") setupAuth();
+    });
+    includeHTML("footer.html", "footer");
+  </script>
+<script>
+async function includeHTML(file, elementId, callback) {
+  try {
+    const res = await fetch(file);
+    const html = await res.text();
+    const mount = document.getElementById(elementId);
+    mount.innerHTML = html;
+
+    const scripts = mount.querySelectorAll("script");
+    for (const oldScript of scripts) {
+      const s = document.createElement("script");
+      for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
+      if (!oldScript.src) s.textContent = oldScript.textContent;
+      document.body.appendChild(s);
+    }
+
+    // ⏳ Wait a tick to ensure imports are loaded
+    setTimeout(() => {
+      if (typeof setupAuth === "function") setupAuth();
+      if (window.feather) feather.replace();
+
+      // Re-enable menu toggles (like other pages)
+      const menuBtn = document.getElementById("menu-btn");
+      const mobileMenu = document.getElementById("mobile-menu");
+      if (menuBtn && mobileMenu)
+        menuBtn.addEventListener("click", () => mobileMenu.classList.toggle("hidden"));
+
+      const loginBtn = document.getElementById("login-btn");
+      const loginDropdown = document.getElementById("login-dropdown");
+      if (loginBtn && loginDropdown)
+        loginBtn.addEventListener("click", () => loginDropdown.classList.toggle("hidden"));
+
+    }, 500);
+
+    if (callback) callback();
+  } catch (err) {
+    console.error("includeHTML error:", err);
+  }
+}
+
+includeHTML("nav.html", "navbar");
+includeHTML("footer.html", "footer");
 </script>
 
-
-  <!-- -------- Load Navbar + Footer -------- -->
-  <script>
-  includeHTML("nav.html", "navbar", () => {
-    // Kør auth.js efter nav eksisterer
-    if (typeof setupAuth === "function") setupAuth();
-
-    // Menu toggles
-    const menuBtn=document.getElementById('menu-btn');
-    const mobileMenu=document.getElementById('mobile-menu');
-    if(menuBtn && mobileMenu) menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
-
-    const loginBtn=document.getElementById('login-btn');
-    const loginDropdown=document.getElementById('login-dropdown');
-    if(loginBtn && loginDropdown) loginBtn.addEventListener('click',()=>loginDropdown.classList.toggle('hidden'));
-
-    const mobileLoginBtn=document.getElementById('mobile-login-btn');
-    const mobileLoginForm=document.getElementById('mobile-login-form');
-    if(mobileLoginBtn && mobileLoginForm) mobileLoginBtn.addEventListener('click',()=>mobileLoginForm.classList.toggle('hidden'));
-
-    // 🔔 Force refresh of notifications after nav loads
-    setTimeout(() => {
-      if (typeof window.refreshNotificationsBadge === "function") {
-        window.refreshNotificationsBadge();
-      }
-    }, 1200); // vent lidt for auth+nav at loade
-  });
-
-  includeHTML("footer.html", "footer");
-  </script>
-
-  <!-- Shared Scripts -->
+  <!-- Shared scripts -->
   <script type="module" src="js/firebase.js"></script>
-<script type="module" src="js/auth.js"></script>
-<script type="module" src="js/common.js"></script>
+  <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/common.js"></script>
 
-
+  
 </body>
 </html>
