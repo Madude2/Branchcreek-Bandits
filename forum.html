@@ -102,7 +102,7 @@
 
           <!-- New post -->
           <div id="new-post-section" class="mb-10 hidden text-right">
-            <button id="post-btn" class="new-post-btn">+ Nyt opslag</button>
+            <button id="post-btn" class="new-post-btn">+ Ny Tråd</button>
           </div>
 
           <!-- Posts list -->
@@ -112,33 +112,7 @@
     </section>
   </main>
 
-  <!-- Footer -->
-  <div id="footer"></div>
-
-  <!-- includeHTML helper -->
-  <script>
-    async function includeHTML(file, elementId, callback) {
-      try {
-        const res = await fetch(file);
-        const html = await res.text();
-        const mount = document.getElementById(elementId);
-        mount.innerHTML = html;
-
-        const scripts = mount.querySelectorAll("script");
-        for (const oldScript of scripts) {
-          const s = document.createElement("script");
-          for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
-          if (!oldScript.src) s.textContent = oldScript.textContent;
-          document.body.appendChild(s);
-        }
-
-        if (window.feather) feather.replace();
-        if (callback) callback();
-      } catch (err) {
-        console.error("includeHTML error:", err);
-      }
-    }
-  </script>
+  
 
   <!-- Forum Logic -->
   <script type="module">
@@ -239,61 +213,63 @@
     });
   </script>
 
-  <!-- Navbar + Footer -->
+   <!-- Dynamic Footer -->
+  <div id="footer"></div>
+
+  <!-- -------- includeHTML helper -------- -->
   <script>
-    includeHTML("nav.html", "navbar", () => {
-      if (typeof setupAuth === "function") setupAuth();
-    });
-    includeHTML("footer.html", "footer");
-  </script>
-<script>
-async function includeHTML(file, elementId, callback) {
-  try {
-    const res = await fetch(file);
-    const html = await res.text();
-    const mount = document.getElementById(elementId);
-    mount.innerHTML = html;
+  async function includeHTML(file, elementId, callback){
+    try {
+      const res = await fetch(file);
+      const html = await res.text();
+      const mount = document.getElementById(elementId);
+      mount.innerHTML = html;
 
-    const scripts = mount.querySelectorAll("script");
-    for (const oldScript of scripts) {
-      const s = document.createElement("script");
-      for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
-      if (!oldScript.src) s.textContent = oldScript.textContent;
-      document.body.appendChild(s);
-    }
+      // Re-run any <script> tags in injected HTML
+      const scripts = mount.querySelectorAll("script");
+      for (const oldScript of scripts) {
+        const s = document.createElement("script");
+        for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
+        if (!oldScript.src) s.textContent = oldScript.textContent;
+        document.body.appendChild(s);
+      }
 
-    // ⏳ Wait a tick to ensure imports are loaded
-    setTimeout(() => {
-      if (typeof setupAuth === "function") setupAuth();
       if (window.feather) feather.replace();
-
-      // Re-enable menu toggles (like other pages)
-      const menuBtn = document.getElementById("menu-btn");
-      const mobileMenu = document.getElementById("mobile-menu");
-      if (menuBtn && mobileMenu)
-        menuBtn.addEventListener("click", () => mobileMenu.classList.toggle("hidden"));
-
-      const loginBtn = document.getElementById("login-btn");
-      const loginDropdown = document.getElementById("login-dropdown");
-      if (loginBtn && loginDropdown)
-        loginBtn.addEventListener("click", () => loginDropdown.classList.toggle("hidden"));
-
-    }, 500);
-
-    if (callback) callback();
-  } catch (err) {
-    console.error("includeHTML error:", err);
+      if (callback) callback();
+    } catch (err) {
+      console.error("includeHTML error:", err);
+    }
   }
-}
+  </script>
 
-includeHTML("nav.html", "navbar");
-includeHTML("footer.html", "footer");
-</script>
+  <!-- -------- Load Navbar + Footer (Forum Logic) -------- -->
+  <script>
+  includeHTML("nav.html", "navbar", () => {
+    if (typeof setupAuth === "function") setupAuth();
 
-  <!-- Shared scripts -->
-  <script type="module" src="js/firebase.js"></script>
-  <script type="module" src="js/auth.js"></script>
-  <script type="module" src="js/common.js"></script>
+    // Menu toggles
+    const menuBtn=document.getElementById('menu-btn');
+    const mobileMenu=document.getElementById('mobile-menu');
+    if(menuBtn && mobileMenu) menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
+
+    const loginBtn=document.getElementById('login-btn');
+    const loginDropdown=document.getElementById('login-dropdown');
+    if(loginBtn && loginDropdown) loginBtn.addEventListener('click',()=>loginDropdown.classList.toggle('hidden'));
+
+    const mobileLoginBtn=document.getElementById('mobile-login-btn');
+    const mobileLoginForm=document.getElementById('mobile-login-form');
+    if(mobileLoginBtn && mobileLoginForm) mobileLoginBtn.addEventListener('click',()=>mobileLoginForm.classList.toggle('hidden'));
+
+    // 🔔 Refresh notifications badge after nav loads
+    setTimeout(() => {
+      if (typeof window.refreshNotificationsBadge === "function") {
+        window.refreshNotificationsBadge();
+      }
+    }, 1200);
+  });
+
+  includeHTML("footer.html", "footer");
+  </script>
 
   
 </body>

@@ -1,338 +1,574 @@
 <!DOCTYPE html>
 <html lang="da">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forum Tråd - Branchcreek Bandits</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Forum Tråd - Branchcreek Bandits</title>
 
-  <!-- Tailwind + Fonts + Icons -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+<!-- Tailwind + Icons -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+<link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet" />
 
-  <style>
-    body {
-      background-color: #f9f7f2;
-      font-family: 'Inter', sans-serif;
-    }
+<style>
+body {
+  background-color: #18191a;
+  color: #e4e6eb;
+  font-family: 'Inter', sans-serif;
+}
+.western-text { font-family: 'Western', sans-serif; }
 
-    .western-text {
-      font-family: "Western", sans-serif;
-    }
+/* --- Forum post/comment layout --- */
+.message-container {
+  background-color: #f5f3e7;
+  border: 1px solid #d0c9b6;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  margin: 1.5rem auto;
+  width: 95%;
+  max-width: 1600px;
+}
+.message-inner {
+  display: flex;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+.message-cell-user {
+  background-color: #efe8cf;
+  width: 200px;
+  flex-shrink: 0;
+  padding: 1rem;
+  border-right: 1px solid #d0c9b6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.message-cell-main {
+  flex: 1;
+  padding: 1.25rem 1.5rem;
+  min-width: 0;
+}
+.message-userAvatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 6px;
+  background-color: #b49d5a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+.message-userDetails h4 {
+  font-weight: 600;
+  color: #1c1c1b;
+  text-align: center;
+}
+.message-userDetails p {
+  font-size: 0.85rem;
+  text-align: center;
+}
+.role-admin { color: #761bb3; font-weight: 600; }
+.role-verified { color: #7c5c20; font-weight: 600; }
+.role-unknown { color: #555; }
 
-    .thread-card {
-      background: white;
-      border: 1px solid #e5e5e5;
-      border-left: 5px solid #c4a962;
-      padding: 1.75rem;
-      border-radius: 0.5rem;
-      transition: all 0.2s ease;
-    }
+.message-content {
+  color: #1c1c1b;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  white-space: pre-line;
+}
 
-    .reply-card {
-      background: #fff;
-      border: 1px solid #eee;
-      padding: 1.25rem;
-      border-radius: 0.5rem;
-      transition: 0.2s;
-    }
+.attachmentList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 6px;
+  margin-top: 0.75rem;
+}
+.attachmentList img {
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  border: 1px solid #d0c9b6;
+  border-radius: 4px;
+  background-color: #fff;
+}
 
-    .reply-card:hover {
-      background-color: #fdfbf6;
-      transform: translateY(-2px);
-      box-shadow: 0 3px 6px rgba(0,0,0,0.05);
-    }
+/* --- Combined Footer --- */
+.message-footer-combined {
+  border-top: 1px solid #d0c9b6;
+  background-color: #efe8cf;
+  color: #555;
+  font-size: 0.8rem;
+}
+.message-footer-combined .footer-top,
+.message-footer-combined .footer-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 1rem;
+}
+.message-footer-combined .footer-top {
+  border-bottom: 1px solid #d0c9b6;
+}
+.like-active {
+  color: #b49d5a;
+  font-weight: 600;
+}
 
-    .reply-avatar {
-      width: 50px;
-      height: 50px;
-      background: #b38b2d;
-      color: white;
-      font-weight: bold;
-      border-radius: 9999px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 1rem;
-      flex-shrink: 0;
-    }
+/* --- Responsive --- */
+@media (max-width: 1280px) {
+  .message-cell-user { width: 180px; }
+  .message-container { width: 96%; }
+}
+@media (max-width: 1024px) {
+  .message-container { width: 98%; }
+  .message-cell-user { width: 160px; }
+}
+@media (max-width: 768px) {
+  .message-inner { flex-direction: column; }
+  .message-cell-user {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid #d0c9b6;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 1rem;
+  }
+  .message-userAvatar { margin: 0; }
+  .message-cell-main { padding: 1rem; }
+}
 
-    .new-reply-btn {
-      background: #b38b2d;
-      color: white;
-      font-weight: bold;
-      padding: 0.75rem 1.5rem;
-      border-radius: 6px;
-      transition: 0.2s;
-    }
+#reply-container { background-color: #f7f5e8; }
 
-    .new-reply-btn:hover {
-      background: #8d6f22;
-    }
-
-    .thread-meta {
-      font-size: 0.875rem;
-      color: #666;
-    }
-  </style>
+/* --- Fullscreen Loading Throbber --- */
+#page-loader {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(24, 25, 26, 0.95);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.4s ease;
+}
+#page-loader.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+#page-loader svg {
+  width: 64px;
+  height: 64px;
+  color: #d4a017;
+}
+</style>
 </head>
 
 <body class="flex flex-col min-h-screen">
 
-  <!-- Navbar -->
-  <div id="navbar"></div>
+<!-- 🔄 Page Loader -->
+<div id="page-loader">
+  <svg class="animate-spin mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+  </svg>
+  <p class="text-yellow-500 text-lg font-semibold">Indlæser tråd...</p>
+</div>
 
-  <!-- Main -->
-  <main class="flex-grow container mx-auto px-6 py-16 max-w-4xl">
+<!-- Navbar -->
+<div id="navbar"></div>
 
-    <!-- 🔙 Back button -->
-    <div class="mb-8">
-      <button 
-        onclick="window.location.href='forum.html'" 
-        class="bg-yellow-700 hover:bg-yellow-800 text-white font-bold px-5 py-2 rounded flex items-center gap-2 transition"
-      >
-        <i data-feather="arrow-left" class="w-4 h-4"></i>
-        Tilbage til forum
-      </button>
-    </div>
+<!-- Main -->
+<main class="flex-grow py-10">
+  <div class="max-w-[1600px] mx-auto px-4">
 
-    <!-- 🧵 Thread -->
-    <div id="thread-container" class="thread-card hidden">
-      <h1 id="thread-title" class="text-4xl font-bold mb-2 text-yellow-800 western-text"></h1>
-      <p id="thread-meta" class="thread-meta mb-6"></p>
-      <p id="thread-content" class="text-gray-800 leading-relaxed whitespace-pre-line mb-10"></p>
-
-      <hr class="my-6 border-gray-300" />
-
-      <!-- 💬 Replies -->
-      <div id="replies-section">
-        <h2 class="text-3xl font-bold western-text mb-6">Svar</h2>
-        <div id="replies-list" class="space-y-6"></div>
-
-        <!-- Reply form -->
-        <div id="reply-form" class="mt-10 hidden">
-          <textarea id="reply-content" rows="4" placeholder="Skriv et svar..." class="w-full border px-3 py-2 rounded mb-3"></textarea>
-          <button id="reply-btn" class="new-reply-btn">
-            <i data-feather="send" class="inline-block w-4 h-4 mr-2"></i> Send svar
-          </button>
-        </div>
-        <p id="reply-login-warning" class="text-red-500 hidden mt-4">Du skal være logget ind og verificeret for at svare.</p>
+    <!-- Header -->
+    <div class="bg-[#1a1a1a] py-4 mb-6">
+      <div class="max-w-[1600px] w-[95%] mx-auto flex items-center justify-between">
+        <h1 class="western-text text-3xl text-yellow-500">Forum</h1>
+        <button onclick="window.location.href='forum.html'"
+          class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded flex items-center gap-2">
+          <i data-feather="arrow-left" class="w-4 h-4"></i> Tilbage
+        </button>
       </div>
     </div>
 
-    <!-- Loaders and errors -->
-    <div id="thread-loading" class="text-center py-20 text-gray-500">
-      <svg class="animate-spin h-10 w-10 mx-auto mb-3 text-yellow-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-      </svg>
-      Indlæser tråd...
-    </div>
+    <!-- Main thread container -->
+    <article id="thread-container" class="message-container hidden">
+      <div class="message-inner">
+        <div class="message-cell-user">
+          <div class="message-userAvatar"><span id="thread-initial">A</span></div>
+          <div class="message-userDetails">
+            <h4 id="thread-author">Ukendt</h4>
+            <p id="thread-rank" class="role-unknown">Ukendt</p>
+          </div>
+        </div>
 
-    <div id="thread-error" class="hidden text-center py-20 text-red-600 font-medium">
+        <div class="message-cell-main">
+          <header class="flex justify-between items-center mb-2 text-sm text-gray-700">
+            <span id="thread-date"></span>
+            <span class="italic">Branchcreek Forum</span>
+          </header>
+
+          <div class="message-content" id="thread-content"></div>
+
+          <section class="message-attachments mt-4 hidden" id="thread-media">
+            <ul class="attachmentList" id="attachment-list"></ul>
+          </section>
+        </div>
+      </div>
+
+      <footer class="message-footer-combined">
+        <div class="footer-top">
+          <span id="like-count">0 likes</span>
+          <span id="comment-count">0 comments</span>
+        </div>
+        <div class="footer-bottom">
+          <span id="thread-like-btn">Synes godt om</span>
+          <span>Svar</span>
+        </div>
+      </footer>
+    </article>
+
+    <div id="thread-error" class="hidden text-center text-red-400 font-medium mt-10">
       Kunne ikke indlæse tråden.
     </div>
-  </main>
 
-  <!-- Footer -->
-  <div id="footer"></div>
+    <!-- Replies -->
+    <div id="replies-section" class="mt-6 space-y-6"></div>
 
-  <!-- 🔥 Forum Thread Logic -->
-  <script type="module">
-  import { auth, db } from "./js/firebase.js";
-  import {
-    doc, getDoc, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-  const urlParams = new URLSearchParams(window.location.search);
-  const threadId = urlParams.get("id");
-
-  const threadContainer = document.getElementById("thread-container");
-  const loading = document.getElementById("thread-loading");
-  const errorBox = document.getElementById("thread-error");
-  const repliesList = document.getElementById("replies-list");
-  const replyForm = document.getElementById("reply-form");
-  const replyWarning = document.getElementById("reply-login-warning");
-
-  async function loadThread() {
-    try {
-      const postRef = doc(db, "forum", threadId);
-      const snap = await getDoc(postRef);
-      if (!snap.exists()) throw new Error("Tråden findes ikke.");
-
-      const data = snap.data();
-      document.getElementById("thread-title").textContent = data.title || "Uden titel";
-      document.getElementById("thread-meta").textContent = `${data.author || "Ukendt"} • ${new Date((data.timestamp?.seconds || 0) * 1000).toLocaleString("da-DK")}`;
-      document.getElementById("thread-content").textContent = data.content || "";
-
-      threadContainer.classList.remove("hidden");
-      loading.classList.add("hidden");
-
-      loadRepliesRealtime();
-    } catch (err) {
-      console.error("❌ Fejl ved indlæsning af tråd:", err);
-      showError("Kunne ikke indlæse tråden.");
-    }
-  }
-
-  function showError(msg) {
-    loading.classList.add("hidden");
-    errorBox.textContent = msg;
-    errorBox.classList.remove("hidden");
-  }
-
-  // Load replies in real-time
-  function loadRepliesRealtime() {
-    const q = query(
-      collection(db, "replies"),
-      where("threadId", "==", threadId),
-      orderBy("timestamp", "asc")
-    );
-
-    onSnapshot(q, (snapshot) => {
-      repliesList.innerHTML = "";
-      if (snapshot.empty) {
-        repliesList.innerHTML = `<p class="text-gray-500 text-center">Ingen svar endnu. Vær den første til at skrive et!</p>`;
-        return;
-      }
-
-      snapshot.forEach((docSnap) => {
-        const r = docSnap.data();
-        const reply = document.createElement("div");
-        reply.className = "reply-card flex items-start gap-4";
-
-        reply.innerHTML = `
-          <div class="reply-avatar">${r.author?.charAt(0)?.toUpperCase() || "?"}</div>
-          <div>
-            <p class="text-gray-800 whitespace-pre-line mb-2">${r.content || ""}</p>
-            <div class="thread-meta">${r.author || "Ukendt"} • ${new Date((r.timestamp?.seconds || 0) * 1000).toLocaleString("da-DK")}</div>
+    <!-- Reply Box -->
+    <article id="reply-container" class="message-container mt-10">
+      <div class="message-inner">
+        <div class="message-cell-user flex flex-col items-center justify-start">
+          <div class="message-userAvatar text-lg" id="reply-avatar">A</div>
+          <div class="message-userDetails mt-2 text-center">
+            <h4 id="reply-username">Bruger</h4>
+            <p id="reply-rank" class="role-unknown">Ukendt</p>
           </div>
-        `;
+        </div>
 
-        repliesList.appendChild(reply);
-      });
-    });
-  }
+        <div class="message-cell-main">
+          <textarea id="reply-content"
+            placeholder="Write your reply..."
+            class="w-full min-h-[140px] border border-[#d0c9b6] rounded-md p-3 focus:ring-2 focus:ring-[#b49d5a] outline-none text-black bg-[#fffef8] resize-y"></textarea>
 
-  // Create new reply
-  async function createReply(user) {
-    const content = document.getElementById("reply-content").value.trim();
-    const btn = document.getElementById("reply-btn");
+          <div class="flex justify-between items-center mt-3">
+            <button class="flex items-center gap-1 text-sm border border-[#b49d5a] text-[#4a3f25] px-3 py-1 rounded hover:bg-[#e8e0c3]">
+              <i data-feather="paperclip" class="w-4 h-4"></i> Attach files
+            </button>
+            <button id="reply-btn"
+              class="bg-[#b49d5a] hover:bg-[#9e864d] text-white px-5 py-1.5 rounded flex items-center gap-1">
+              <i data-feather="corner-down-left" class="w-4 h-4"></i> Post reply
+            </button>
+          </div>
+        </div>
+      </div>
+    </article>
 
-    if (!content) return alert("Skriv noget først!");
-    btn.disabled = true;
-    btn.innerHTML = "Sender...";
+    <p id="reply-login-warning" class="text-red-400 hidden mt-2 text-sm text-center">
+      Du skal være logget ind for at kommentere.
+    </p>
+  </div>
+</main>
 
-    try {
-      await addDoc(collection(db, "replies"), {
-        threadId,
-        content,
-        author: user.displayName || user.email,
-        userId: user.uid,
-        timestamp: serverTimestamp(),
-      });
-      document.getElementById("reply-content").value = "";
-    } catch (err) {
-      console.error("❌ Fejl ved oprettelse af svar:", err);
-      alert("Fejl ved oprettelse af svar.");
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = `<i data-feather="send" class="inline-block w-4 h-4 mr-2"></i> Send svar`;
-      feather.replace();
-    }
-  }
+<!-- Footer -->
+<div id="footer"></div>
 
-  // Auth
-  auth.onAuthStateChanged(async (user) => {
-    if (!user) {
-      replyWarning.classList.remove("hidden");
-      return loadThread();
-    }
+<!-- Firebase Logic -->
+<script type="module">
+import { auth, db } from "./js/firebase.js";
+import {
+  doc, getDoc, updateDoc, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp,
+  arrayUnion, arrayRemove
+} from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    const data = userDoc.exists() ? userDoc.data() : {};
-    const isVerified = data.verifiedByAdmin || ["verified", "admin"].includes(data.role);
+// -----------------------------------------
+// 🔧 DOM References
+// -----------------------------------------
+const threadId = new URLSearchParams(window.location.search).get("id");
+const threadContainer = document.getElementById("thread-container");
+const likeCount = document.getElementById("like-count");
+const commentCount = document.getElementById("comment-count");
+const repliesSection = document.getElementById("replies-section");
+const replyInput = document.getElementById("reply-content");
+const replyBtn = document.getElementById("reply-btn");
+const replyWarning = document.getElementById("reply-login-warning");
 
-    if (isVerified) {
-      replyForm.classList.remove("hidden");
-      document.getElementById("reply-btn").addEventListener("click", () => createReply(user));
-    } else {
-      replyWarning.classList.remove("hidden");
-    }
+// -----------------------------------------
+// 🌟 Page Loader Controls
+// -----------------------------------------
+function showThrobber() {
+  document.getElementById("page-loader").classList.remove("hidden");
+}
+async function hideThrobber() {
+  const loader = document.getElementById("page-loader");
+  loader.classList.add("hidden");
+  await new Promise(res => setTimeout(res, 400)); // Wait for fade
+}
 
-    loadThread();
-  });
-  </script>
-
-  <!-- Navbar + Footer -->
-  <script>
-  async function includeHTML(file, elementId, callback) {
-    const res = await fetch(file);
-    const html = await res.text();
-    const mount = document.getElementById(elementId);
-    mount.innerHTML = html;
-    const scripts = mount.querySelectorAll("script");
-    for (const oldScript of scripts) {
-      const s = document.createElement("script");
-      for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
-      if (!oldScript.src) s.textContent = oldScript.textContent;
-      document.body.appendChild(s);
-    }
-    if (window.feather) feather.replace();
-    if (callback) callback();
-  }
-
-  includeHTML("nav.html", "navbar", () => {
-    if (typeof setupAuth === "function") setupAuth();
-    if (window.feather) feather.replace();
-  });
-  includeHTML("footer.html", "footer");
-  </script>
-
-<script>
-async function includeHTML(file, elementId, callback) {
+// -----------------------------------------
+// 🧩 Helper: Get user role
+// -----------------------------------------
+async function getUserRole(uid) {
+  if (!uid) return { label: "Ukendt", css: "role-unknown" };
   try {
-    const res = await fetch(file);
-    const html = await res.text();
-    const mount = document.getElementById(elementId);
-    mount.innerHTML = html;
-
-    const scripts = mount.querySelectorAll("script");
-    for (const oldScript of scripts) {
-      const s = document.createElement("script");
-      for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
-      if (!oldScript.src) s.textContent = oldScript.textContent;
-      document.body.appendChild(s);
+    const snap = await getDoc(doc(db, "users", uid));
+    if (snap.exists()) {
+      const role = snap.data().role;
+      if (role === "admin") return { label: "Admin", css: "role-admin" };
+      if (role === "verified") return { label: "Medlem", css: "role-verified" };
     }
-
-    // ⏳ Wait a tick to ensure imports are loaded
-    setTimeout(() => {
-      if (typeof setupAuth === "function") setupAuth();
-      if (window.feather) feather.replace();
-
-      // Re-enable menu toggles (like other pages)
-      const menuBtn = document.getElementById("menu-btn");
-      const mobileMenu = document.getElementById("mobile-menu");
-      if (menuBtn && mobileMenu)
-        menuBtn.addEventListener("click", () => mobileMenu.classList.toggle("hidden"));
-
-      const loginBtn = document.getElementById("login-btn");
-      const loginDropdown = document.getElementById("login-dropdown");
-      if (loginBtn && loginDropdown)
-        loginBtn.addEventListener("click", () => loginDropdown.classList.toggle("hidden"));
-
-    }, 500);
-
-    if (callback) callback();
   } catch (err) {
-    console.error("includeHTML error:", err);
+    console.error("Fejl ved hentning af rolle:", err);
+  }
+  return { label: "Ukendt", css: "role-unknown" };
+}
+
+// -----------------------------------------
+// ❤️ Toggle Like Logic
+// -----------------------------------------
+async function toggleLike(ref, user, btn) {
+  if (!user) {
+    alert("Du skal være logget ind for at synes godt om et opslag.");
+    return;
+  }
+
+  try {
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return;
+    const data = snap.data();
+    const likedBy = Array.isArray(data.likedBy) ? data.likedBy : [];
+    const hasLiked = likedBy.includes(user.uid);
+
+    if (hasLiked) {
+      await updateDoc(ref, {
+        likedBy: arrayRemove(user.uid),
+        likes: Math.max((data.likes || 1) - 1, 0),
+      });
+      btn.classList.remove("like-active");
+      btn.textContent = "Synes godt om";
+    } else {
+      await updateDoc(ref, {
+        likedBy: arrayUnion(user.uid),
+        likes: (data.likes || 0) + 1,
+      });
+      btn.classList.add("like-active");
+      btn.textContent = "Du synes godt om dette";
+    }
+  } catch (err) {
+    console.error("Fejl ved toggling af like:", err);
   }
 }
 
-includeHTML("nav.html", "navbar");
-includeHTML("footer.html", "footer");
+// -----------------------------------------
+// 🧩 Load Thread
+// -----------------------------------------
+async function loadThread() {
+  try {
+    if (!threadId) {
+      throw new Error("Manglende tråd-ID.");
+    }
+
+    showThrobber();
+
+    const ref = doc(db, "forum", threadId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) throw new Error("Tråden findes ikke.");
+
+    const data = snap.data();
+    const role = await getUserRole(data.userId);
+
+    // Populate thread info
+    document.getElementById("thread-author").textContent = data.author || "Ukendt";
+    document.getElementById("thread-initial").textContent =
+      data.author?.charAt(0)?.toUpperCase() || "?";
+    const rank = document.getElementById("thread-rank");
+    rank.textContent = role.label;
+    rank.className = role.css;
+    document.getElementById("thread-date").textContent = new Date(
+      (data.timestamp?.seconds || 0) * 1000
+    ).toLocaleString("da-DK");
+    document.getElementById("thread-content").textContent = data.content || "";
+
+    likeCount.textContent = `${data.likes || 0} likes`;
+    commentCount.textContent = `${data.comments || 0} comments`;
+
+    // 🧠 Like Button Logic
+    const likeBtn = document.querySelector("#thread-container .footer-bottom span:first-child");
+    if (likeBtn) {
+      const user = auth.currentUser;
+      if (user && data.likedBy?.includes(user.uid)) {
+        likeBtn.classList.add("like-active");
+        likeBtn.textContent = "Du synes godt om dette";
+      }
+      likeBtn.onclick = async () => await toggleLike(ref, auth.currentUser, likeBtn);
+    }
+
+    threadContainer.classList.remove("hidden");
+    await hideThrobber(); // fade out loader before showing replies
+    loadRepliesRealtime();
+  } catch (err) {
+    console.error("Fejl ved indlæsning af tråd:", err);
+    await hideThrobber();
+    document.getElementById("thread-error").classList.remove("hidden");
+  }
+}
+
+// -----------------------------------------
+// 🔁 Real-time Replies
+// -----------------------------------------
+function loadRepliesRealtime() {
+  const q = query(collection(db, "replies"), where("threadId", "==", threadId), orderBy("timestamp", "asc"));
+  onSnapshot(q, async (snapshot) => {
+    repliesSection.innerHTML = "";
+    let total = 0;
+
+    for (const docSnap of snapshot.docs) {
+      const r = docSnap.data();
+      total++;
+      const role = await getUserRole(r.userId);
+
+      const replyEl = document.createElement("article");
+      replyEl.className = "message-container";
+      replyEl.innerHTML = `
+        <div class="message-inner">
+          <div class="message-cell-user">
+            <div class="message-userAvatar">${r.author?.charAt(0)?.toUpperCase() || "?"}</div>
+            <div class="message-userDetails">
+              <h4>${r.author || "Ukendt"}</h4>
+              <p class="${role.css}">${role.label}</p>
+            </div>
+          </div>
+          <div class="message-cell-main">
+            <header class="flex justify-between text-sm mb-2 text-gray-700">
+              <span>${r.timestamp?.seconds
+                ? new Date(r.timestamp.seconds * 1000).toLocaleString("da-DK")
+                : ""}</span>
+            </header>
+            <div class="message-content">${r.content || ""}</div>
+          </div>
+        </div>
+        <footer class="message-footer-combined">
+          <div class="footer-top">
+            <span>${r.likes || 0} ${r.likes === 1 ? "like" : "likes"}</span>
+            <span>${r.comments || 0} ${r.comments === 1 ? "comment" : "comments"}</span>
+          </div>
+          <div class="footer-bottom">
+            <span class="reply-like-btn ${auth.currentUser && r.likedBy?.includes(auth.currentUser.uid) ? "like-active" : ""}">
+              ${auth.currentUser && r.likedBy?.includes(auth.currentUser.uid)
+                ? "Du synes godt om dette"
+                : "Synes godt om"}
+            </span>
+            <span>Svar</span>
+          </div>
+        </footer>
+      `;
+
+      repliesSection.appendChild(replyEl);
+
+      // 🧠 Like for reply
+      const replyLikeBtn = replyEl.querySelector(".reply-like-btn");
+      replyLikeBtn.onclick = async () => {
+        const user = auth.currentUser;
+        const replyRef = doc(db, "replies", docSnap.id);
+        await toggleLike(replyRef, user, replyLikeBtn);
+      };
+    }
+
+    commentCount.textContent = `${total} comments`;
+    if (window.feather) feather.replace();
+  });
+}
+
+// -----------------------------------------
+// 💬 Create Reply
+// -----------------------------------------
+async function createReply(user) {
+  const content = replyInput.value.trim();
+  if (!content) return;
+
+  replyBtn.disabled = true;
+  const original = replyBtn.innerHTML;
+  replyBtn.innerHTML = `⏳ Poster...`;
+
+  try {
+    await addDoc(collection(db, "replies"), {
+      threadId,
+      content,
+      author: user.displayName || user.email,
+      userId: user.uid,
+      timestamp: serverTimestamp(),
+      likes: 0,
+      comments: 0,
+      likedBy: []
+    });
+    replyInput.value = "";
+  } catch (err) {
+    console.error("Fejl ved oprettelse af svar:", err);
+  } finally {
+    replyBtn.disabled = false;
+    replyBtn.innerHTML = original;
+  }
+}
+
+// -----------------------------------------
+// 👤 Auth State
+// -----------------------------------------
+auth.onAuthStateChanged(async (user) => {
+  try {
+    if (!user) {
+      document.getElementById("reply-login-warning").classList.remove("hidden");
+      replyBtn.disabled = true;
+    } else {
+      const username = user.displayName || user.email.split("@")[0];
+      const role = await getUserRole(user.uid);
+
+      document.getElementById("reply-username").textContent = username;
+      document.getElementById("reply-avatar").textContent = username.charAt(0).toUpperCase();
+
+      const rank = document.getElementById("reply-rank");
+      rank.textContent = role.label;
+      rank.className = role.css;
+
+      document.getElementById("reply-login-warning").classList.add("hidden");
+      replyBtn.disabled = false;
+      replyBtn.onclick = () => createReply(user);
+    }
+  } finally {
+    loadThread(); // always attempt to load thread (shows & hides throbber internally)
+  }
+});
 </script>
 
+<!-- Navbar/Footer Loader -->
+<script>
+async function includeHTML(file, elementId) {
+  try {
+    const res = await fetch(file);
+    const html = await res.text();
+    document.getElementById(elementId).innerHTML = html;
+    if (window.feather) feather.replace();
+  } catch (err) {
+    console.error("Fejl ved includeHTML:", err);
+  }
+}
+includeHTML("nav.html", "navbar");
+includeHTML("footer.html", "footer");
+
+// Replace icons for any pre-existing markup (e.g., back button)
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.feather) feather.replace();
+});
+</script>
+
+<!-- Shared Scripts -->
+<script type="module" src="js/firebase.js"></script>
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/common.js"></script>
 
 </body>
 </html>
