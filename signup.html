@@ -8,6 +8,8 @@
 <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 <link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
 
+
+
 <style>
 /* ===== Base styling ===== */
 h1,h2,h3,h4,h5,h6 { font-family: 'Western', sans-serif; }
@@ -110,7 +112,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const ADMIN_EMAIL = "asbjrnahle33@gmail.com";
+const ADMIN_EMAILS = [
+  "asbjrnahle33@gmail.com",
+  "lilysean0@gmail.com",
+  "anotheradmin@gmail.com"
+];
+
+ 
 
 window.signup = async function() {
   const name = document.getElementById("signup-name").value.trim();

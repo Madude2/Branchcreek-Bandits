@@ -16,23 +16,33 @@ body {
   color: #e4e6eb;
   font-family: 'Inter', sans-serif;
 }
-.western-text { font-family: 'Western', sans-serif; }
+.western-text {
+  font-family: 'Western', sans-serif;
+}
 
 /* --- Forum post/comment layout --- */
 .message-container {
   background-color: #f5f3e7;
   border: 1px solid #d0c9b6;
-  border-radius: 6px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
   margin: 1.5rem auto;
   width: 95%;
   max-width: 1600px;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
+.message-container:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
 .message-inner {
   display: flex;
   flex-wrap: nowrap;
   width: 100%;
 }
+
 .message-cell-user {
   background-color: #efe8cf;
   width: 200px;
@@ -43,15 +53,17 @@ body {
   flex-direction: column;
   align-items: center;
 }
+
 .message-cell-main {
   flex: 1;
   padding: 1.25rem 1.5rem;
   min-width: 0;
 }
+
 .message-userAvatar {
   width: 70px;
   height: 70px;
-  border-radius: 6px;
+  border-radius: 8px;
   background-color: #b49d5a;
   display: flex;
   align-items: center;
@@ -61,18 +73,29 @@ body {
   font-size: 1.5rem;
   margin-bottom: 0.5rem;
 }
+
 .message-userDetails h4 {
   font-weight: 600;
   color: #1c1c1b;
   text-align: center;
 }
+
 .message-userDetails p {
   font-size: 0.85rem;
   text-align: center;
 }
-.role-admin { color: #761bb3; font-weight: 600; }
-.role-verified { color: #7c5c20; font-weight: 600; }
-.role-unknown { color: #555; }
+
+.role-admin {
+  color: #761bb3;
+  font-weight: 600;
+}
+.role-verified {
+  color: #7c5c20;
+  font-weight: 600;
+}
+.role-unknown {
+  color: #555;
+}
 
 .message-content {
   color: #1c1c1b;
@@ -81,22 +104,70 @@ body {
   white-space: pre-line;
 }
 
+/* --- Image attachments (multi-image support) --- */
+.message-attachments {
+  margin-top: 1.25rem;
+}
 .attachmentList {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 6px;
-  margin-top: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
 }
 .attachmentList img {
   width: 100%;
-  height: 90px;
-  object-fit: cover;
+  height: auto;
+  border-radius: 8px;
   border: 1px solid #d0c9b6;
-  border-radius: 4px;
   background-color: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  cursor: zoom-in;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.attachmentList img:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
 }
 
-/* --- Combined Footer --- */
+/* --- Fullscreen modal for image preview --- */
+#image-modal {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+#image-modal.show {
+  display: flex;
+  animation: fadeIn 0.25s ease;
+}
+#image-modal img {
+  max-width: 95%;
+  max-height: 90vh;
+  border-radius: 10px;
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.4);
+}
+#image-modal span {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  color: #fff;
+  font-size: 2.5rem;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.2s ease;
+}
+#image-modal span:hover {
+  opacity: 0.7;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* --- Footer --- */
 .message-footer-combined {
   border-top: 1px solid #d0c9b6;
   background-color: #efe8cf;
@@ -119,16 +190,18 @@ body {
 }
 
 /* --- Responsive --- */
-@media (max-width: 1280px) {
-  .message-cell-user { width: 180px; }
-  .message-container { width: 96%; }
-}
 @media (max-width: 1024px) {
-  .message-container { width: 98%; }
-  .message-cell-user { width: 160px; }
+  .message-cell-user {
+    width: 160px;
+  }
+  .message-container {
+    width: 98%;
+  }
 }
 @media (max-width: 768px) {
-  .message-inner { flex-direction: column; }
+  .message-inner {
+    flex-direction: column;
+  }
   .message-cell-user {
     width: 100%;
     border-right: none;
@@ -137,11 +210,17 @@ body {
     justify-content: flex-start;
     gap: 1rem;
   }
-  .message-userAvatar { margin: 0; }
-  .message-cell-main { padding: 1rem; }
+  .message-userAvatar {
+    margin: 0;
+  }
+  .message-cell-main {
+    padding: 1rem;
+  }
 }
 
-#reply-container { background-color: #f7f5e8; }
+#reply-container {
+  background-color: #f7f5e8;
+}
 
 /* --- Fullscreen Loading Throbber --- */
 #page-loader {
@@ -165,6 +244,7 @@ body {
   color: #d4a017;
 }
 </style>
+
 </head>
 
 <body class="flex flex-col min-h-screen">
@@ -177,6 +257,11 @@ body {
   </svg>
   <p class="text-yellow-500 text-lg font-semibold">Indlæser tråd...</p>
 </div>
+
+<!-- Firebase + Auth + Common Scripts -->
+<script type="module" src="./js/firebase.js"></script>
+<script type="module" src="./js/auth.js"></script>
+<script type="module" src="./js/common.js"></script>
 
 <!-- Navbar -->
 <div id="navbar"></div>
@@ -215,7 +300,8 @@ body {
 
           <div class="message-content" id="thread-content"></div>
 
-          <section class="message-attachments mt-4 hidden" id="thread-media">
+          <!-- 🖼️ Images container -->
+          <section class="message-attachments hidden" id="thread-media">
             <ul class="attachmentList" id="attachment-list"></ul>
           </section>
         </div>
@@ -298,6 +384,7 @@ const replyInput = document.getElementById("reply-content");
 const replyBtn = document.getElementById("reply-btn");
 const replyWarning = document.getElementById("reply-login-warning");
 
+
 // -----------------------------------------
 // 🌟 Page Loader Controls
 // -----------------------------------------
@@ -365,13 +452,11 @@ async function toggleLike(ref, user, btn) {
 }
 
 // -----------------------------------------
-// 🧩 Load Thread
+// 🧩 Load Thread (supports multiple images)
 // -----------------------------------------
 async function loadThread() {
   try {
-    if (!threadId) {
-      throw new Error("Manglende tråd-ID.");
-    }
+    if (!threadId) throw new Error("Manglende tråd-ID.");
 
     showThrobber();
 
@@ -394,6 +479,29 @@ async function loadThread() {
     ).toLocaleString("da-DK");
     document.getElementById("thread-content").textContent = data.content || "";
 
+    // 🖼️ Handle one or multiple images
+    const mediaSection = document.getElementById("thread-media");
+    const attachmentList = document.getElementById("attachment-list");
+    attachmentList.innerHTML = "";
+
+    let images = [];
+
+    // Support for either imageURL (single) or imageURLs (array)
+    if (data.imageURL) images = [data.imageURL];
+    if (Array.isArray(data.imageURLs)) images = data.imageURLs;
+
+    if (images.length > 0) {
+      images.forEach((url) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<img src="${url}" alt="Forum billede" />`;
+        attachmentList.appendChild(li);
+      });
+      mediaSection.classList.remove("hidden");
+    } else {
+      mediaSection.classList.add("hidden");
+    }
+
+    // Like & comment counters
     likeCount.textContent = `${data.likes || 0} likes`;
     commentCount.textContent = `${data.comments || 0} comments`;
 
@@ -408,15 +516,49 @@ async function loadThread() {
       likeBtn.onclick = async () => await toggleLike(ref, auth.currentUser, likeBtn);
     }
 
+    // ✅ Show thread after media is ready
     threadContainer.classList.remove("hidden");
-    await hideThrobber(); // fade out loader before showing replies
+    await hideThrobber();
     loadRepliesRealtime();
+
+    // 🖼️ Setup image modal preview
+    setupImageModal();
   } catch (err) {
     console.error("Fejl ved indlæsning af tråd:", err);
     await hideThrobber();
     document.getElementById("thread-error").classList.remove("hidden");
   }
 }
+
+// -----------------------------------------
+// 🔍 Modal for image preview
+// -----------------------------------------
+function setupImageModal() {
+  const modal = document.createElement("div");
+  modal.id = "image-modal";
+  modal.innerHTML = `
+    <span>&times;</span>
+    <img src="" alt="Preview" />
+  `;
+  document.body.appendChild(modal);
+
+  const modalImg = modal.querySelector("img");
+  const closeBtn = modal.querySelector("span");
+
+  document.querySelectorAll("#attachment-list img").forEach(img => {
+    img.addEventListener("click", () => {
+      modalImg.src = img.src;
+      modal.classList.add("show");
+    });
+  });
+
+  closeBtn.addEventListener("click", () => modal.classList.remove("show"));
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.classList.remove("show");
+  });
+}
+
+
 
 // -----------------------------------------
 // 🔁 Real-time Replies
@@ -485,11 +627,68 @@ function loadRepliesRealtime() {
 }
 
 // -----------------------------------------
-// 💬 Create Reply
+// 💬 Create Reply with Image Upload
 // -----------------------------------------
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL } 
+  from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+
+const storage = getStorage();
+const fileInput = document.getElementById("reply-files");
+const attachBtn = document.getElementById("attach-btn");
+const previewContainer = document.getElementById("reply-preview");
+let uploadedImageURLs = [];
+
+// 🖼️ Open file picker
+if (attachBtn && fileInput) {
+  attachBtn.addEventListener("click", () => fileInput.click());
+
+  // Upload and preview selected files
+  fileInput.addEventListener("change", async (e) => {
+    const files = e.target.files;
+    if (!files.length || !auth.currentUser) return;
+
+    previewContainer.innerHTML = "";
+    uploadedImageURLs = [];
+
+    for (const file of files) {
+      if (!file.type.startsWith("image/")) continue;
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`⚠️ ${file.name} er for stor (max 5MB)`);
+        continue;
+      }
+
+      const user = auth.currentUser;
+      const filePath = `forumImages/${user.uid}/${Date.now()}_${file.name}`;
+      const storageRef = sRef(storage, filePath);
+
+      try {
+        // Show temporary preview while uploading
+        const tempImg = document.createElement("div");
+        tempImg.textContent = `Uploader ${file.name}...`;
+        tempImg.className = "text-xs text-gray-600 italic";
+        previewContainer.appendChild(tempImg);
+
+        const snapshot = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+
+        uploadedImageURLs.push(downloadURL);
+
+        // Replace text preview with real image
+        const img = document.createElement("img");
+        img.src = downloadURL;
+        img.className = "rounded border border-gray-300 w-full object-cover mt-1";
+        previewContainer.replaceChild(img, tempImg);
+      } catch (err) {
+        console.error("Fejl ved upload af billede:", err);
+      }
+    }
+  });
+}
+
+// 🧩 Create reply and include uploaded images
 async function createReply(user) {
   const content = replyInput.value.trim();
-  if (!content) return;
+  if (!content && uploadedImageURLs.length === 0) return;
 
   replyBtn.disabled = true;
   const original = replyBtn.innerHTML;
@@ -501,12 +700,17 @@ async function createReply(user) {
       content,
       author: user.displayName || user.email,
       userId: user.uid,
+      imageURLs: uploadedImageURLs,
       timestamp: serverTimestamp(),
       likes: 0,
       comments: 0,
       likedBy: []
     });
+
+    // Reset input + preview after posting
     replyInput.value = "";
+    previewContainer.innerHTML = "";
+    uploadedImageURLs = [];
   } catch (err) {
     console.error("Fejl ved oprettelse af svar:", err);
   } finally {
@@ -514,6 +718,7 @@ async function createReply(user) {
     replyBtn.innerHTML = original;
   }
 }
+
 
 // -----------------------------------------
 // 👤 Auth State
@@ -544,31 +749,70 @@ auth.onAuthStateChanged(async (user) => {
 });
 </script>
 
+
 <!-- Navbar/Footer Loader -->
 <script>
-async function includeHTML(file, elementId) {
+async function includeHTML(file, elementId, callback) {
   try {
     const res = await fetch(file);
     const html = await res.text();
-    document.getElementById(elementId).innerHTML = html;
+    const mount = document.getElementById(elementId);
+    mount.innerHTML = html;
+
+    // Re-run <script> tags in injected HTML (for feather icons etc.)
+    const scripts = mount.querySelectorAll("script");
+    for (const oldScript of scripts) {
+      const s = document.createElement("script");
+      for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
+      if (!oldScript.src) s.textContent = oldScript.textContent;
+      document.body.appendChild(s);
+    }
+
     if (window.feather) feather.replace();
+    if (callback) callback();
   } catch (err) {
-    console.error("Fejl ved includeHTML:", err);
+    console.error("includeHTML error:", err);
   }
 }
-includeHTML("nav.html", "navbar");
+
+// 🧩 Load Navbar + re-run auth + setup menus
+includeHTML("nav.html", "navbar", () => {
+  if (typeof setupAuth === "function") setupAuth();
+
+  // Menu toggles
+  const menuBtn = document.getElementById('menu-btn');
+  const mobileMenu = document.getElementById('mobile-menu');
+  if (menuBtn && mobileMenu) menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+
+  const loginBtn = document.getElementById('login-btn');
+  const loginDropdown = document.getElementById('login-dropdown');
+  if (loginBtn && loginDropdown) loginBtn.addEventListener('click', () => loginDropdown.classList.toggle('hidden'));
+
+  const mobileLoginBtn = document.getElementById('mobile-login-btn');
+  const mobileLoginForm = document.getElementById('mobile-login-form');
+  if (mobileLoginBtn && mobileLoginForm) mobileLoginBtn.addEventListener('click', () => mobileLoginForm.classList.toggle('hidden'));
+
+  // 🔔 Refresh notifications badge after nav loads
+  setTimeout(() => {
+    if (typeof window.refreshNotificationsBadge === "function") {
+      window.refreshNotificationsBadge();
+    }
+  }, 1200);
+});
+
 includeHTML("footer.html", "footer");
 
 // Replace icons for any pre-existing markup (e.g., back button)
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   if (window.feather) feather.replace();
 });
 </script>
 
 <!-- Shared Scripts -->
-<script type="module" src="js/firebase.js"></script>
-<script type="module" src="js/auth.js"></script>
-<script type="module" src="js/common.js"></script>
+<script type="module" src="./js/firebase.js"></script>
+<script type="module" src="./js/auth.js"></script>
+<script type="module" src="./js/common.js"></script>
+
 
 </body>
 </html>

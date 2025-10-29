@@ -17,7 +17,7 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/fi
 
 console.log("[common.js] ✅ Loaded (shared Firebase instance)");
 
-const ADMIN_EMAIL = "asbjrnahle33@gmail.com";
+const ADMIN_EMAIL = "asbjrnahle33@gmail.com" || "lilysean0@gmail.com"; 
 
 /* -------------------------------
    📨 Create notifications (admin/user/global)

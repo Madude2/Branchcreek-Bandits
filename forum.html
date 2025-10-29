@@ -77,6 +77,11 @@
   <!-- Navbar -->
   <div id="navbar"></div>
 
+  <!-- Load auth system before loading the navbar -->
+  <script type="module" src="./js/firebase.js"></script>
+  <script type="module" src="./js/auth.js"></script>
+  <script type="module" src="./js/common.js"></script>
+
   <!-- Main content -->
   <main class="flex-grow">
     <section class="py-16">
@@ -99,7 +104,6 @@
 
         <!-- Forum content -->
         <div id="forum-content" class="hidden">
-
           <!-- New post -->
           <div id="new-post-section" class="mb-10 hidden text-right">
             <button id="post-btn" class="new-post-btn">+ Ny Tråd</button>
@@ -112,7 +116,30 @@
     </section>
   </main>
 
-  
+  <!-- 🧵 New Thread Modal -->
+  <div id="new-thread-modal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50">
+    <div class="bg-white w-full max-w-lg rounded-lg shadow-lg p-6 text-black">
+      <h2 class="text-2xl font-bold mb-4 text-center text-yellow-700">Opret ny tråd</h2>
+      <input
+        id="thread-title"
+        type="text"
+        placeholder="Titel"
+        class="w-full mb-3 border border-gray-300 rounded p-2 focus:ring-2 focus:ring-yellow-600"
+      />
+      <textarea
+        id="thread-content-input"
+        rows="6"
+        placeholder="Skriv dit opslag her..."
+        class="w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-yellow-600"
+      ></textarea>
+      <div class="flex justify-end gap-2 mt-4">
+        <button id="cancel-thread" class="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Annuller</button>
+        <button id="submit-thread" class="px-4 py-2 rounded bg-yellow-600 hover:bg-yellow-700 text-white font-bold">
+          Opret
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Forum Logic -->
   <script type="module">
@@ -192,6 +219,65 @@
       }
     }
 
+    // 🧵 NEW THREAD LOGIC
+    function setupNewThreadModal(user) {
+      const modal = document.getElementById("new-thread-modal");
+      const openBtn = document.getElementById("post-btn");
+      const cancelBtn = document.getElementById("cancel-thread");
+      const submitBtn = document.getElementById("submit-thread");
+
+      if (!modal || !openBtn) return;
+
+      openBtn.onclick = () => {
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+      };
+
+      cancelBtn.onclick = () => {
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      };
+
+      submitBtn.onclick = async () => {
+        const title = document.getElementById("thread-title").value.trim();
+        const content = document.getElementById("thread-content-input").value.trim();
+
+        if (!title || !content) {
+          alert("Skriv både titel og indhold.");
+          return;
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Opretter...";
+
+        try {
+          await addDoc(collection(db, "forum"), {
+            title,
+            content,
+            author: user.displayName || user.email,
+            userId: user.uid,
+            timestamp: serverTimestamp(),
+            likes: 0,
+            comments: 0,
+            likedBy: [],
+          });
+
+          modal.classList.add("hidden");
+          modal.classList.remove("flex");
+          document.getElementById("thread-title").value = "";
+          document.getElementById("thread-content-input").value = "";
+
+          loadForumPosts();
+        } catch (err) {
+          console.error("❌ Fejl ved oprettelse af tråd:", err);
+          alert("Kunne ikke oprette tråd. Prøv igen.");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Opret";
+        }
+      };
+    }
+
     // Auth check
     onAuthStateChanged(auth, async (user) => {
       if (!user) return showLoginWarning();
@@ -207,70 +293,64 @@
         showForum();
         document.getElementById("new-post-section").classList.remove("hidden");
         loadForumPosts();
+        setupNewThreadModal(user); // 🧠 Enable modal for verified users
       } else {
         showLoginWarning();
       }
     });
   </script>
 
-   <!-- Dynamic Footer -->
+  <!-- Footer -->
   <div id="footer"></div>
 
-  <!-- -------- includeHTML helper -------- -->
+  <!-- includeHTML + navbar/footer loader -->
   <script>
-  async function includeHTML(file, elementId, callback){
-    try {
-      const res = await fetch(file);
-      const html = await res.text();
-      const mount = document.getElementById(elementId);
-      mount.innerHTML = html;
+    async function includeHTML(file, elementId, callback) {
+      try {
+        const res = await fetch(file);
+        const html = await res.text();
+        const mount = document.getElementById(elementId);
+        mount.innerHTML = html;
 
-      // Re-run any <script> tags in injected HTML
-      const scripts = mount.querySelectorAll("script");
-      for (const oldScript of scripts) {
-        const s = document.createElement("script");
-        for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
-        if (!oldScript.src) s.textContent = oldScript.textContent;
-        document.body.appendChild(s);
+        // Re-run any <script> tags in injected HTML
+        const scripts = mount.querySelectorAll("script");
+        for (const oldScript of scripts) {
+          const s = document.createElement("script");
+          for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
+          if (!oldScript.src) s.textContent = oldScript.textContent;
+          document.body.appendChild(s);
+        }
+
+        if (window.feather) feather.replace();
+        if (callback) callback();
+      } catch (err) {
+        console.error("includeHTML error:", err);
       }
-
-      if (window.feather) feather.replace();
-      if (callback) callback();
-    } catch (err) {
-      console.error("includeHTML error:", err);
     }
-  }
+
+    includeHTML("nav.html", "navbar", () => {
+      if (typeof setupAuth === "function") setupAuth();
+
+      const menuBtn = document.getElementById('menu-btn');
+      const mobileMenu = document.getElementById('mobile-menu');
+      if (menuBtn && mobileMenu) menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+
+      const loginBtn = document.getElementById('login-btn');
+      const loginDropdown = document.getElementById('login-dropdown');
+      if (loginBtn && loginDropdown) loginBtn.addEventListener('click', () => loginDropdown.classList.toggle('hidden'));
+
+      const mobileLoginBtn = document.getElementById('mobile-login-btn');
+      const mobileLoginForm = document.getElementById('mobile-login-form');
+      if (mobileLoginBtn && mobileLoginForm) mobileLoginBtn.addEventListener('click', () => mobileLoginForm.classList.toggle('hidden'));
+
+      setTimeout(() => {
+        if (typeof window.refreshNotificationsBadge === "function") {
+          window.refreshNotificationsBadge();
+        }
+      }, 1200);
+    });
+
+    includeHTML("footer.html", "footer");
   </script>
-
-  <!-- -------- Load Navbar + Footer (Forum Logic) -------- -->
-  <script>
-  includeHTML("nav.html", "navbar", () => {
-    if (typeof setupAuth === "function") setupAuth();
-
-    // Menu toggles
-    const menuBtn=document.getElementById('menu-btn');
-    const mobileMenu=document.getElementById('mobile-menu');
-    if(menuBtn && mobileMenu) menuBtn.addEventListener('click',()=>mobileMenu.classList.toggle('hidden'));
-
-    const loginBtn=document.getElementById('login-btn');
-    const loginDropdown=document.getElementById('login-dropdown');
-    if(loginBtn && loginDropdown) loginBtn.addEventListener('click',()=>loginDropdown.classList.toggle('hidden'));
-
-    const mobileLoginBtn=document.getElementById('mobile-login-btn');
-    const mobileLoginForm=document.getElementById('mobile-login-form');
-    if(mobileLoginBtn && mobileLoginForm) mobileLoginBtn.addEventListener('click',()=>mobileLoginForm.classList.toggle('hidden'));
-
-    // 🔔 Refresh notifications badge after nav loads
-    setTimeout(() => {
-      if (typeof window.refreshNotificationsBadge === "function") {
-        window.refreshNotificationsBadge();
-      }
-    }, 1200);
-  });
-
-  includeHTML("footer.html", "footer");
-  </script>
-
-  
 </body>
 </html>

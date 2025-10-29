@@ -21,8 +21,67 @@ import {
 
 console.log("[auth.js] ✅ Loaded — roles + spinner + admin notifications + flicker fix");
 
-window.setupAuth = function () {
-  const ADMIN_EMAIL = "asbjrnahle33@gmail.com";
+
+  window.setupAuth = function () {
+  const ADMIN_EMAIL = "asbjrnahle33@gmail.com" || "lilysean0@gmail.com"; // your admin email
+
+  
+
+
+
+
+    
+
+  /* -------------------------------
+      Password visibility toggles (robust)
+  --------------------------------*/
+  function initFeatherSafe() {
+    if (window.feather && typeof feather.replace === "function") {
+      feather.replace();
+    }
+  }
+
+  function setupPasswordToggles() {
+    const pairs = [
+      { inputId: "login-password", toggleId: "toggle-login-password" },
+      { inputId: "signup-password", toggleId: "toggle-signup-password" },
+      { inputId: "mobile-login-password", toggleId: "toggle-mobile-password" },
+    ];
+
+    pairs.forEach(({ inputId, toggleId }) => {
+      const input = document.getElementById(inputId);
+      const btn = document.getElementById(toggleId);
+      if (!input || !btn || btn.dataset.bound === "1") return;
+
+      // Make room for the icon just in case
+      input.classList.add("pr-10");
+
+      // Prevent double-binding in dynamic UIs
+      btn.dataset.bound = "1";
+
+      btn.addEventListener("click", () => {
+        const showing = input.type === "text";
+        input.type = showing ? "password" : "text";
+
+        const icon = btn.querySelector("i");
+        if (icon) {
+          icon.setAttribute("data-feather", showing ? "eye" : "eye-off");
+          initFeatherSafe();
+        }
+      });
+    });
+  }
+
+
+  
+  // Run once now, then re-run when DOM changes (e.g., dropdowns/modals inject fields)
+  initFeatherSafe();
+  setupPasswordToggles();
+  const _pwObserver = new MutationObserver(() => {
+    initFeatherSafe();
+    setupPasswordToggles();
+  });
+  _pwObserver.observe(document.body, { childList: true, subtree: true });
 
   /* -------------------------------
      🔒 Reliable logout handler
@@ -192,21 +251,20 @@ window.setupAuth = function () {
       if (isAdmin) role = "admin";
       else if (data.verifiedByAdmin) role = "verified";
 
-      // ✅ Always prefer Firestore displayName if available
-const displayName = data.displayName || user.displayName || user.email;
-updateMenu(displayName, role);
+      // ✅ Prefer Firestore displayName if available
+      const displayName = data.displayName || user.displayName || user.email;
+      updateMenu(displayName, role);
 
-// 🧠 Optional: sync Firebase Auth profile for consistency
-if (!user.displayName && data.displayName) {
-  try {
-    const { updateProfile } = await import("https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js");
-    await updateProfile(user, { displayName: data.displayName });
-    console.log("[auth.js] 🔄 Synced Auth displayName from Firestore:", data.displayName);
-  } catch (err) {
-    console.warn("[auth.js] ⚠️ Couldn't update Auth profile:", err.message);
-  }
-}
-
+      // 🧠 Optional: sync Firebase Auth profile for consistency
+      if (!user.displayName && data.displayName) {
+        try {
+          const { updateProfile } = await import("https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js");
+          await updateProfile(user, { displayName: data.displayName });
+          console.log("[auth.js] 🔄 Synced Auth displayName from Firestore:", data.displayName);
+        } catch (err) {
+          console.warn("[auth.js] ⚠️ Couldn't update Auth profile:", err.message);
+        }
+      }
 
       // Close dropdowns
       document.getElementById("login-dropdown")?.classList.add("hidden");
@@ -264,7 +322,9 @@ if (!user.displayName && data.displayName) {
       if (isAdmin) role = "admin";
       else if (data.verifiedByAdmin) role = "verified";
 
-      updateMenu(user.displayName || user.email, role);
+      // ✅ Use Firestore displayName if present
+      const displayName = data.displayName || user.displayName || user.email;
+      updateMenu(displayName, role);
 
       // ✅ Auto-create approval request if user somehow skipped earlier
       if (!isAdmin && role === "registered" && !data.verifiedByAdmin) {
@@ -307,4 +367,4 @@ if (!user.displayName && data.displayName) {
       alert("Fejl ved log ud: " + err.message);
     }
   };
-};
+  }

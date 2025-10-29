@@ -6,24 +6,49 @@
   <title>Login - Branchcreek Bandits</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
+  <!-- Feather icons (defer to ensure DOM exists first) -->
+  <script defer src="https://unpkg.com/feather-icons"></script>
 </head>
+
 <body class="bg-gray-900 text-white flex items-center justify-center min-h-screen">
 
   <div class="bg-gray-800 p-8 rounded-2xl shadow-lg w-96">
     <h2 class="text-2xl font-bold text-center mb-6">Login</h2>
 
     <input id="login-email" type="email" placeholder="Email" class="w-full mb-3 px-3 py-2 text-black rounded-lg">
-    <input id="login-password" type="password" placeholder="Password" class="w-full mb-3 px-3 py-2 text-black rounded-lg">
+
+    <!-- Password field with eye toggle -->
+    <div class="relative mb-4">
+      <input
+        id="login-password"
+        type="password"
+        placeholder="Adgangskode"
+        class="border p-2 rounded w-full pr-10 text-black"
+      />
+      <button
+        type="button"
+        id="toggle-login-password"
+        class="absolute inset-y-0 right-2 flex items-center text-gray-500 hover:text-yellow-600"
+        aria-label="Vis/Skjul adgangskode"
+      >
+        <i data-feather="eye"></i>
+      </button>
+    </div>
 
     <button onclick="loginUser()" class="w-full bg-yellow-600 hover:bg-yellow-700 py-2 rounded-lg font-bold mb-2">
       Login
     </button>
 
-    <p class="text-center text-sm">Har du ikke en konto? <a href="signup.html" class="text-blue-600 hover:underline">Opret konto her</a></p>
+    <p class="text-center text-sm">
+      Har du ikke en konto?
+      <a href="signup.html" class="text-blue-600 hover:underline">Opret konto her</a>
+    </p>
   </div>
 
   <!-- Include shared auth system -->
+  <script type="module" src="js/firebase.js"></script>
   <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/common.js"></script>
 
   <script>
     function loginUser() {
@@ -38,7 +63,6 @@
       // Use the global auth.js login
       window.login(email, password)
         .then(() => {
-          // Redirect to forum or homepage after successful login
           window.location.href = "forum.html";
         })
         .catch(err => console.error(err));
@@ -50,11 +74,61 @@
         window.location.href = "forum.html";
       }
     });
-  </script>
-  <script type="module" src="js/firebase.js"></script>
-<script type="module" src="js/auth.js"></script>
-<script type="module" src="js/common.js"></script>
 
+    /* -------------------------------
+       👁️ Password visibility toggles
+    --------------------------------*/
+    function initFeatherSafe() {
+      if (window.feather && typeof feather.replace === 'function') {
+        feather.replace();
+      }
+    }
+
+    function setupPasswordToggles() {
+      const pairs = [
+        { inputId: "login-password", toggleId: "toggle-login-password" },
+        { inputId: "signup-password", toggleId: "toggle-signup-password" },
+        { inputId: "mobile-login-password", toggleId: "toggle-mobile-password" },
+      ];
+
+      pairs.forEach(({ inputId, toggleId }) => {
+        const input = document.getElementById(inputId);
+        const btn = document.getElementById(toggleId);
+        if (!input || !btn || btn.dataset.bound === "1") return;
+
+        // avoid double-binding in dynamic UIs
+        btn.dataset.bound = "1";
+
+        // ensure space for icon in case markup was altered
+        input.classList.add('pr-10');
+
+        btn.addEventListener("click", () => {
+          const showing = input.type === "text";
+          input.type = showing ? "password" : "text";
+
+          // Swap icon
+          const icon = btn.querySelector("i");
+          if (icon) {
+            icon.setAttribute("data-feather", showing ? "eye" : "eye-off");
+            initFeatherSafe();
+          }
+        });
+      });
+    }
+
+    // 1) Run when DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+      initFeatherSafe();
+      setupPasswordToggles();
+    });
+
+    // 2) Re-run when new nodes are injected (dropdowns/modals, etc.)
+    const observer = new MutationObserver(() => {
+      initFeatherSafe();
+      setupPasswordToggles();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  </script>
 
 </body>
 </html>
