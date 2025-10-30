@@ -1,4 +1,4 @@
-// js/common.js — unified live bell + admin badge logic (with per-user notifications + smart dropdown + admin name tracking)
+// js/common.js — unified live bell + admin badge logic (role-based)
 import { db, auth } from "./firebase.js";
 import {
   collection,
@@ -15,36 +15,30 @@ import {
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-console.log("[common.js] ✅ Loaded (shared Firebase instance)");
-
-const ADMIN_EMAIL = "asbjrnahle33@gmail.com" || "lilysean0@gmail.com"; 
+console.log("[common.js] ✅ Loaded (role-based notifications system)");
 
 /* -------------------------------
    📨 Create notifications (admin/user/global)
 --------------------------------*/
 
-/**
- * 🔔 Send a notification to a specific user
- */
+/** 🔔 Send a notification to a specific user */
 export async function sendUserNotification(userId, title, message, type = "general") {
   try {
     await addDoc(collection(db, "notifications"), {
       title,
       message,
       type,
-      userId, // 👈 only visible to that user per Firestore rules
+      userId,
       timestamp: serverTimestamp(),
       readBy: []
     });
-    console.log(`[✅ Notification sent to user ${userId}] ${title}`);
+    console.log(`[✅ Notification sent → user ${userId}] ${title}`);
   } catch (err) {
     console.error("[❌ Error sending user notification]", err);
   }
 }
 
-/**
- * 🌍 Send a global notification (visible to all users)
- */
+/** 🌍 Send a global notification (visible to all users) */
 export async function sendGlobalNotification(title, message, type = "general") {
   try {
     await addDoc(collection(db, "notifications"), {
@@ -60,19 +54,13 @@ export async function sendGlobalNotification(title, message, type = "general") {
   }
 }
 
-/**
- * 👑 Send a notification to the specific admin performing the action
- * Includes the admin's name or email for clarity
- */
+/** 👑 Send a notification to the admin performing an action */
 export async function sendAdminNotification(adminUid, title, message, type = "admin_action") {
   try {
-    // Fetch admin info
     const adminRef = doc(db, "users", adminUid);
     const adminSnap = await getDoc(adminRef);
     const adminData = adminSnap.exists() ? adminSnap.data() : {};
     const adminName = adminData.displayName || adminData.name || adminData.email || "Ukendt Admin";
-
-    // Build personalized message
     const personalizedMessage = `${adminName} ${message}`;
 
     await addDoc(collection(db, "notifications"), {
@@ -101,29 +89,32 @@ window.loadNotificationsDropdown = async function ({ messagesEl, countEl } = {})
   const user = auth.currentUser;
   if (!user) {
     m.innerHTML = `<p class="text-gray-500 text-sm text-center">Log ind for at se notifikationer.</p>`;
-    if (c) c.classList.add("hidden");
+    c?.classList.add("hidden");
     return;
   }
 
   try {
+    // 🔎 Get user role dynamically
+    const userSnap = await getDoc(doc(db, "users", user.uid));
+    const userRole = userSnap.exists() ? userSnap.data().role : "registered";
+    const isAdmin = userRole === "admin";
+
     const qy = query(collection(db, "notifications"), orderBy("timestamp", "desc"), limit(10));
     const snap = await getDocs(qy);
-    const isAdmin = user.email === ADMIN_EMAIL;
 
+    // 🔍 Filter visibility
     const visible = snap.docs
       .map((d) => ({ id: d.id, ...d.data() }))
       .filter((n) => {
-        // Admins see only their own or global notifications
-        if (isAdmin) {
-          return !n.userId || n.userId === user.uid;
-        }
-        // Regular users see only their own or global
+        // Admin sees all global + own + approval requests
+        if (isAdmin) return !n.userId || n.userId === user.uid || n.type === "approval_request";
+        // Users see only their own or global
         return !n.userId || n.userId === user.uid;
       });
 
     if (visible.length === 0) {
       m.innerHTML = `<p class="text-gray-500 text-sm text-center">Ingen relevante notifikationer.</p>`;
-      if (c) c.classList.add("hidden");
+      c?.classList.add("hidden");
       return;
     }
 
@@ -141,54 +132,59 @@ window.loadNotificationsDropdown = async function ({ messagesEl, countEl } = {})
       c.classList.remove("hidden");
     }
 
-    console.log(`[common.js] ✅ Loaded ${visible.length} relevant notifications.`);
+    console.log(`[common.js] ✅ Loaded ${visible.length} notifications (role: ${userRole})`);
   } catch (err) {
     console.error("[common.js] ❌ Error loading notifications:", err);
     m.innerHTML = `<p class="text-red-500 text-sm text-center">Fejl: ${err.message}</p>`;
-    if (c) c.classList.add("hidden");
+    c?.classList.add("hidden");
   }
 };
 
 /* -------------------------------
-   🔔 Live badge updater (with admin awareness)
+   🔔 Live badge updater (role-based)
 --------------------------------*/
 function setupLiveBadge() {
   if (window._liveBadgeActive) return;
   window._liveBadgeActive = true;
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     const cnt = document.getElementById("notif-count");
     const cntMobile = document.getElementById("notif-count-mobile");
     if (!cnt) return;
+
     if (!user || !user.emailVerified) {
       cnt.classList.add("hidden");
       cntMobile?.classList.add("hidden");
       return;
     }
 
+    // Get user role
+    let userRole = "registered";
+    try {
+      const snap = await getDoc(doc(db, "users", user.uid));
+      if (snap.exists()) userRole = snap.data().role || "registered";
+    } catch {
+      console.warn("[common.js] ⚠️ Could not fetch user role.");
+    }
+    const isAdmin = userRole === "admin";
+
     onSnapshot(collection(db, "notifications"), (snap) => {
       if (window._pauseNotifUpdates) return;
 
       let unread = 0;
       let pendingApprovals = 0;
-      const isAdmin = user.email === ADMIN_EMAIL;
 
       snap.docs.forEach((d) => {
         const data = d.data();
         const readBy = Array.isArray(data.readBy) ? data.readBy : [];
 
-        // Skip notifications not meant for this user (admins included)
-        if (data.userId && data.userId !== user.uid) return;
-
-        // Count unread
+        if (data.userId && data.userId !== user.uid) return; // only relevant
         if (!readBy.includes(user.uid)) unread++;
 
-        // Count approval requests (admin only)
         if (isAdmin && data.type === "approval_request") pendingApprovals++;
       });
 
       const showCount = isAdmin && pendingApprovals > 0 ? pendingApprovals : unread;
-
       [cnt, cntMobile].forEach((el) => {
         if (!el) return;
         if (showCount > 0) {
@@ -206,18 +202,16 @@ function setupLiveBadge() {
             "py-0.5",
             "font-bold"
           );
-        } else {
-          el.classList.add("hidden");
-        }
+        } else el.classList.add("hidden");
       });
 
-      console.log(`[common.js] 🔔 ${unread} ulæste, ${pendingApprovals} afventende`);
+      console.log(`[common.js] 🔔 ${unread} ulæste, ${pendingApprovals} afventende (role: ${userRole})`);
     });
   });
 }
 
 /* -------------------------------
-   🔔 Bell dropdown handler (smart bounds)
+   🔔 Bell dropdown (smart bounds)
 --------------------------------*/
 window.setupBellButton = function (attempt = 1) {
   if (window._bellSetupActive) return;
@@ -254,23 +248,18 @@ window.setupBellButton = function (attempt = 1) {
     const r = btn.getBoundingClientRect();
     const dropWidth = drop.offsetWidth;
     const dropHeight = drop.offsetHeight;
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
     const margin = 8;
-
     let top = r.bottom + margin;
     let left = r.right - dropWidth;
 
-    if (left + dropWidth + margin > screenWidth) left = screenWidth - dropWidth - margin;
     if (left < margin) left = margin;
-    if (top + dropHeight + margin > screenHeight) {
+    if (top + dropHeight + margin > window.innerHeight) {
       top = r.top - dropHeight - margin;
       if (top < margin) top = margin;
     }
 
     drop.style.top = `${top}px`;
     drop.style.left = `${left}px`;
-
     if (wasHidden) {
       drop.classList.add("hidden");
       drop.style.visibility = "";
@@ -283,12 +272,8 @@ window.setupBellButton = function (attempt = 1) {
     drop.classList.toggle("hidden");
   });
 
-  window.addEventListener("resize", () => {
-    if (!drop.classList.contains("hidden")) positionDrop();
-  });
-  window.addEventListener("scroll", () => {
-    if (!drop.classList.contains("hidden")) positionDrop();
-  });
+  window.addEventListener("resize", () => !drop.classList.contains("hidden") && positionDrop());
+  window.addEventListener("scroll", () => !drop.classList.contains("hidden") && positionDrop());
 
   window.loadNotificationsDropdown({ messagesEl: msgs, countEl: cnt });
   setupLiveBadge();

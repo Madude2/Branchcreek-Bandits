@@ -8,8 +8,6 @@
 <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 <link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
 
-
-
 <style>
 /* ===== Base styling ===== */
 h1,h2,h3,h4,h5,h6 { font-family: 'Western', sans-serif; }
@@ -30,7 +28,7 @@ input, button { border-radius: 0 !important; }
 }
 a.back-home { display: inline-block; margin-top: 15px; color: #4285F4; text-decoration: underline; }
 
-/* ===== ✅ Local font fix for logo and title ===== */
+/* ===== ✅ Font fix ===== */
 nav a span,
 h1.western-text {
   font-family: 'Western', serif !important;
@@ -39,9 +37,11 @@ h1.western-text {
 </style>
 </head>
 
-<body class="bg-gray-100 font-sans">
+<main class="flex-grow">
+<body class="bg-gray-100 font-sans flex flex-col min-h-screen">
 
-<!-- Dynamic Navbar -->
+
+<!-- Navbar -->
 <div id="navbar"></div>
 
 <!-- Signup Section -->
@@ -63,16 +63,19 @@ h1.western-text {
     <div id="signup-success" class="hidden text-center">
       <h2 class="text-2xl font-bold mb-3 western-text">Tillykke! Konto oprettet.</h2>
       <p>En bekræftelses-email er blevet sendt til din e-mail. Tak for at registrere dig!</p>
-      <p>Hvis du ikke kan finde din mail, så tjek din spam mappe.</p>
+      <p>Hvis du ikke kan finde mailen, så tjek din spam mappe.</p>
       <a href="index.html" class="back-home">Gå tilbage til forsiden</a>
     </div>
   </div>
 </section>
 
+ 
+</main>
+
 <!-- Dynamic Footer -->
 <div id="footer"></div>
 
-<!-- Feather icons + Nav/Footer Loader -->
+<!-- Include Navbar & Footer -->
 <script>
 feather.replace();
 function includeHTML(file, elementId, callback){
@@ -93,12 +96,13 @@ includeHTML("footer.html", "footer");
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { 
-  getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signOut 
+  getAuth, createUserWithEmailAndPassword, sendEmailVerification, signOut 
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 import { 
   getFirestore, doc, setDoc, addDoc, collection, serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
+/* ---------- Firebase Config ---------- */
 const firebaseConfig = {
   apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
   authDomain: "branchcreek-bandits.firebaseapp.com",
@@ -112,14 +116,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const ADMIN_EMAILS = [
-  "asbjrnahle33@gmail.com",
-  "lilysean0@gmail.com",
-  "anotheradmin@gmail.com"
-];
 
- 
-
+/* ---------- Signup Function ---------- */
 window.signup = async function() {
   const name = document.getElementById("signup-name").value.trim();
   const email = document.getElementById("signup-email").value.trim();
@@ -131,7 +129,7 @@ window.signup = async function() {
     return;
   }
 
-  // 🌀 Disable button and show throbber
+  // 🌀 Show loading state
   const originalHTML = btn.innerHTML;
   btn.disabled = true;
   btn.classList.add("btn-disabled");
@@ -147,39 +145,43 @@ window.signup = async function() {
   `;
 
   try {
+    // 👤 Create user
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     const user = cred.user;
-    const isAdmin = user.email === ADMIN_EMAIL;
 
+    // 💾 Save user info in Firestore with default role
     await setDoc(doc(db, "users", user.uid), {
       email: user.email,
       displayName: name,
-      status: isAdmin ? "verified" : "registered",
-      verifiedByAdmin: isAdmin,
-      role: isAdmin ? "admin" : "registered",
+      role: "registered", // default role
+      status: "registered",
+      verifiedByAdmin: false,
       createdAt: serverTimestamp(),
-      emailVerified: false,
+      emailVerified: false
     });
 
-    if (!isAdmin) {
-      await addDoc(collection(db, "notifications"), {
-        title: "Ny bruger venter på godkendelse",
-        message: `Bruger ${user.email} har oprettet en konto og venter på godkendelse.`,
-        type: "approval_request",
-        userId: user.uid,
-        timestamp: serverTimestamp(),
-        readBy: [],
-      });
-    }
+    // 📬 Notify admins (optional)
+    await addDoc(collection(db, "notifications"), {
+      title: "Ny bruger venter på godkendelse",
+      message: `Bruger ${user.email} har oprettet en konto og venter på godkendelse.`,
+      type: "approval_request",
+      userId: user.uid,
+      timestamp: serverTimestamp(),
+      readBy: []
+    });
 
+    // ✉️ Send email verification
     await sendEmailVerification(user);
 
+    // 🟢 Show success
     document.getElementById("signup-form").classList.add("hidden");
     document.getElementById("signup-success").classList.remove("hidden");
 
+    // 🚪 Log out
     await signOut(auth);
+
   } catch (err) {
-    console.error("[signup.html] ❌ Signup error:", err);
+    console.error("❌ Signup error:", err);
     alert("Fejl ved oprettelse: " + err.message);
   } finally {
     btn.disabled = false;
@@ -188,7 +190,7 @@ window.signup = async function() {
   }
 };
 
-/* ✅ Allow Enter key to submit form */
+/* 🔑 Allow pressing Enter to submit form */
 document.addEventListener("keypress", (e) => {
   if (e.key === "Enter" && document.activeElement.closest("#signup-form")) {
     e.preventDefault();

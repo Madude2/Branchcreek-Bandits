@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard - Branchcreek Bandits</title>
+
+<!-- Tailwind + Fonts + Icons -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+<link href="https://fonts.cdnfonts.com/css/western" rel="stylesheet">
+
+<style>
+  .western-text { font-family: 'Western', sans-serif; }
+  .nav-link { color: white; }
+  .nav-link:hover { color: #d4a017; }
+</style>
+</head>
+
+<body class="bg-gray-100 font-sans flex flex-col min-h-screen">
+
+<!-- Navbar -->
+<div id="navbar"></div>
+
+<!-- Main Content -->
+<main class="flex-grow py-16 bg-white">
+  <div class="container mx-auto px-6 max-w-6xl">
+    <h1 class="western-text text-4xl mb-8 text-center">Admin Dashboard</h1>
+
+    <!-- Access Denied -->
+    <div id="access-denied" class="hidden text-center text-red-600 text-lg font-semibold">
+      ⛔ Du har ikke adgang til denne side.
+    </div>
+
+    <!-- Members Table -->
+    <div id="members-section" class="hidden overflow-x-auto">
+      <div class="flex justify-between mb-4 items-center">
+        <h2 class="western-text text-2xl">Brugeradministration</h2>
+        <button id="refresh-btn" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded">
+          Opdater Liste
+        </button>
+      </div>
+
+      <table class="min-w-full border border-gray-300 shadow-sm rounded-lg">
+        <thead class="bg-yellow-600 text-white">
+          <tr>
+            <th class="px-4 py-3 text-left">Navn</th>
+            <th class="px-4 py-3 text-left">E-mail</th>
+            <th class="px-4 py-3 text-left">Rolle</th>
+            <th class="px-4 py-3 text-left">Verificeret</th>
+            <th class="px-4 py-3 text-left">Oprettet</th>
+            <th class="px-4 py-3 text-center">Handlinger</th>
+          </tr>
+        </thead>
+        <tbody id="members-table" class="divide-y divide-gray-200 bg-white"></tbody>
+      </table>
+      <p id="member-count" class="text-gray-600 mt-4 text-sm"></p>
+    </div>
+  </div>
+</main>
+
+<!-- Footer -->
+<div id="footer"></div>
+
+<!-- -------- includeHTML helper -------- -->
+<script>
+async function includeHTML(file, elementId, callback){
+  try {
+    const res = await fetch(file);
+    const html = await res.text();
+    const mount = document.getElementById(elementId);
+    mount.innerHTML = html;
+
+    // Execute embedded scripts
+    const scripts = mount.querySelectorAll("script");
+    for (const oldScript of scripts) {
+      const s = document.createElement("script");
+      for (const attr of oldScript.attributes) s.setAttribute(attr.name, attr.value);
+      if (!oldScript.src) s.textContent = oldScript.textContent;
+      document.body.appendChild(s);
+    }
+
+    if (window.feather) feather.replace();
+    if (callback) callback();
+  } catch (err) {
+    console.error("includeHTML error:", err);
+  }
+}
+</script>
+
+<!-- Load Navbar + Footer -->
+<script>
+includeHTML("nav.html", "navbar", () => {
+  if (typeof setupAuth === "function") setupAuth();
+});
+includeHTML("footer.html", "footer");
+</script>
+
+<!-- 🔥 Firebase Admin Logic (with Cloud Functions) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, getDoc } 
+  from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getFunctions, httpsCallable } 
+  from "https://www.gstatic.com/firebasejs/11.0.1/firebase-functions.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCzk3xKdC0p9logWjGIZX41M1oeIeqjxGI",
+  authDomain: "branchcreek-bandits.firebaseapp.com",
+  projectId: "branchcreek-bandits",
+  storageBucket: "branchcreek-bandits.appspot.com",
+  messagingSenderId: "828305260971",
+  appId: "1:828305260971:web:6c3601fc97601a9621d2ee",
+  measurementId: "G-550TRD5SQ3"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const functions = getFunctions(app, "europe-west1");
+
+const deleteUserAccount = httpsCallable(functions, "deleteUserAccount");
+const updateUserRole = httpsCallable(functions, "updateUserRole");
+
+const tableBody = document.getElementById("members-table");
+const section = document.getElementById("members-section");
+const denied = document.getElementById("access-denied");
+const countText = document.getElementById("member-count");
+const refreshBtn = document.getElementById("refresh-btn");
+
+async function loadUsers() {
+  tableBody.innerHTML = "";
+  const snapshot = await getDocs(collection(db, "users"));
+  let count = 0;
+
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    count++;
+
+    const verified = data.verifiedByAdmin ? "✅" : "❌";
+    const createdAt = data.createdAt?.toDate?.()
+      ? data.createdAt.toDate().toLocaleDateString("da-DK")
+      : "-";
+    const isAdmin = data.role === "admin";
+
+    const row = document.createElement("tr");
+    row.className = "hover:bg-gray-50 transition";
+    row.innerHTML = `
+      <td class="px-4 py-2">${data.displayName || "-"}</td>
+      <td class="px-4 py-2">${data.email || "-"}</td>
+      <td class="px-4 py-2 capitalize">${data.role || "-"}</td>
+      <td class="px-4 py-2">${verified}</td>
+      <td class="px-4 py-2">${createdAt}</td>
+      <td class="px-4 py-2 flex flex-wrap gap-2 justify-center">
+        <button class="promote-btn bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded" data-id="${docSnap.id}">
+          ${isAdmin ? "Fjern Admin" : "Gør Admin"}
+        </button>
+        <button class="delete-btn bg-red-600 hover:bg-red-700 text-white text-sm px-3 py-1 rounded" data-id="${docSnap.id}">
+          Slet
+        </button>
+      </td>
+    `;
+    tableBody.appendChild(row);
+  });
+
+  countText.textContent = `Antal medlemmer: ${count}`;
+  setupButtons();
+}
+
+function setupButtons() {
+  // 👑 Promote/Demote handler
+  document.querySelectorAll(".promote-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const uid = e.target.dataset.id;
+      const userRef = doc(db, "users", uid);
+      const snap = await getDoc(userRef);
+      if (!snap.exists()) return alert("Bruger ikke fundet.");
+
+      const currentRole = snap.data().role;
+      const newRole = currentRole === "admin" ? "verified" : "admin";
+
+      if (confirm(`Ændre rolle til "${newRole}"?`)) {
+        try {
+          const res = await updateUserRole({ uid, newRole });
+          alert(res.data?.message || "Rolle opdateret!");
+          await loadUsers();
+        } catch (err) {
+          console.error("❌ Role update error:", err);
+          alert("Kunne ikke opdatere rolle: " + err.message);
+        }
+      }
+    });
+  });
+
+  // 🗑️ Delete handler
+  document.querySelectorAll(".delete-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      const uid = e.target.dataset.id;
+      if (!confirm("⚠️ Er du sikker på, at du vil slette denne bruger helt?")) return;
+
+      try {
+        const res = await deleteUserAccount({ uid });
+        alert(res.data?.message || "Brugeren blev slettet.");
+        await loadUsers();
+      } catch (err) {
+        console.error("❌ Delete error:", err);
+        alert("Kunne ikke slette bruger: " + err.message);
+      }
+    });
+  });
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    denied.classList.remove("hidden");
+    return;
+  }
+
+  try {
+    const userSnap = await getDoc(doc(db, "users", user.uid));
+    if (!userSnap.exists() || userSnap.data().role !== "admin") {
+      denied.classList.remove("hidden");
+      return;
+    }
+
+    section.classList.remove("hidden");
+    await loadUsers();
+
+  } catch (err) {
+    console.error("❌ Error loading users:", err);
+    denied.classList.remove("hidden");
+    denied.textContent = "Fejl ved indlæsning af data.";
+  }
+});
+
+refreshBtn.addEventListener("click", () => loadUsers());
+</script>
+
+<!-- Shared Scripts -->
+<script type="module" src="js/firebase.js"></script>
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/common.js"></script>
+
+</body>
+</html>
